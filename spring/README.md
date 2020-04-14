@@ -17,3 +17,8 @@ Join swarm as a service
 Allow service port
 
     docker service update --publish-add 8080 spring-app
+
+
+Stack deploy
+
+    docker stack deploy -c docker-compose.yml app

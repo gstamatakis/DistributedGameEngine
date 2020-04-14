@@ -9,7 +9,7 @@ Cache-Control: no-cache
 
 
 ###
-GET http://localhost:8080/user
+GET http://83.212.102.12:8080/user
 Accept: */*
 Cache-Control: no-cache
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1ODY4NTk5NDksImhhc2giOiIwZDY2MGZjZWMzOGVkOGI0NGMwMWIwZDgyMzQ4YTRhYyIsInVzZXJuYW1lIjoiZzEyMzQ1In0.YSty4ih7A9aec_Hf2Umb3-nziUCSfTI_RJmlW5fneJ_O2lyLixf3ObV6hZZ5HNu1st2R3svDkbk1MyGu_HvV3Q
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1ODY4NjM3ODksImhhc2giOiIzN2QzMWE1MTk5OWY2ODliYmU3ZmQ5NGZiMGQ4Y2FmOSIsInVzZXJuYW1lIjoiZzEyMzQ1In0.APL5ieST3Cp4pFkFarpFVKxGX6Ne1bGMVBEG7-LUYyhFP-2NDzrD_LMHH6UsL_up2Q7sqXjdf7kwMYIkQNX33g
