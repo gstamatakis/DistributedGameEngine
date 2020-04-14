@@ -1,7 +1,7 @@
 version: '3.2'
 services:
   redis-master:
-    image: kumojin/redis:5
+    image: dge/redis:5
     ports:
       - 6379:6379
     deploy:
@@ -18,7 +18,7 @@ services:
       - redis
 
   redis-slave:
-    image: kumojin/redis:5
+    image: dge/redis:5
     command: --slaveof redis-master 6379
     deploy:
       mode: replicated
@@ -34,10 +34,14 @@ services:
       - redis
 
   redis-sentinel:
-    image: kumojin/redis-sentinel:5
+    image: dge/redis-sentinel:5
     deploy:
       mode: replicated
-      replicas: 3
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
       placement:
         constraints:
           - node.labels.redis-sentinel == true
@@ -46,12 +50,16 @@ services:
     networks:
       - redis
 
-  spring-app:
-    image: spring-app:1.0
+  spring:
+    image: dge/spring:1.0
     ports:
       - 8080:8080
     deploy:
       replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
       restart_policy:
         condition: on-failure
     networks:
