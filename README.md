@@ -5,3 +5,8 @@ Authentication
 
 
 
+## Swarm 
+
+Init
+
+    docker swarm init --advertise-addr 83.212.102.12

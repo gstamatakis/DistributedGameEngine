@@ -9,7 +9,7 @@ services:
       - REDIS_IP=redis-zero
       - REDIS_MASTER_NAME=redismaster
     deploy:
-      replicas: 3
+      replicas: 1
     networks:
       - redis
 
@@ -19,8 +19,10 @@ services:
       - REDIS_SENTINEL_IP=redis-sentinel
       - REDIS_MASTER_NAME=redismaster
       - REDIS_SENTINEL_PORT=26379
+    ports:
+      - "6379:6379"
     deploy:
-      replicas: 3
+      replicas: 2
     networks:
       - redis
 
