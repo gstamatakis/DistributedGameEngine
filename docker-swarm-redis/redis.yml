@@ -1,0 +1,55 @@
+version: '3.7'
+
+services:
+  redis-master:
+    image: kumojin/redis:5
+    ports:
+      - 6379:6379
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      placement:
+        constraints:
+          - node.labels.redis-master == true
+    networks:
+      - redis
+
+  redis-slave:
+    image: kumojin/redis:5
+    command: --slaveof redis-master 6379
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      placement:
+        constraints:
+          - node.labels.redis-replica == true
+    networks:
+      - redis
+
+  redis-sentinel:
+    image: kumojin/redis-sentinel:5
+    deploy:
+      mode: replicated
+      replicas: 3
+      placement:
+        constraints:
+          - node.labels.redis-sentinel == true
+    environment:
+      - "SENTINEL_MASTER_IP=redis-master"
+    networks:
+      - redis
+
+networks:
+  redis:
+    driver: overlay
+
+volumes:
+  redis-data:

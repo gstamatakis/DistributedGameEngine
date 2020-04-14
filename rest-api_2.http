@@ -1,0 +1,15 @@
+GET http://localhost:8080/login
+Accept: */*
+Cache-Control: no-cache
+
+{
+  "username": "g12345",
+  "password": "g12345"
+}
+
+
+###
+GET http://localhost:8080/user
+Accept: */*
+Cache-Control: no-cache
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1ODY4NTk5NDksImhhc2giOiIwZDY2MGZjZWMzOGVkOGI0NGMwMWIwZDgyMzQ4YTRhYyIsInVzZXJuYW1lIjoiZzEyMzQ1In0.YSty4ih7A9aec_Hf2Umb3-nziUCSfTI_RJmlW5fneJ_O2lyLixf3ObV6hZZ5HNu1st2R3svDkbk1MyGu_HvV3Q
