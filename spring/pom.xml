@@ -71,7 +71,7 @@
                 </dependencies>
                 <configuration>
                     <keepDependenciesWithProvidedScope>true</keepDependenciesWithProvidedScope>
-                    <createDependencyReducedPom>true</createDependencyReducedPom>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
                     <filters>
                         <filter>
                             <artifact>*:*</artifact>
