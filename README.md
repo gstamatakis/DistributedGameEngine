@@ -20,3 +20,22 @@ Deploy the stack
 
     https://blog.ngopal.com.np/2017/10/10/spring-boot-with-jwt-authentication-using-redis/
 
+
+# Docker cmd
+
+
+Stop and remove all containers
+
+    docker stop $(docker ps -a -q)
+    docker rm $(docker ps -a -q)
+
+
+Remove all instances and containers
+
+    docker rm -f $(docker ps -a -q)
+    docker rmi -f $(docker images -q)
+
+
+Stop all services
+
+        docker service rm $(docker service ls -q)
