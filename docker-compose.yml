@@ -4,6 +4,8 @@ services:
     image: dge/redis:5
     ports:
       - 6379:6379
+    environment:
+      - "ALLOW_EMPTY_PASSWORD=yes"
     deploy:
       mode: replicated
       replicas: 2
@@ -20,6 +22,8 @@ services:
   redis-slave:
     image: dge/redis:5
     command: --slaveof redis-master 6379
+    environment:
+      - "ALLOW_EMPTY_PASSWORD=yes"
     deploy:
       mode: replicated
       replicas: 2
@@ -47,8 +51,12 @@ services:
           - node.labels.redis-sentinel == true
     environment:
       - "SENTINEL_MASTER_IP=redis-master"
+      - "SENTINEL_MASTER_HOST=redis-master"
+      - "ALLOW_EMPTY_PASSWORD=yes"
     networks:
       - redis
+    depends_on:
+      - redis-master
 
   spring:
     image: dge/spring:1.0

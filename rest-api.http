@@ -1,4 +1,4 @@
-GET http://83.212.102.12:8080/login
+GET http://localhost:8080/login
 Accept: */*
 Cache-Control: no-cache
 
@@ -9,7 +9,7 @@ Cache-Control: no-cache
 
 
 ###
-GET http://83.212.102.12:8080/user
+GET http://localhost:8080/user
 Accept: */*
 Cache-Control: no-cache
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1ODY4NjM3ODksImhhc2giOiIzN2QzMWE1MTk5OWY2ODliYmU3ZmQ5NGZiMGQ4Y2FmOSIsInVzZXJuYW1lIjoiZzEyMzQ1In0.APL5ieST3Cp4pFkFarpFVKxGX6Ne1bGMVBEG7-LUYyhFP-2NDzrD_LMHH6UsL_up2Q7sqXjdf7kwMYIkQNX33g
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1ODY4OTEwOTQsImhhc2giOiIwOTA5NjFkZDk5YWUyMDQzNDUzNGMzYzA4ZTcwNTczMiIsInVzZXJuYW1lIjoiZzEyMzQ1In0.QAhHFKu899yLqWyp-lGqbad3boq6mVCyGoOqsgv-dJYdpTs3GksXcPypxjI89u-RAnAibSRzyYNGEqAK9YYHJA
