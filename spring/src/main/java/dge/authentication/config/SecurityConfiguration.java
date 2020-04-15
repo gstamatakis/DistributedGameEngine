@@ -1,11 +1,10 @@
-package authentication.config;
+package dge.authentication.config;
 
-import authentication.jwt.JWTAuthenticationFilter;
-import authentication.jwt.JWTLoginFilter;
-import authentication.jwt.TokenAuthenticationService;
-import authentication.service.RedisService;
+import dge.authentication.jwt.JWTAuthenticationFilter;
+import dge.authentication.jwt.JWTLoginFilter;
+import dge.authentication.jwt.TokenAuthenticationService;
+import dge.authentication.service.RedisService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 @Slf4j
 @Configuration
@@ -37,8 +37,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     }
 
     @Override
-    protected AuthenticationManager authenticationManager() throws Exception {
-        return new ProviderManager(Arrays.asList((AuthenticationProviderImpl) new AuthenticationProviderImpl(redisService)));
+    protected AuthenticationManager authenticationManager() {
+        return new ProviderManager(Collections.singletonList(new AuthenticationProviderImpl(redisService)));
     }
 
     @Bean

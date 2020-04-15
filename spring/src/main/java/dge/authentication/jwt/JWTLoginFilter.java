@@ -1,7 +1,7 @@
-package authentication.jwt;
+package dge.authentication.jwt;
 
-import authentication.domain.AuthenticationTokenImpl;
-import authentication.domain.SessionUser;
+import dge.authentication.domain.AuthenticationTokenImpl;
+import dge.authentication.domain.SessionUser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -36,8 +36,8 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication)
             throws IOException, ServletException {
-        
+
         AuthenticationTokenImpl auth = (AuthenticationTokenImpl) authentication;
-        tokenAuthenticationService.addAuthentication(response, auth); 
+        tokenAuthenticationService.addAuthentication(response, auth);
     }
 }

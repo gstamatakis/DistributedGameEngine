@@ -1,8 +1,8 @@
-package authentication.config;
+package dge.authentication.config;
 
-import authentication.domain.AuthenticationTokenImpl;
-import authentication.domain.SessionUser;
-import authentication.service.RedisService;
+import dge.authentication.domain.AuthenticationTokenImpl;
+import dge.authentication.domain.SessionUser;
+import dge.authentication.service.RedisService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

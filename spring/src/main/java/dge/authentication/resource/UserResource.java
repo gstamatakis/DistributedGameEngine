@@ -1,7 +1,7 @@
-package authentication.resource;
+package dge.authentication.resource;
 
-import authentication.domain.AuthenticationTokenImpl;
-import authentication.service.RedisService;
+import dge.authentication.domain.AuthenticationTokenImpl;
+import dge.authentication.service.RedisService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;

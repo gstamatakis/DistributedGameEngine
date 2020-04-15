@@ -1,4 +1,4 @@
-GET http://localhost:8080/login
+GET http://dge_spring:8080/login
 Accept: */*
 Cache-Control: no-cache
 
@@ -9,7 +9,14 @@ Cache-Control: no-cache
 
 
 ###
-GET http://localhost:8080/user
+GET http://dge_spring:8080/user
 Accept: */*
 Cache-Control: no-cache
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1ODY4OTEwOTQsImhhc2giOiIwOTA5NjFkZDk5YWUyMDQzNDUzNGMzYzA4ZTcwNTczMiIsInVzZXJuYW1lIjoiZzEyMzQ1In0.QAhHFKu899yLqWyp-lGqbad3boq6mVCyGoOqsgv-dJYdpTs3GksXcPypxjI89u-RAnAibSRzyYNGEqAK9YYHJA
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1ODY5NDkxOTQsImhhc2giOiIxYTQzNGFkMmQ3MDc4OTBlMWI2YWMwNjRlMGVkNjI2NyIsInVzZXJuYW1lIjoiZzEyMzQ1In0.9asez8aZsUQI8cpywgCpASfaufSdEzwXm6KphkH8jSm5mm86QatQ_cNfdP_GJX0QUY5uxpTfJlh2h7fT-q-6qg
+
+
+###
+GET http://localhost:8080/kafka/test
+Accept: */*
+Cache-Control: no-cache
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1ODY5NDkxOTQsImhhc2giOiIxYTQzNGFkMmQ3MDc4OTBlMWI2YWMwNjRlMGVkNjI2NyIsInVzZXJuYW1lIjoiZzEyMzQ1In0.9asez8aZsUQI8cpywgCpASfaufSdEzwXm6KphkH8jSm5mm86QatQ_cNfdP_GJX0QUY5uxpTfJlh2h7fT-q-6qg

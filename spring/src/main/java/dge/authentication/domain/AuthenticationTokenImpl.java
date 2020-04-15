@@ -1,4 +1,4 @@
-package authentication.domain;
+package dge.authentication.domain;
 
 import lombok.Setter;
 import lombok.ToString;

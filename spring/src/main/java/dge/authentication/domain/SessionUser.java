@@ -1,5 +1,4 @@
-
-package authentication.domain;
+package dge.authentication.domain;
 
 import lombok.Data;
 
@@ -17,12 +16,12 @@ public class SessionUser {
     private Date created;
 
     public boolean hasExpired() {
-        if(created == null){
+        if (created == null) {
             return true;
         }
         LocalDateTime localDateTime = created.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
         localDateTime = localDateTime.plusHours(1);
-        return  Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant()).before(new Date());
+        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant()).before(new Date());
     }
 
     public String getUsername() {

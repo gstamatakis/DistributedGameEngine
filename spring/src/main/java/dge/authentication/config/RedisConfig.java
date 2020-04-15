@@ -1,4 +1,4 @@
-package authentication.config;
+package dge.authentication.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -36,8 +36,8 @@ public class RedisConfig {
     }
 
     @Bean
-    RedisTemplate< String, Object> redisTemplate() throws Exception {
-        final RedisTemplate< String, Object> template = new RedisTemplate< String, Object>();
+    RedisTemplate<String, Object> redisTemplate() throws Exception {
+        final RedisTemplate<String, Object> template = new RedisTemplate<String, Object>();
         template.setConnectionFactory(jedisConnectionFactory());
         template.setKeySerializer(new StringRedisSerializer());
 

@@ -1,8 +1,8 @@
-package authentication.jwt;
+package dge.authentication.jwt;
 
-import authentication.domain.AuthenticationTokenImpl;
-import authentication.domain.SessionUser;
-import authentication.service.RedisService;
+import dge.authentication.domain.AuthenticationTokenImpl;
+import dge.authentication.domain.SessionUser;
+import dge.authentication.service.RedisService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

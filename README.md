@@ -21,9 +21,12 @@ Build the docker images
     
 Set the redis flags
 
-    docker node update --label-add redis-master=true snf-873350
-    docker node update --label-add redis-replica=true snf-873350
-    docker node update --label-add redis-sentinel=true snf-873350
+    docker node update --label-add redis-master=true docker-desktop
+    docker node update --label-add redis-replica=true docker-desktop
+    docker node update --label-add redis-sentinel=true docker-desktop
+    docker node update --label-add spring=true docker-desktop
+    docker node update --label-add kafka=true docker-desktop
+    docker node update --label-add zookeeper=true docker-desktop
 
 
 Deploy the stack
@@ -33,6 +36,11 @@ Deploy the stack
 
 # Docker commands
 
+Stop all services
+
+    docker service rm $(docker service ls -q)
+    
+    
 Stop and remove all containers
 
     docker stop $(docker ps -a -q)
@@ -45,13 +53,12 @@ Remove all instances and containers
     docker rmi -f $(docker images -q)
 
 
-Stop all services
-
-    docker service rm $(docker service ls -q)
-
-
 # Sources
-## Authentication
+### Authentication
 
     https://blog.ngopal.com.np/2017/10/10/spring-boot-with-jwt-authentication-using-redis/
 
+
+### Kafka
+
+    https://github.com/wurstmeister/kafka-docker

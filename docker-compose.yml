@@ -62,7 +62,7 @@ services:
     ports:
       - "2181:2181"
     deploy:
-      replicas: 3
+      replicas: 2
       resources:
         limits:
           cpus: '0.5'
@@ -72,16 +72,13 @@ services:
           - node.labels.zookeeper == true
       restart_policy:
         condition: on-failure
-      networks:
-        - redis
+    networks:
+      - redis
 
   kafka:
     image: wurstmeister/kafka:2.12-2.4.1
     ports:
-      - target: 9094
-        published: 9094
-        protocol: tcp
-        mode: host
+      - "9094:9094"
     environment:
       HOSTNAME_COMMAND: "docker info | grep ^Name: | cut -d' ' -f 2"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -90,7 +87,7 @@ services:
       KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
     deploy:
-      replicas: 3
+      replicas: 2
       resources:
         limits:
           cpus: '0.5'
@@ -111,7 +108,7 @@ services:
     ports:
       - 8080:8080
     deploy:
-      replicas: 3
+      replicas: 2
       resources:
         limits:
           cpus: '0.5'

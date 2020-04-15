@@ -1,8 +1,7 @@
-package authentication.service;
+package dge.authentication.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,10 +14,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-/**
- *
- * @author Narayan <me@ngopal.com.np>
- */
+
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Service("redisService")
 @Slf4j
@@ -26,7 +22,7 @@ public class RedisService {
 
     private final ObjectMapper mapper;
 
-    private final RedisTemplate< String, Object> template;
+    private final RedisTemplate<String, Object> template;
 
     public RedisService(ObjectMapper mapper, RedisTemplate<String, Object> template) {
         this.mapper = mapper;
