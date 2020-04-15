@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import threading, logging, time
+import logging
 import multiprocessing
-
+import threading
+import time
 from kafka import KafkaConsumer, KafkaProducer
 
 
@@ -22,6 +23,7 @@ class Producer(threading.Thread):
             time.sleep(1)
 
         producer.close()
+
 
 class Consumer(multiprocessing.Process):
     def __init__(self):

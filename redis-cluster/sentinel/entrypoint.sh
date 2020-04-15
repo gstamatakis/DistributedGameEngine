@@ -1,8 +1,8 @@
 #!/bin/sh
 
 if [ -z "$SENTINEL_MASTER_IP" ]; then
-    echo "env var \"SENTINEL_MASTER_IP\" is not set"
-    exit 1
+  echo "env var \"SENTINEL_MASTER_IP\" is not set"
+  exit 1
 fi
 
 sed -i "s/%%SENTINEL_MASTER_IP%%/${SENTINEL_MASTER_IP}/g" /etc/redis/sentinel.conf

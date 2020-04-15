@@ -39,8 +39,7 @@ Deploy the stack
 
 Update the service images 
 
-    docker service update --force spring
-    
+    docker service update --force dge_game-master
 
 
 Stop all services
