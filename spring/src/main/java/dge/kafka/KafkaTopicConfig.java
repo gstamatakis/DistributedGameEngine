@@ -10,47 +10,47 @@ import org.springframework.kafka.core.KafkaAdmin;
 import java.util.HashMap;
 import java.util.Map;
 
-//@Configuration
+@Configuration
 public class KafkaTopicConfig {
 
-//    @Value(value = "${kafka.bootstrapAddress}")
+    @Value(value = "${kafka.bootstrapAddress}")
     private String bootstrapAddress;
 
-//    @Value(value = "${message.topic.name}")
+    @Value(value = "${message.topic.name}")
     private String topicName;
 
-//    @Value(value = "${partitioned.topic.name}")
+    @Value(value = "${partitioned.topic.name}")
     private String partionedTopicName;
 
-//    @Value(value = "${filtered.topic.name}")
+    @Value(value = "${filtered.topic.name}")
     private String filteredTopicName;
 
-//    @Value(value = "${greeting.topic.name}")
+    @Value(value = "${greeting.topic.name}")
     private String greetingTopicName;
 
-//    @Bean
+    @Bean
     public KafkaAdmin kafkaAdmin() {
         Map<String, Object> configs = new HashMap<>();
         configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
         return new KafkaAdmin(configs);
     }
 
-//    @Bean
+    @Bean
     public NewTopic topic1() {
         return new NewTopic(topicName, 1, (short) 1);
     }
 
-//    @Bean
+    @Bean
     public NewTopic topic2() {
         return new NewTopic(partionedTopicName, 6, (short) 1);
     }
 
-//    @Bean
+    @Bean
     public NewTopic topic3() {
         return new NewTopic(filteredTopicName, 1, (short) 1);
     }
 
-//    @Bean
+    @Bean
     public NewTopic topic4() {
         return new NewTopic(greetingTopicName, 1, (short) 1);
     }

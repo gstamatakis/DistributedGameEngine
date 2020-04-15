@@ -24,7 +24,7 @@ import java.util.Collections;
 
 @Slf4j
 @Configuration
-@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
+@Order(SecurityProperties.DEFAULT_FILTER_ORDER)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private final TokenAuthenticationService tokenService;

@@ -4,6 +4,7 @@ SPRING_IMAGE = dge/spring:1.0
 
 .PHONY: build
 build:
+	mvn clean package
 	docker image build -t $(SENTINEL_IMAGE) redis-cluster/sentinel/
 	docker image build -t $(REDIS_IMAGE) redis-cluster/redis/
 	docker image build -t $(SPRING_IMAGE) spring/

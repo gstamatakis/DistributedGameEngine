@@ -1,6 +1,5 @@
 package dge.authentication.domain;
 
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -13,7 +12,6 @@ import java.util.Collection;
 @ToString(callSuper = true)
 public class AuthenticationTokenImpl extends AbstractAuthenticationToken {
 
-    @Setter
     private final String username;
 
     public AuthenticationTokenImpl(String principal, Collection<? extends GrantedAuthority> authorities) {

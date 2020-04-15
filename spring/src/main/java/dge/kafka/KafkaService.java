@@ -1,6 +1,8 @@
 package dge.kafka;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
@@ -9,26 +11,30 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
-//@Order(Ordered.HIGHEST_PRECEDENCE)
-//@Service("kafkaService")
-//@Slf4j
+@Order(Ordered.HIGHEST_PRECEDENCE)
+@Service("kafkaService")
+@Slf4j
 public class KafkaService {
     public KafkaService() {
     }
 
-//    @Bean
+    @Autowired
+    private ApplicationContext context;
+
+    @Bean
     public MessageProducer messageProducer() {
         return new MessageProducer();
     }
 
-//    @Bean
+    @Bean
     public MessageListener messageListener() {
         return new MessageListener();
     }
 
-    private static void kafkaTest(ConfigurableApplicationContext context) throws InterruptedException {
+    public String kafkaTest() throws InterruptedException {
         MessageProducer producer = context.getBean(MessageProducer.class);
         MessageListener listener = context.getBean(MessageListener.class);
+
         /*
          * Sending a Hello World message to topic 'baeldung'.
          * Must be recieved by both listeners with group foo
@@ -68,6 +74,7 @@ public class KafkaService {
         producer.sendGreetingMessage(new Greeting("Greetings", "World!"));
         listener.greetingLatch.await(10, TimeUnit.SECONDS);
 
-        context.close();
+        //Everything ok
+        return "OK";
     }
 }

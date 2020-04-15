@@ -14,11 +14,11 @@ import org.springframework.kafka.support.serializer.JsonDeserializer;
 import java.util.HashMap;
 import java.util.Map;
 
-//@EnableKafka
-//@Configuration
+@EnableKafka
+@Configuration
 public class KafkaConsumerConfig {
 
-//    @Value(value = "${kafka.bootstrapAddress}")
+    @Value(value = "${kafka.bootstrapAddress}")
     private String bootstrapAddress;
 
     public ConsumerFactory<String, String> consumerFactory(String groupId) {
@@ -36,27 +36,27 @@ public class KafkaConsumerConfig {
         return factory;
     }
 
-//    @Bean
+    @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> fooKafkaListenerContainerFactory() {
         return kafkaListenerContainerFactory("foo");
     }
 
-//    @Bean
+    @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> barKafkaListenerContainerFactory() {
         return kafkaListenerContainerFactory("bar");
     }
 
-//    @Bean
+    @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> headersKafkaListenerContainerFactory() {
         return kafkaListenerContainerFactory("headers");
     }
 
-//    @Bean
+    @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> partitionsKafkaListenerContainerFactory() {
         return kafkaListenerContainerFactory("partitions");
     }
 
-//    @Bean
+    @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> filterKafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = kafkaListenerContainerFactory("filter");
         factory.setRecordFilterStrategy(record -> record.value()
@@ -71,7 +71,7 @@ public class KafkaConsumerConfig {
         return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), new JsonDeserializer<>(Greeting.class));
     }
 
-//    @Bean
+    @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Greeting> greetingKafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, Greeting> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(greetingConsumerFactory());

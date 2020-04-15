@@ -8,13 +8,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
-@SpringBootApplication
+@SpringBootApplication(
+        exclude = {RedisRepositoriesAutoConfiguration.class}
+)
 public class Application {
 
     @Autowired
     private RedisService redisService;
+
+    @Autowired
+    private KafkaService kafkaService;
 
     @Value("${ENC_KEY}")
     private String encKey;

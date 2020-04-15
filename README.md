@@ -33,14 +33,31 @@ Deploy the stack
 
     docker stack deploy -c docker-compose.yml dge
     
+    
+    
+# Docker commands (run from PowerShell)
 
-# Docker commands
+Update the service images 
+
+    docker service update --force spring
+    
+
 
 Stop all services
 
     docker service rm $(docker service ls -q)
     
     
+Stop and remove all EXITED containers
+
+    docker rm $(docker ps --filter "status=exited" -q)
+
+
+Remove all unused images
+
+    docker image prune -f
+    
+
 Stop and remove all containers
 
     docker stop $(docker ps -a -q)

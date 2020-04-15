@@ -13,13 +13,13 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 import java.util.HashMap;
 import java.util.Map;
 
-//@Configuration
+@Configuration
 public class KafkaProducerConfig {
 
-//    @Value(value = "${kafka.bootstrapAddress}")
+    @Value(value = "${kafka.bootstrapAddress}")
     private String bootstrapAddress;
 
-//    @Bean
+    @Bean
     public ProducerFactory<String, String> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
@@ -28,12 +28,12 @@ public class KafkaProducerConfig {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-//    @Bean
+    @Bean
     public KafkaTemplate<String, String> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
-//    @Bean
+    @Bean
     public ProducerFactory<String, Greeting> greetingProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
@@ -42,7 +42,7 @@ public class KafkaProducerConfig {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-//    @Bean
+    @Bean
     public KafkaTemplate<String, Greeting> greetingKafkaTemplate() {
         return new KafkaTemplate<>(greetingProducerFactory());
     }

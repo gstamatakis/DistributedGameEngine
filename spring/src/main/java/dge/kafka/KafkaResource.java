@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 
-//@RestController
-//@RequestMapping("/kafka")
+@RestController
+@RequestMapping("/kafka")
 public class KafkaResource {
     private final KafkaService service;
 
@@ -16,8 +16,17 @@ public class KafkaResource {
         this.service = service;
     }
 
-//    @RequestMapping(value = "/test", method = RequestMethod.GET)
+    @RequestMapping(value = "/status", method = RequestMethod.GET)
+    public String kafkaStatus(AuthenticationTokenImpl auth, HttpServletResponse response) {
+        return "STATUS_OK!";
+    }
+
+    @RequestMapping(value = "/test", method = RequestMethod.GET)
     public String testKafka(AuthenticationTokenImpl auth, HttpServletResponse response) {
-        return "TEST_OK!";
+        try {
+            return service.kafkaTest();
+        } catch (InterruptedException e) {
+            return e.getMessage();
+        }
     }
 }
