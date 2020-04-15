@@ -79,6 +79,8 @@ services:
     image: wurstmeister/kafka:2.12-2.4.1
     ports:
       - 9094:9094
+    depends_on:
+      - zookeeper
     environment:
       HOSTNAME_COMMAND: "docker info | grep ^Name: | cut -d' ' -f 2"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -103,9 +105,12 @@ services:
       - redis
 
   game-master:
-    image: dge/play-master:1.0
+    image: dge/game-master:1.0
     ports:
       - 8082:8082
+    depends_on:
+      - redis-master
+      - kafka
     deploy:
       replicas: 2
       resources:
@@ -124,6 +129,9 @@ services:
     image: dge/play-master:1.0
     ports:
       - 8081:8081
+    depends_on:
+      - redis-master
+      - kafka
     deploy:
       replicas: 2
       resources:
@@ -142,6 +150,9 @@ services:
     image: dge/user-interface:1.0
     ports:
       - 8080:8080
+    depends_on:
+      - redis-master
+      - kafka
     deploy:
       replicas: 2
       resources:
