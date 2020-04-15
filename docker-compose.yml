@@ -4,8 +4,6 @@ services:
     image: dge/redis:5
     ports:
       - 6379:6379
-    environment:
-      - "ALLOW_EMPTY_PASSWORD=yes"
     deploy:
       mode: replicated
       replicas: 2
@@ -16,14 +14,14 @@ services:
       placement:
         constraints:
           - node.labels.redis-master == true
+      restart_policy:
+        condition: on-failure
     networks:
       - redis
 
   redis-slave:
     image: dge/redis:5
     command: --slaveof redis-master 6379
-    environment:
-      - "ALLOW_EMPTY_PASSWORD=yes"
     deploy:
       mode: replicated
       replicas: 2
@@ -34,6 +32,8 @@ services:
       placement:
         constraints:
           - node.labels.redis-replica == true
+      restart_policy:
+        condition: on-failure
     networks:
       - redis
 
@@ -49,14 +49,62 @@ services:
       placement:
         constraints:
           - node.labels.redis-sentinel == true
+      restart_policy:
+        condition: on-failure
     environment:
       - "SENTINEL_MASTER_IP=redis-master"
-      - "SENTINEL_MASTER_HOST=redis-master"
-      - "ALLOW_EMPTY_PASSWORD=yes"
     networks:
       - redis
-    depends_on:
-      - redis-master
+
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      placement:
+        constraints:
+          - node.labels.zookeeper == true
+      restart_policy:
+        condition: on-failure
+      networks:
+        - redis
+
+  kafka:
+    image: wurstmeister/kafka:2.12-2.4.1
+    ports:
+      - target: 9094
+        published: 9094
+        protocol: tcp
+        mode: host
+    environment:
+      HOSTNAME_COMMAND: "docker info | grep ^Name: | cut -d' ' -f 2"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://_{HOSTNAME_COMMAND}:9094
+      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      placement:
+        constraints:
+          - node.labels.kafka == true
+      restart_policy:
+        condition: on-failure
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - redis
+
 
   spring:
     image: dge/spring:1.0
@@ -68,6 +116,9 @@ services:
         limits:
           cpus: '0.5'
           memory: 512M
+      placement:
+        constraints:
+          - node.labels.spring == true
       restart_policy:
         condition: on-failure
     networks:
