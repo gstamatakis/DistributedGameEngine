@@ -24,6 +24,10 @@ public class SessionUser {
         return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant()).before(new Date());
     }
 
+    public void hashPassword() {
+        this.password = String.valueOf(password.hashCode());
+    }
+
     public String getUsername() {
         return username;
     }

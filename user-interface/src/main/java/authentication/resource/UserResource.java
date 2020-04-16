@@ -23,11 +23,6 @@ public class UserResource {
         return auth.getPrincipal().toString();
     }
 
-    @RequestMapping(value = "/processor", method = RequestMethod.GET)
-    public Integer getProcessor(AuthenticationTokenImpl auth, HttpServletResponse response) {
-        return Runtime.getRuntime().availableProcessors();
-    }
-
     @RequestMapping(value = "/logout", method = RequestMethod.GET)
     public String logout(AuthenticationTokenImpl auth, HttpServletResponse response) {
         service.setValue(auth.getPrincipal().toString().toLowerCase(), "");

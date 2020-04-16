@@ -1,6 +1,6 @@
 package authentication;
 
-import authentication.jwt.TokenAuthenticationService;
+import authentication.filter.TokenAuthenticationService;
 import authentication.service.RedisService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;

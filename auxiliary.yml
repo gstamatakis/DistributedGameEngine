@@ -1,0 +1,109 @@
+version: '3.5'
+services:
+
+  mysql01:
+    image: robinong79/mysql_repl:5.7
+    networks:
+      - mysqlcluster
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_USER=user1
+      - MYSQL_PASSWORD=password1
+      - MYSQL_DATABASE=uidb
+      - SERVER_ID=1
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      update_config:
+        parallelism: 1
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+      placement:
+        constraints:
+          - node.labels.mysql == true
+
+  wso2-mysqlfailover:
+    image: robinong79/mysqlfailover:1.6.4
+    networks:
+      - mysqlcluster
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MASTER=mysql01
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      update_config:
+        parallelism: 1
+        delay: 60s
+      restart_policy:
+        condition: none
+        max_attempts: 5
+      placement:
+        constraints:
+          - node.labels.mysql == true
+
+  wso2-mysqlrouter:
+    image: robinong79/mysqlrouter:2.0.4
+    ports:
+      - 3306:3306
+    networks:
+      - mysqlcluster
+    environment:
+      - MLOGGER_LEVEL=ERROR
+      - MYSQLROUTER_BINDPORT=3306
+      - DESTINATIONS=mysql01,mysql02
+    deploy:
+      mode: replicated
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      update_config:
+        parallelism: 1
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+      placement:
+        constraints:
+          - node.labels.mysql == true
+
+  mysql02:
+    image: robinong79/mysql_repl:5.7
+    networks:
+      - mysqlcluster
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - SERVER_ID=2
+      - AUTO_INIT_MASTER_IP=mysql01
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      update_config:
+        parallelism: 1
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+      placement:
+        constraints:
+          - node.labels.mysql == true
+
+networks:
+  mysqlcluster:
+    driver: overlay

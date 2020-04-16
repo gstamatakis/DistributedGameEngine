@@ -21,4 +21,4 @@ Allow service port
 
 Stack deploy
 
-    docker stack deploy -c docker-compose.yml app
+    docker stack deploy -c full.yml app

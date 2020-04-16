@@ -23,7 +23,7 @@ public class RedisConfig {
 
     @Bean
     @Primary
-    JedisConnectionFactory jedisConnectionFactory() throws Exception {
+    JedisConnectionFactory jedisConnectionFactory() {
         JedisConnectionFactory factory = new JedisConnectionFactory();
         factory.setHostName(redisHost);
         factory.setPort(redisPort);
@@ -31,16 +31,14 @@ public class RedisConfig {
             factory.setPassword(redisPass);
         }
         factory.setUsePool(true);
-
         return factory;
     }
 
     @Bean
-    RedisTemplate<String, Object> redisTemplate() throws Exception {
-        final RedisTemplate<String, Object> template = new RedisTemplate<String, Object>();
+    RedisTemplate<String, Object> redisTemplate() {
+        final RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(jedisConnectionFactory());
         template.setKeySerializer(new StringRedisSerializer());
-
         template.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
         template.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
         return template;

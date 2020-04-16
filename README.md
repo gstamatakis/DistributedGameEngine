@@ -27,13 +27,18 @@ Set the redis flags
     docker node update --label-add spring=true docker-desktop
     docker node update --label-add kafka=true docker-desktop
     docker node update --label-add zookeeper=true docker-desktop
+    docker node update --label-add mysql=true docker-desktop
 
 
-Deploy the stack
+Deploy the FULL stack
 
-    docker stack deploy -c docker-compose.yml dge
+    docker stack deploy -c full.yml dge
+
     
-    
+Deploy just the Databases and Kafka (useful for testing)
+
+    docker stack deploy -c auxiliary.yml dge
+
     
 # Docker commands (run from PowerShell)
 
@@ -74,7 +79,12 @@ Remove all instances and containers
 
     https://blog.ngopal.com.np/2017/10/10/spring-boot-with-jwt-authentication-using-redis/
 
-
+    https://medium.com/@xoor/jwt-authentication-service-44658409e12c
+    
 ### Kafka
 
     https://github.com/wurstmeister/kafka-docker
+    
+### MySQL
+
+    https://github.com/robinong79/docker-swarm-mysql-masterslave-failover

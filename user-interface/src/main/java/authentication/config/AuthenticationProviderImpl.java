@@ -4,7 +4,8 @@ package authentication.config;
 import authentication.AuthenticationTokenImpl;
 import authentication.SessionUser;
 import authentication.service.RedisService;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -13,9 +14,12 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-public class AuthenticationProviderImpl implements org.springframework.security.authentication.AuthenticationProvider {
+public class AuthenticationProviderImpl implements AuthenticationProvider {
 
     private final RedisService service;
+
+    @Value("${SESSION_TIMEOUT_MIN}")
+    private int sessionTimeoutMin;
 
     public AuthenticationProviderImpl(RedisService service) {
         this.service = service;
@@ -24,27 +28,22 @@ public class AuthenticationProviderImpl implements org.springframework.security.
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getPrincipal() + "";
-        String password = authentication.getCredentials() + "";
+        String hashedPassword = String.valueOf(authentication.getCredentials().hashCode());
 
-        if (username.length() < 5) {
-            throw new BadCredentialsException("Username not found.");
+        SessionUser user = (SessionUser) service.getValue(username, SessionUser.class);
+        if (user == null) {
+            return null;
         }
-        if (password.length() < 5) {
-            throw new BadCredentialsException("Wrong password.");
+        if (!hashedPassword.equals(user.getPassword())) {
+            return null;
         }
 
-        //Right now just authenticate on the basis of the user=pass
-        if (username.equalsIgnoreCase(password)) {
-            SessionUser u = new SessionUser();
-            u.setUsername(username);
-            u.setCreated(new Date());
-            AuthenticationTokenImpl auth = new AuthenticationTokenImpl(u.getUsername(), Collections.emptyList());
-            auth.setAuthenticated(true);
-            auth.setDetails(u);
-            service.setValue(String.format("%s:%s", u.getUsername().toLowerCase(), auth.getHash()), u, TimeUnit.SECONDS, 3600L, true);
-            return auth;
-        }
-        return null;
+        user.setCreated(new Date());
+        AuthenticationTokenImpl auth = new AuthenticationTokenImpl(user.getUsername(), Collections.emptyList());
+        auth.setAuthenticated(true);
+        auth.setDetails(user);
+        service.setValue(username, user, TimeUnit.MINUTES, sessionTimeoutMin, true);
+        return auth;
     }
 
     @Override

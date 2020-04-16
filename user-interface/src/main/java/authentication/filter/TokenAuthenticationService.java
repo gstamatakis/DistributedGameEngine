@@ -1,4 +1,4 @@
-package authentication.jwt;
+package authentication.filter;
 
 
 import authentication.AuthenticationTokenImpl;
@@ -7,6 +7,7 @@ import authentication.service.RedisService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.token.Sha512DigestUtils;
@@ -20,15 +21,17 @@ import java.util.Map;
 
 public class TokenAuthenticationService {
     private final RedisService service;
-    private final long EXPIRATION_TIME = 5 * 60 * 1000; // 5 min
     private final String secret;
     private final String tokenPrefix = "Bearer";
     private final String headerString = "Authorization";
 
+    @Value("${SESSION_TIMEOUT_MIN}")
+    private int sessionTimeout;
+
 
     public TokenAuthenticationService(RedisService service, String key) {
         this.service = service;
-        secret = Sha512DigestUtils.shaHex(key);
+        this.secret = Sha512DigestUtils.shaHex(key);
     }
 
     public void addAuthentication(HttpServletResponse response, AuthenticationTokenImpl auth) {
@@ -39,7 +42,7 @@ public class TokenAuthenticationService {
         String JWT = Jwts.builder()
                 .setSubject(auth.getPrincipal().toString())
                 .setClaims(claims)
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + sessionTimeout))
                 .signWith(SignatureAlgorithm.HS512, secret)
                 .compact();
         response.addHeader(headerString, tokenPrefix + " " + JWT);
@@ -50,37 +53,40 @@ public class TokenAuthenticationService {
         if (token == null) {
             return null;
         }
+
         //remove "Bearer" text
         token = token.replace(tokenPrefix, "").trim();
 
         //Validating the token
-        if (!token.isEmpty()) {
-            Claims claims;
-            try {
-                claims = Jwts.parser()
-                        .setSigningKey(secret)
-                        .parseClaimsJws(token).getBody();
-
-            } catch (Exception e) {
-                return null;
-            }
-
-            //Valid token and now checking to see if the token is actually expired or alive by querying in redis.
-            if (claims != null && claims.containsKey("username")) {
-                String username = claims.get("username").toString();
-                String hash = claims.get("hash").toString();
-                SessionUser user = (SessionUser) service.getValue(String.format("%s:%s", username, hash), SessionUser.class);
-                if (user != null) {
-                    AuthenticationTokenImpl auth = new AuthenticationTokenImpl(user.getUsername(), Collections.emptyList());
-                    auth.setDetails(user);
-                    auth.authenticate();
-                    return auth;
-                } else {
-                    return new UsernamePasswordAuthenticationToken(null, null);
-                }
-
-            }
+        if (token.isEmpty()) {
+            return null;
         }
-        return null;
+
+        //Get the JWT claims
+        Claims claims;
+        try {
+            claims = Jwts.parser()
+                    .setSigningKey(secret)
+                    .parseClaimsJws(token).getBody();
+        } catch (Exception e) {
+            return null;
+        }
+
+        //Claims must also contain the username
+        if (claims == null || !claims.containsKey("username")) {
+            return null;
+        }
+
+        //Valid token and now checking to see if the token is actually expired or alive by querying in redis.
+        String username = claims.get("username").toString();
+        SessionUser user = (SessionUser) service.getValue(username, SessionUser.class);
+        if (user != null) {
+            AuthenticationTokenImpl auth = new AuthenticationTokenImpl(user.getUsername(), Collections.emptyList());
+            auth.setDetails(user);
+            auth.authenticate();
+            return auth;
+        } else {
+            return new UsernamePasswordAuthenticationToken(null, null);
+        }
     }
 }

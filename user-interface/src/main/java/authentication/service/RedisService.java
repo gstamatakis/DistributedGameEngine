@@ -2,6 +2,7 @@ package authentication.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,8 +22,11 @@ import java.util.concurrent.TimeUnit;
 public class RedisService {
 
     private final ObjectMapper mapper;
-
     private final RedisTemplate<String, Object> template;
+
+    @Value("${DEFAULT_EXPIRATION_TIME_MIN}")
+    private int defaultExpirationTimeMin;
+
 
     public RedisService(ObjectMapper mapper, RedisTemplate<String, Object> template) {
         this.mapper = mapper;
@@ -33,14 +37,11 @@ public class RedisService {
         template.setHashValueSerializer(new StringRedisSerializer());
         template.setValueSerializer(new StringRedisSerializer());
         Set<String> redisKeys = template.keys(pattern);
-        return new ArrayList<>(redisKeys);
-    }
-
-    public synchronized Object getValue(final String key) {
-
-        template.setHashValueSerializer(new StringRedisSerializer());
-        template.setValueSerializer(new StringRedisSerializer());
-        return template.opsForValue().get(key);
+        if (redisKeys != null) {
+            return new ArrayList<>(redisKeys);
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     public synchronized Object getValue(final String key, Class clazz) {
@@ -52,25 +53,13 @@ public class RedisService {
     }
 
     public void setValue(final String key, final Object value) {
-        setValue(key, value, TimeUnit.HOURS, 5, false);
+        setValue(key, value, TimeUnit.MINUTES, defaultExpirationTimeMin, false);
     }
 
     public void setValue(final String key, final Object value, boolean marshal) {
-        if (marshal) {
-            template.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
-            template.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
-        } else {
-            template.setHashValueSerializer(new StringRedisSerializer());
-            template.setValueSerializer(new StringRedisSerializer());
-        }
-        template.opsForValue().set(key, value);
-        // set a expire for a message
-        template.expire(key, 5, TimeUnit.MINUTES);
+        setValue(key, value, TimeUnit.MINUTES, defaultExpirationTimeMin, marshal);
     }
 
-    public void setValue(final String key, final Object value, TimeUnit unit, long timeout) {
-        setValue(key, value, unit, timeout, false);
-    }
 
     public void setValue(final String key, final Object value, TimeUnit unit, long timeout, boolean marshal) {
         if (marshal) {
