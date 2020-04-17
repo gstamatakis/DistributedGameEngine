@@ -1,10 +1,10 @@
 version: '3.5'
 services:
 
-  mysql01:
+  mysql1:
     image: robinong79/mysql_repl:5.7
     networks:
-      - mysqlcluster
+      - swarm_net
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_USER=user1
@@ -28,13 +28,14 @@ services:
         constraints:
           - node.labels.mysql == true
 
-  wso2-mysqlfailover:
-    image: robinong79/mysqlfailover:1.6.4
+  mysql2:
+    image: robinong79/mysql_repl:5.7
     networks:
-      - mysqlcluster
+      - swarm_net
     environment:
       - MYSQL_ROOT_PASSWORD=password
-      - MASTER=mysql01
+      - SERVER_ID=2
+      - AUTO_INIT_MASTER_IP=mysql1
     deploy:
       mode: replicated
       replicas: 1
@@ -42,6 +43,30 @@ services:
         limits:
           cpus: '0.5'
           memory: 512M
+      update_config:
+        parallelism: 1
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+      placement:
+        constraints:
+          - node.labels.mysql == true
+
+  mysqlfailover:
+    image: robinong79/mysqlfailover:1.6.4
+    networks:
+      - swarm_net
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MASTER=mysql1
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
       update_config:
         parallelism: 1
         delay: 60s
@@ -52,23 +77,23 @@ services:
         constraints:
           - node.labels.mysql == true
 
-  wso2-mysqlrouter:
+  mysqlrouter:
     image: robinong79/mysqlrouter:2.0.4
     ports:
       - 3306:3306
     networks:
-      - mysqlcluster
+      - swarm_net
     environment:
       - MLOGGER_LEVEL=ERROR
       - MYSQLROUTER_BINDPORT=3306
-      - DESTINATIONS=mysql01,mysql02
+      - DESTINATIONS=mysql1,mysql2
     deploy:
       mode: replicated
       replicas: 2
       resources:
         limits:
           cpus: '0.5'
-          memory: 512M
+          memory: 128M
       update_config:
         parallelism: 1
         delay: 60s
@@ -79,14 +104,11 @@ services:
         constraints:
           - node.labels.mysql == true
 
-  mysql02:
-    image: robinong79/mysql_repl:5.7
-    networks:
-      - mysqlcluster
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - SERVER_ID=2
-      - AUTO_INIT_MASTER_IP=mysql01
+
+  redis-master:
+    image: dge/redis:5
+    ports:
+      - 6379:6379
     deploy:
       mode: replicated
       replicas: 1
@@ -94,16 +116,52 @@ services:
         limits:
           cpus: '0.5'
           memory: 512M
-      update_config:
-        parallelism: 1
-        delay: 60s
-      restart_policy:
-        condition: on-failure
-        max_attempts: 5
       placement:
         constraints:
-          - node.labels.mysql == true
+          - node.labels.redis-master == true
+      restart_policy:
+        condition: on-failure
+    networks:
+      - swarm_net
+
+  redis-slave:
+    image: dge/redis:5
+    command: --slaveof redis-master 6379
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      placement:
+        constraints:
+          - node.labels.redis-replica == true
+      restart_policy:
+        condition: on-failure
+    networks:
+      - swarm_net
+
+  redis-sentinel:
+    image: dge/redis-sentinel:5
+    deploy:
+      mode: replicated
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+      placement:
+        constraints:
+          - node.labels.redis-sentinel == true
+      restart_policy:
+        condition: on-failure
+    environment:
+      - "SENTINEL_MASTER_IP=redis-master"
+    networks:
+      - swarm_net
+
 
 networks:
-  mysqlcluster:
+  swarm_net:
     driver: overlay

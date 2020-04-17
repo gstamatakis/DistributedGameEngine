@@ -1,10 +1,10 @@
 version: '3.5'
 services:
 
-  mysql01:
+  mysql1:
     image: robinong79/mysql_repl:5.7
     networks:
-      - mysqlcluster
+      - swarm_net
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_USER=user1
@@ -28,43 +28,17 @@ services:
         constraints:
           - node.labels.mysql == true
 
-  wso2-mysqlfailover:
-    image: robinong79/mysqlfailover:1.6.4
+  mysql2:
+    image: robinong79/mysql_repl:5.7
     networks:
-      - mysqlcluster
+      - swarm_net
     environment:
       - MYSQL_ROOT_PASSWORD=password
-      - MASTER=mysql01
+      - SERVER_ID=2
+      - AUTO_INIT_MASTER_IP=mysql1
     deploy:
       mode: replicated
       replicas: 1
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-      update_config:
-        parallelism: 1
-        delay: 60s
-      restart_policy:
-        condition: none
-        max_attempts: 5
-      placement:
-        constraints:
-          - node.labels.mysql == true
-
-  wso2-mysqlrouter:
-    image: robinong79/mysqlrouter:2.0.4
-    ports:
-      - 3306:3306
-    networks:
-      - mysqlcluster
-    environment:
-      - MLOGGER_LEVEL=ERROR
-      - MYSQLROUTER_BINDPORT=3306
-      - DESTINATIONS=mysql01,mysql02
-    deploy:
-      mode: replicated
-      replicas: 2
       resources:
         limits:
           cpus: '0.5'
@@ -79,21 +53,47 @@ services:
         constraints:
           - node.labels.mysql == true
 
-  mysql02:
-    image: robinong79/mysql_repl:5.7
+  mysqlfailover:
+    image: robinong79/mysqlfailover:1.6.4
     networks:
-      - mysqlcluster
+      - swarm_net
     environment:
       - MYSQL_ROOT_PASSWORD=password
-      - SERVER_ID=2
-      - AUTO_INIT_MASTER_IP=mysql01
+      - MASTER=mysql1
     deploy:
       mode: replicated
       replicas: 1
       resources:
         limits:
           cpus: '0.5'
-          memory: 512M
+          memory: 128M
+      update_config:
+        parallelism: 1
+        delay: 60s
+      restart_policy:
+        condition: none
+        max_attempts: 5
+      placement:
+        constraints:
+          - node.labels.mysql == true
+
+  mysqlrouter:
+    image: robinong79/mysqlrouter:2.0.4
+    ports:
+      - 3306:3306
+    networks:
+      - swarm_net
+    environment:
+      - MLOGGER_LEVEL=ERROR
+      - MYSQLROUTER_BINDPORT=3306
+      - DESTINATIONS=mysql1,mysql2
+    deploy:
+      mode: replicated
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
       update_config:
         parallelism: 1
         delay: 60s
@@ -121,7 +121,7 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - redis
+      - swarm_net
 
   redis-slave:
     image: dge/redis:5
@@ -139,17 +139,17 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - redis
+      - swarm_net
 
   redis-sentinel:
     image: dge/redis-sentinel:5
     deploy:
       mode: replicated
-      replicas: 1
+      replicas: 2
       resources:
         limits:
           cpus: '0.5'
-          memory: 512M
+          memory: 256M
       placement:
         constraints:
           - node.labels.redis-sentinel == true
@@ -158,7 +158,7 @@ services:
     environment:
       - "SENTINEL_MASTER_IP=redis-master"
     networks:
-      - redis
+      - swarm_net
 
 
   zookeeper:
@@ -177,7 +177,7 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - redis
+      - swarm_net
 
   kafka:
     image: wurstmeister/kafka:2.12-2.4.1
@@ -206,7 +206,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - redis
+      - swarm_net
 
   game-master:
     image: dge/game-master:1.0
@@ -227,7 +227,7 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - redis
+      - swarm_net
 
   play-master:
     image: dge/play-master:1.0
@@ -248,7 +248,7 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - redis
+      - swarm_net
 
   user-interface:
     image: dge/user-interface:1.0
@@ -269,12 +269,12 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - redis
+      - swarm_net
 
 volumes:
   vol_dbclient:
     driver: local
 
 networks:
-  redis:
+  swarm_net:
     driver: overlay
