@@ -1,9 +1,11 @@
-#!/usr/bin/env python
 import logging
 import multiprocessing
 import threading
 import time
-from kafka import KafkaConsumer, KafkaProducer
+
+from kafka import *
+
+bs = ["192.168.1.100:9094", "192.168.1.100:9095"]
 
 
 class Producer(threading.Thread):
@@ -15,11 +17,10 @@ class Producer(threading.Thread):
         self.stop_event.set()
 
     def run(self):
-        producer = KafkaProducer(bootstrap_servers='localhost:9094')
+        producer = KafkaProducer(bootstrap_servers=bs)
 
         while not self.stop_event.is_set():
-            producer.send('my-topic', b"test")
-            producer.send('my-topic', b"\xc2Hola, mundo!")
+            producer.send('my-topic', "test")
             time.sleep(1)
 
         producer.close()
@@ -34,9 +35,9 @@ class Consumer(multiprocessing.Process):
         self.stop_event.set()
 
     def run(self):
-        consumer = KafkaConsumer(bootstrap_servers='dge_kafka:9094',
+        consumer = KafkaConsumer(bootstrap_servers=bs,
                                  auto_offset_reset='earliest',
-                                 consumer_timeout_ms=1000)
+                                 consumer_timeout_ms=5000)
         consumer.subscribe(['my-topic'])
 
         while not self.stop_event.is_set():
