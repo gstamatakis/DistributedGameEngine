@@ -1,0 +1,23 @@
+server:
+  port: 8088
+
+spring.application.name: KafkaStreamsGlobalKTableJoin
+
+spring.cloud.stream:
+  bindings:
+    process-in-0:
+      destination: user-clicks
+    process-in-1:
+      destination: user-regions
+    process-out-0:
+      destination: output-topic
+
+  kafka:
+    binder:
+      brokers: localhost:9094,localhost:9095,localhost:9096
+
+    streams.binder:
+      configuration:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        commit.interval.ms: 1000

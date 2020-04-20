@@ -1,7 +1,7 @@
 from kafka import KafkaConsumer
 
-consumer = KafkaConsumer('topic10',
-                         group_id='g3',
+consumer = KafkaConsumer('output-topic',
+                         group_id='g1',
                          bootstrap_servers=['192.168.1.100:9094', '192.168.1.100:9095', '192.168.1.100:9096'],
                          auto_offset_reset='earliest',
                          enable_auto_commit=True,

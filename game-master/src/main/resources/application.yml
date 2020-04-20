@@ -8,7 +8,7 @@
 #Spring properties
 
 server:
-  port: 8081 # This is the default port anyway, but you can change it here
+  port: 8081
 
 security:
   jwt:
