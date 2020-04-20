@@ -1,4 +1,4 @@
-package ui.security;
+package play.security;
 
 import exception.CustomException;
 import org.springframework.security.core.Authentication;

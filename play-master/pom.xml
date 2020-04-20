@@ -11,6 +11,13 @@
 
     <artifactId>play-master</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>comp414</groupId>
+            <artifactId>core</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <finalName>play-master</finalName>

@@ -1,4 +1,4 @@
-package ui.exception;
+package exception;
 
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;

@@ -24,27 +24,26 @@ services:
     ports:
       - 9094:9094
     environment:
-      KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
       KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_ACKS: all
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 3000
       KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'true'
       KAFKA_CONTROLLER_SHUTDOWN_ENABLE: 'true'
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://83.212.102.12:9094
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://192.168.1.100:9094
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-      KAFKA_LOG_RETENTION_BYTES: -1
-      KAFKA_LOG_RETENTION_DAYS: 2
-      KAFKA_CREATE_TOPICS: "my-topic:4:2"
+      KAFKA_LOG_RETENTION_BYTES: 100048576
+      KAFKA_LOG_RETENTION_DAYS: 1
     deploy:
       replicas: 1
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '1'
+          memory: 1g
       placement:
         constraints:
           - node.labels.kafka == true
@@ -58,26 +57,26 @@ services:
     ports:
       - 9095:9095
     environment:
-      KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
       KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_ACKS: all
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 3000
       KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'true'
       KAFKA_CONTROLLER_SHUTDOWN_ENABLE: 'true'
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9095
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://83.212.102.12:9095
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://192.168.1.100:9095
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-      KAFKA_LOG_RETENTION_BYTES: -1
-      KAFKA_LOG_RETENTION_DAYS: 2
+      KAFKA_LOG_RETENTION_BYTES: 100048576
+      KAFKA_LOG_RETENTION_DAYS: 1
     deploy:
       replicas: 1
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '1'
+          memory: 1g
       placement:
         constraints:
           - node.labels.kafka == true
@@ -85,6 +84,142 @@ services:
         condition: on-failure
     networks:
       - swarm_net
+
+  kafka3:
+    image: wurstmeister/kafka:2.12-2.4.1
+    ports:
+      - 9096:9096
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_ACKS: all
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 3000
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'true'
+      KAFKA_CONTROLLER_SHUTDOWN_ENABLE: 'true'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
+      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9096
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://192.168.1.100:9096
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_LOG_RETENTION_BYTES: 100048576
+      KAFKA_LOG_RETENTION_DAYS: 1
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1g
+      placement:
+        constraints:
+          - node.labels.kafka == true
+      restart_policy:
+        condition: on-failure
+    networks:
+      - swarm_net
+
+  mysql1:
+    image: robinong79/mysql_repl:5.7
+    networks:
+      - swarm_net
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_USER=user1
+      - MYSQL_PASSWORD=password1
+      - MYSQL_DATABASE=uidb
+      - SERVER_ID=1
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      update_config:
+        parallelism: 1
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+      placement:
+        constraints:
+          - node.labels.mysql == true
+
+  mysql2:
+    image: robinong79/mysql_repl:5.7
+    networks:
+      - swarm_net
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - SERVER_ID=2
+      - AUTO_INIT_MASTER_IP=mysql1
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      update_config:
+        parallelism: 1
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+      placement:
+        constraints:
+          - node.labels.mysql == true
+
+  mysqlfailover:
+    image: robinong79/mysqlfailover:1.6.4
+    networks:
+      - swarm_net
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MASTER=mysql1
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+      update_config:
+        parallelism: 1
+        delay: 60s
+      restart_policy:
+        condition: none
+        max_attempts: 5
+      placement:
+        constraints:
+          - node.labels.mysql == true
+
+  mysqlrouter:
+    image: robinong79/mysqlrouter:2.0.4
+    ports:
+      - 3306:3306
+    networks:
+      - swarm_net
+    environment:
+      - MLOGGER_LEVEL=ERROR
+      - MYSQLROUTER_BINDPORT=3306
+      - DESTINATIONS=mysql1,mysql2
+    deploy:
+      mode: replicated
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+      update_config:
+        parallelism: 1
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+      placement:
+        constraints:
+          - node.labels.mysql == true
 
 networks:
   swarm_net:

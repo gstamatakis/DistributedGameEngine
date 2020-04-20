@@ -1,8 +1,8 @@
 package ui.controller;
 
 import io.swagger.annotations.*;
-import ui.dto.UserDataDTO;
-import ui.dto.UserResponseDTO;
+import dto.UserDataDTO;
+import dto.UserResponseDTO;
 import ui.model.User;
 import ui.service.UserService;
 import org.modelmapper.ModelMapper;

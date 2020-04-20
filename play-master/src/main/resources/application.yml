@@ -6,10 +6,12 @@
 # log to file (absolute/relative path of log file)
 #logging.file=path/to/log/file.log
 #Spring properties
-server.port=8081
-# Redis properties
-redis.host=redis-master
-redis.port=6379
-redis.pass=
-# Kafka properties
-kafka.bootstrapAddress=kafka:9092
+
+server:
+  port: 8081 # This is the default port anyway, but you can change it here
+
+security:
+  jwt:
+    token:
+      secret-key: secret-key
+      expire-length: 300000 # 5 minutes duration by default: 5 minutes * 60 seconds * 1000 milliseconds

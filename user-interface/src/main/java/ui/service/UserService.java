@@ -1,9 +1,6 @@
 package ui.service;
 
-import ui.exception.CustomException;
-import ui.model.User;
-import ui.repository.UserRepository;
-import ui.security.JwtTokenProvider;
+import exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,6 +8,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import ui.model.User;
+import ui.repository.UserRepository;
+import ui.security.JwtTokenProvider;
 
 import javax.servlet.http.HttpServletRequest;
 

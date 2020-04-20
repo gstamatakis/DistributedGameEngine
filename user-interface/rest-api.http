@@ -7,13 +7,13 @@ Cache-Control: no-cache
 GET http://localhost:8080/users/client
 Accept: */*
 Cache-Control: no-cache
-Authorization:eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOlt7ImF1dGhvcml0eSI6IlJPTEVfQURNSU4ifV0sImlhdCI6MTU4NzIwNDM4NywiZXhwIjoxNTg3MjA0Njg3fQ.NqLDWbwXGGJa5M_LAvvkQz_vXmzTyurw-ZG2Ap3wjJw
+Authorization:eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOlt7ImF1dGhvcml0eSI6IlJPTEVfQURNSU4ifV0sImlhdCI6MTU4NzM3NzEwOCwiZXhwIjoxNTg3Mzc3NDA4fQ.WtE6Q8kQK8UVuMuEFjk66mK1nhp7-oo5V1YOqsDPy_U
 ###
 
 GET http://localhost:8080/users/refresh
 Accept: */*
 Cache-Control: no-cache
-Authorization:eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOlt7ImF1dGhvcml0eSI6IlJPTEVfQURNSU4ifV0sImlhdCI6MTU4NzE0Mjc2NSwiZXhwIjoxNTg3MTQzMDY1fQ.CUhq9uGgvxWP6PezJMQESaka391lsYvm548vusJS65s
+Authorization:eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOlt7ImF1dGhvcml0eSI6IlJPTEVfQURNSU4ifV0sImlhdCI6MTU4NzM3NzEwOCwiZXhwIjoxNTg3Mzc3NDA4fQ.WtE6Q8kQK8UVuMuEFjk66mK1nhp7-oo5V1YOqsDPy_U
 
 ###
 

@@ -1,5 +1,7 @@
 package ui.model;
 
+import model.Role;
+
 import javax.persistence.*;
 import javax.validation.constraints.Size;
 

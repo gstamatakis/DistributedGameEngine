@@ -1,7 +1,7 @@
-package ui.dto;
+package dto;
 
 import io.swagger.annotations.ApiModelProperty;
-import ui.model.Role;
+import model.Role;
 
 public class UserDataDTO {
 
