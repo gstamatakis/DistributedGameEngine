@@ -11,13 +11,13 @@ import ui.model.User;
 import ui.service.UserService;
 
 @SpringBootApplication
-public class Application implements CommandLineRunner {
+public class UserInterfaceApplication implements CommandLineRunner {
 
     @Autowired
     UserService userService;
 
     public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(UserInterfaceApplication.class, args);
     }
 
     @Bean

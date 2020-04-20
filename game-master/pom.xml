@@ -64,7 +64,7 @@
                                         implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>gm.Application</mainClass>
+                                    <mainClass>gm.GameMasterApplication</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>

@@ -1,4 +1,4 @@
-package play.controller;
+package pm.controller;
 
 import dto.UserResponseDTO;
 import io.swagger.annotations.ApiOperation;
@@ -15,10 +15,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("")
-public class UserController {
+public class PMController {
 
     @Autowired
     private ModelMapper modelMapper;
+
+    @GetMapping(value = "/ping/{value}")
+    @ApiResponses(value = @ApiResponse(code = 400, message = "Something went wrong"))
+    public String ping(@PathVariable String value) {
+        return value;
+    }
 
     @GetMapping(value = "/test/{value}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_CLIENT')")

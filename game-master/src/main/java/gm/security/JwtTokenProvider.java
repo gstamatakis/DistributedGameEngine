@@ -1,4 +1,4 @@
-package play.security;
+package gm.security;
 
 import exception.CustomException;
 import io.jsonwebtoken.JwtException;

@@ -1,4 +1,10 @@
-GET http://localhost:8081/test/1234
+GET http://localhost:8082/ping/123123
 Accept: */*
 Cache-Control: no-cache
-Authorization:eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOlt7ImF1dGhvcml0eSI6IlJPTEVfQURNSU4ifV0sImlhdCI6MTU4NzM4MDI2OSwiZXhwIjoxNTg3MzgwNTY5fQ.vXnA4b5Hus2_iWAc03sQt5aM0T-cdc8EsKlFANNDhs0
+
+###
+
+GET http://localhost:8082/test/1234
+Accept: */*
+Cache-Control: no-cache
+Authorization:eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOlt7ImF1dGhvcml0eSI6IlJPTEVfQURNSU4ifV0sImlhdCI6MTU4NzM4NDM0NiwiZXhwIjoxNTg3Mzg0NjQ2fQ.1Vaccx8FxhFW5Z-MHE0qc3JJ6PKucSHkZiUIZxx8L_4

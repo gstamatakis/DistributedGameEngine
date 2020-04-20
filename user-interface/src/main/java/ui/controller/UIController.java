@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 @RestController
 @RequestMapping("/users")
 @Api(tags = "users")
-public class UserController {
+public class UIController {
 
     @Autowired
     private UserService userService;

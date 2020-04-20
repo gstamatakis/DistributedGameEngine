@@ -1,4 +1,4 @@
-package play;
+package pm;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.SpringApplication;
@@ -8,14 +8,14 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 
 @SpringBootApplication
 @EnableWebSecurity
-public class Application {
+public class PlayMasterApplication {
     @Bean
     public ModelMapper modelMapper() {
         return new ModelMapper();
     }
 
     public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(PlayMasterApplication.class, args);
     }
 
 }

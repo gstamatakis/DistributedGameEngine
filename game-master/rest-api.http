@@ -1,0 +1,11 @@
+GET http://localhost:8081/ping/12345
+Accept: */*
+Cache-Control: no-cache
+
+####
+
+GET http://localhost:8081/test/1234
+Accept: */*
+Cache-Control: no-cache
+Authorization:eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOlt7ImF1dGhvcml0eSI6IlJPTEVfQURNSU4ifV0sImlhdCI6MTU4NzM4NDA3MSwiZXhwIjoxNTg3Mzg0MzcxfQ.lFv72Htf4JBrpEp_H94MrfkCnm3d-q66oCKMlQlA9SY
+
