@@ -1,8 +1,7 @@
 version: '3.5'
 services:
-
   mysql1:
-    image: robinong79/mysql_repl:5.7
+    image: localhost:5000/dge/mysql:1.0
     networks:
       - swarm_net
     environment:
@@ -29,7 +28,7 @@ services:
           - node.labels.mysql == true
 
   mysql2:
-    image: robinong79/mysql_repl:5.7
+    image: localhost:5000/dge/mysql:1.0
     networks:
       - swarm_net
     environment:
@@ -54,7 +53,7 @@ services:
           - node.labels.mysql == true
 
   mysqlfailover:
-    image: robinong79/mysqlfailover:1.6.4
+    image: localhost:5000/dge/mysql-failover:1.0
     networks:
       - swarm_net
     environment:
@@ -78,7 +77,7 @@ services:
           - node.labels.mysql == true
 
   mysqlrouter:
-    image: robinong79/mysqlrouter:2.0.4
+    image: localhost:5000/dge/mysql-router:1.0
     ports:
       - 3306:3306
     networks:
@@ -105,7 +104,7 @@ services:
           - node.labels.mysql == true
 
   redis-master:
-    image: dge/redis:5
+    image: localhost:5000/dge/redis:1.0
     ports:
       - 6379:6379
     deploy:
@@ -124,8 +123,10 @@ services:
       - swarm_net
 
   redis-slave:
-    image: dge/redis:5
+    image: localhost:5000/dge/redis:1.0
     command: --slaveof redis-master 6379
+    depends_on:
+      - redis-master
     deploy:
       mode: replicated
       replicas: 1
@@ -142,10 +143,12 @@ services:
       - swarm_net
 
   redis-sentinel:
-    image: dge/redis-sentinel:5
+    image: localhost:5000/dge/redis-sentinel:5
+    depends_on:
+      - redis-master
     deploy:
       mode: replicated
-      replicas: 2
+      replicas: 1
       resources:
         limits:
           cpus: '0.5'
@@ -160,13 +163,14 @@ services:
     networks:
       - swarm_net
 
-
   zookeeper:
-    image: wurstmeister/zookeeper
+    image: localhost:5000/dge/zookeeper:1.0
     ports:
       - 2181:2181
+    depends_on:
+      - redis-master
     deploy:
-      replicas: 2
+      replicas: 1
       resources:
         limits:
           cpus: '0.5'
@@ -179,44 +183,115 @@ services:
     networks:
       - swarm_net
 
-  kafka:
-    image: wurstmeister/kafka:2.12-2.4.1
+  kafka1:
+    image: localhost:5000/dge/kafka:1.0
     ports:
       - 9094:9094
-    depends_on:
-      - zookeeper
     environment:
-      HOSTNAME_COMMAND: "docker info | grep ^Name: | cut -d' ' -f 2"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://_{HOSTNAME_COMMAND}:9094
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_ACKS: all
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 3000
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'true'
+      KAFKA_CONTROLLER_SHUTDOWN_ENABLE: 'true'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://192.168.1.6:9094
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_LOG_RETENTION_BYTES: 100048576
+      KAFKA_LOG_RETENTION_DAYS: 1
     deploy:
-      replicas: 2
+      replicas: 1
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '1'
+          memory: 1g
       placement:
         constraints:
           - node.labels.kafka == true
       restart_policy:
         condition: on-failure
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - swarm_net
 
+  kafka2:
+    image: localhost:5000/dge/kafka:1.0
+    ports:
+      - 9095:9095
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_ACKS: all
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 3000
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'true'
+      KAFKA_CONTROLLER_SHUTDOWN_ENABLE: 'true'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
+      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9095
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://192.168.1.6:9095
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_LOG_RETENTION_BYTES: 100048576
+      KAFKA_LOG_RETENTION_DAYS: 1
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1g
+      placement:
+        constraints:
+          - node.labels.kafka == true
+      restart_policy:
+        condition: on-failure
+    networks:
+      - swarm_net
+
+  kafka3:
+    image: localhost:5000/dge/kafka:1.0
+    ports:
+      - 9096:9096
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_ACKS: all
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 3000
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'true'
+      KAFKA_CONTROLLER_SHUTDOWN_ENABLE: 'true'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
+      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9096
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://192.168.1.6:9096
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_LOG_RETENTION_BYTES: 100048576
+      KAFKA_LOG_RETENTION_DAYS: 1
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1g
+      placement:
+        constraints:
+          - node.labels.kafka == true
+      restart_policy:
+        condition: on-failure
+    networks:
+      - swarm_net
+
+
   game-master:
-    image: dge/game-master:1.0
+    image: localhost:5000/dge/game-master:1.0
     ports:
       - 8082:8082
     depends_on:
-      - redis-master
+      - mysqlrouter
       - kafka
     deploy:
-      replicas: 2
+      replicas: 1
       resources:
         limits:
           cpus: '0.5'
@@ -230,14 +305,14 @@ services:
       - swarm_net
 
   play-master:
-    image: dge/play-master:1.0
+    image: localhost:5000/dge/play-master:1.0
     ports:
       - 8081:8081
     depends_on:
-      - redis-master
+      - mysqlrouter
       - kafka
     deploy:
-      replicas: 2
+      replicas: 1
       resources:
         limits:
           cpus: '0.5'
@@ -251,14 +326,14 @@ services:
       - swarm_net
 
   user-interface:
-    image: dge/user-interface:1.0
+    image: localhost:5000/dge/user-interface:1.0
     ports:
       - 8080:8080
     depends_on:
-      - redis-master
+      - mysqlrouter
       - kafka
     deploy:
-      replicas: 2
+      replicas: 1
       resources:
         limits:
           cpus: '0.5'
@@ -270,10 +345,6 @@ services:
         condition: on-failure
     networks:
       - swarm_net
-
-volumes:
-  vol_dbclient:
-    driver: local
 
 networks:
   swarm_net:

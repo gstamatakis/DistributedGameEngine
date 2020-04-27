@@ -32,7 +32,7 @@ Set the redis flags
 
 Deploy the FULL stack
 
-    docker stack deploy -c full.yml dge
+    docker stack deploy -c swarm.yml dge
 
     
 Deploy just the Databases and Kafka (useful for testing)
@@ -41,6 +41,11 @@ Deploy just the Databases and Kafka (useful for testing)
 
     
 # Docker commands (run from PowerShell)
+
+Stop a deployed stack
+
+    docker stack rm dge
+    
 
 Update the service images 
 
@@ -73,6 +78,21 @@ Remove all instances and containers
     docker rm -f $(docker ps -a -q)
     docker rmi -f $(docker images -q)
 
+# Registry
+
+Deploy a Docker registry so other nodes can access your images
+
+    docker service create --name registry --publish published=5000,target=5000 registry:2
+
+Verify that it works (should return '{}')
+
+    curl http://localhost:5000/v2/
+    
+Push something
+
+    make build 
+    make push
+    
 
 # Sources
 ### Authentication
