@@ -1,5 +1,6 @@
 package kafka;
 
+import kafka.message.RegionWithClicks;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.Grouped;
@@ -21,8 +22,9 @@ public class KafkaStreamsGlobalKTableJoin {
     }
 
     public static class KStreamToTableJoinApplication {
+
         @Bean
-        public BiFunction<KStream<String, Long>, KTable<String, String>, KStream<String, Long>> process() {
+        public BiFunction<KStream<String, Long>, KTable<String, String>, KStream<String, Long>> processClicks() {
             return (userClicksStream, userRegionsTable) -> userClicksStream
                     .leftJoin(userRegionsTable,
                             (clicks, region) -> new RegionWithClicks(region == null ? "UNKNOWN" : region, clicks),
@@ -31,31 +33,6 @@ public class KafkaStreamsGlobalKTableJoin {
                     .groupByKey(Grouped.with(Serdes.String(), Serdes.Long()))
                     .reduce(Long::sum)
                     .toStream();
-        }
-    }
-
-    private static final class RegionWithClicks {
-
-        private final String region;
-        private final long clicks;
-
-        public RegionWithClicks(String region, long clicks) {
-            if (region == null || region.isEmpty()) {
-                throw new IllegalArgumentException("region must be set");
-            }
-            if (clicks < 0) {
-                throw new IllegalArgumentException("clicks must not be negative");
-            }
-            this.region = region;
-            this.clicks = clicks;
-        }
-
-        public String getRegion() {
-            return region;
-        }
-
-        public long getClicks() {
-            return clicks;
         }
 
     }
