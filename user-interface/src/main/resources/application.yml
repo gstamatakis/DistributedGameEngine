@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://192.168.1.6:3306/uidb
+    url: jdbc:mysql://192.168.1.100:3306/uidb
     username: user1
     password: password1
   tomcat:
@@ -19,7 +19,7 @@ spring:
           new_generator_mappings: false
 
 redis:
-  host: 192.168.1.6
+  host: 192.168.1.100
   port: 6379
   pass:
   enc_key: dkdi38393kd

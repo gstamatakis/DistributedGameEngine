@@ -66,6 +66,10 @@ Remove all unused images
 
     docker image prune -f
     
+Remove all dangling images (none tags)
+    
+    docker rmi $(docker images -aq --filter dangling=true)
+
 
 Stop and remove all containers
 
@@ -92,6 +96,10 @@ Push something
 
     make build 
     make push
+    
+Remove the registry
+
+    docker service rm registry
     
 
 # Sources

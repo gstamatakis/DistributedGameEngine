@@ -1,7 +1,25 @@
 version: '3.5'
 services:
+
+  registry:
+    image: registry:2
+    networks:
+      - swarm_net
+    ports:
+      - 5000:5000
+    deploy:
+      mode: global
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        window: 120s
+
   mysql1:
-    image: localhost:5000/dge/mysql:1.0
+    image: 127.0.0.1:5000/dge/mysql:latest
     networks:
       - swarm_net
     environment:
@@ -22,13 +40,14 @@ services:
         delay: 60s
       restart_policy:
         condition: on-failure
-        max_attempts: 5
+        delay: 5s
+        window: 120s
       placement:
         constraints:
           - node.labels.mysql == true
 
   mysql2:
-    image: localhost:5000/dge/mysql:1.0
+    image: 127.0.0.1:5000/dge/mysql:latest
     networks:
       - swarm_net
     environment:
@@ -47,13 +66,14 @@ services:
         delay: 60s
       restart_policy:
         condition: on-failure
-        max_attempts: 5
+        delay: 5s
+        window: 120s
       placement:
         constraints:
           - node.labels.mysql == true
 
   mysqlfailover:
-    image: localhost:5000/dge/mysql-failover:1.0
+    image: 127.0.0.1:5000/dge/mysql-failover:latest
     networks:
       - swarm_net
     environment:
@@ -70,14 +90,15 @@ services:
         parallelism: 1
         delay: 60s
       restart_policy:
-        condition: none
-        max_attempts: 5
+        condition: on-failure
+        delay: 5s
+        window: 120s
       placement:
         constraints:
           - node.labels.mysql == true
 
   mysqlrouter:
-    image: localhost:5000/dge/mysql-router:1.0
+    image: 127.0.0.1:5000/dge/mysql-router:latest
     ports:
       - 3306:3306
     networks:
@@ -98,13 +119,14 @@ services:
         delay: 60s
       restart_policy:
         condition: on-failure
-        max_attempts: 5
+        delay: 5s
+        window: 120s
       placement:
         constraints:
           - node.labels.mysql == true
 
   redis-master:
-    image: localhost:5000/dge/redis:1.0
+    image: 127.0.0.1:5000/dge/redis:latest
     ports:
       - 6379:6379
     deploy:
@@ -119,11 +141,13 @@ services:
           - node.labels.redis-master == true
       restart_policy:
         condition: on-failure
+        delay: 5s
+        window: 120s
     networks:
       - swarm_net
 
   redis-slave:
-    image: localhost:5000/dge/redis:1.0
+    image: 127.0.0.1:5000/dge/redis:latest
     command: --slaveof redis-master 6379
     depends_on:
       - redis-master
@@ -139,11 +163,13 @@ services:
           - node.labels.redis-replica == true
       restart_policy:
         condition: on-failure
+        delay: 5s
+        window: 120s
     networks:
       - swarm_net
 
   redis-sentinel:
-    image: localhost:5000/dge/redis-sentinel:5
+    image: 127.0.0.1:5000/dge/redis-sentinel:latest
     depends_on:
       - redis-master
     deploy:
@@ -158,13 +184,15 @@ services:
           - node.labels.redis-sentinel == true
       restart_policy:
         condition: on-failure
+        delay: 5s
+        window: 120s
     environment:
       - "SENTINEL_MASTER_IP=redis-master"
     networks:
       - swarm_net
 
   zookeeper:
-    image: localhost:5000/dge/zookeeper:1.0
+    image: 127.0.0.1:5000/dge/zookeeper:latest
     ports:
       - 2181:2181
     depends_on:
@@ -180,11 +208,13 @@ services:
           - node.labels.zookeeper == true
       restart_policy:
         condition: on-failure
+        delay: 5s
+        window: 120s
     networks:
       - swarm_net
 
   kafka1:
-    image: localhost:5000/dge/kafka:1.0
+    image: 127.0.0.1:5000/dge/kafka:latest
     ports:
       - 9094:9094
     environment:
@@ -198,7 +228,7 @@ services:
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://192.168.1.6:9094
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://127.0.0.1:9094
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       KAFKA_LOG_RETENTION_BYTES: 100048576
       KAFKA_LOG_RETENTION_DAYS: 1
@@ -207,17 +237,19 @@ services:
       resources:
         limits:
           cpus: '1'
-          memory: 1g
+          memory: 512M
       placement:
         constraints:
           - node.labels.kafka == true
       restart_policy:
         condition: on-failure
+        delay: 5s
+        window: 120s
     networks:
       - swarm_net
 
   kafka2:
-    image: localhost:5000/dge/kafka:1.0
+    image: 127.0.0.1:5000/dge/kafka:latest
     ports:
       - 9095:9095
     environment:
@@ -231,7 +263,7 @@ services:
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9095
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://192.168.1.6:9095
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://127.0.0.1:9095
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       KAFKA_LOG_RETENTION_BYTES: 100048576
       KAFKA_LOG_RETENTION_DAYS: 1
@@ -240,17 +272,19 @@ services:
       resources:
         limits:
           cpus: '1'
-          memory: 1g
+          memory: 512M
       placement:
         constraints:
           - node.labels.kafka == true
       restart_policy:
         condition: on-failure
+        delay: 5s
+        window: 120s
     networks:
       - swarm_net
 
   kafka3:
-    image: localhost:5000/dge/kafka:1.0
+    image: 127.0.0.1:5000/dge/kafka:latest
     ports:
       - 9096:9096
     environment:
@@ -264,7 +298,7 @@ services:
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9096
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://192.168.1.6:9096
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://127.0.0.1:9096
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       KAFKA_LOG_RETENTION_BYTES: 100048576
       KAFKA_LOG_RETENTION_DAYS: 1
@@ -273,39 +307,20 @@ services:
       resources:
         limits:
           cpus: '1'
-          memory: 1g
+          memory: 512M
       placement:
         constraints:
           - node.labels.kafka == true
       restart_policy:
         condition: on-failure
+        delay: 5s
+        window: 120s
     networks:
       - swarm_net
 
 
   game-master:
-    image: localhost:5000/dge/game-master:1.0
-    ports:
-      - 8082:8082
-    depends_on:
-      - mysqlrouter
-      - kafka
-    deploy:
-      replicas: 1
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-      placement:
-        constraints:
-          - node.labels.spring == true
-      restart_policy:
-        condition: on-failure
-    networks:
-      - swarm_net
-
-  play-master:
-    image: localhost:5000/dge/play-master:1.0
+    image: 127.0.0.1:5000/dge/game-master:latest
     ports:
       - 8081:8081
     depends_on:
@@ -316,17 +331,42 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 256M
+          memory: 512M
       placement:
         constraints:
           - node.labels.spring == true
       restart_policy:
         condition: on-failure
+        delay: 5s
+        window: 120s
+    networks:
+      - swarm_net
+
+  play-master:
+    image: 127.0.0.1:5000/dge/play-master:latest
+    ports:
+      - 8082:8082
+    depends_on:
+      - mysqlrouter
+      - kafka
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      placement:
+        constraints:
+          - node.labels.spring == true
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        window: 120s
     networks:
       - swarm_net
 
   user-interface:
-    image: localhost:5000/dge/user-interface:1.0
+    image: 127.0.0.1:5000/dge/user-interface:latest
     ports:
       - 8080:8080
     depends_on:
@@ -337,12 +377,14 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 256M
+          memory: 512M
       placement:
         constraints:
           - node.labels.spring == true
       restart_policy:
         condition: on-failure
+        delay: 5s
+        window: 120s
     networks:
       - swarm_net
 

@@ -1,7 +1,7 @@
 from kafka import KafkaAdminClient
 from kafka.admin import NewTopic
 
-admin_client = KafkaAdminClient(bootstrap_servers=['192.168.1.6:9094', '192.168.1.6:9095', '192.168.1.6:9096'],
+admin_client = KafkaAdminClient(bootstrap_servers=['127.0.0.1:9094', '127.0.0.1:9095', '127.0.0.1:9096'],
                                 client_id='test')
 
 topic_list = []

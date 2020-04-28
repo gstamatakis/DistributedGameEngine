@@ -15,7 +15,7 @@ spring.cloud.stream:
 
   kafka:
     binder:
-      brokers: 192.168.1.6:9094,192.168.1.6:9095,192.168.1.6:9096
+      brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
     producer-group-id: g1
     consumer-group-id: g1
     streams.binder:

@@ -4,7 +4,7 @@ import time
 from kafka import KafkaProducer
 
 print('above producer')
-producer = KafkaProducer(bootstrap_servers=['192.168.1.6:9094', '192.168.1.6:9095', '192.168.1.6:9096'],
+producer = KafkaProducer(bootstrap_servers=['127.0.0.1:9094', '127.0.0.1:9095', '127.0.0.1:9096'],
                          key_serializer=lambda v: json.dumps(v).encode('utf-8'),
                          value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
