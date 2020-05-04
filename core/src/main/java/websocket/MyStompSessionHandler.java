@@ -1,4 +1,4 @@
-package ui.websocket;
+package websocket;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,7 +6,6 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandler;
-import websocket.OutputMessage;
 
 import java.lang.reflect.Type;
 import java.util.List;

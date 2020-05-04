@@ -6,6 +6,7 @@ import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import websocket.Message;
+import websocket.MyStompSessionHandler;
 
 import java.util.ArrayList;
 import java.util.List;
