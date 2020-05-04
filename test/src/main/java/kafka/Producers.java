@@ -14,7 +14,7 @@ public class Producers {
     public static void main(String... args) {
         Random rng = new Random(0);
         Map<String, Object> props = new HashMap<>();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Arrays.asList("localhost:9094", "localhost:9095", "localhost:9096"));
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Arrays.asList("127.0.0.1:9094", "127.0.0.1:9095", "127.0.0.1:9096"));
         props.put(ProducerConfig.RETRIES_CONFIG, 0);
         props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
         props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
@@ -36,7 +36,7 @@ public class Producers {
                 new KeyValue<>("", "9")
         );
         KafkaTemplate<String, String> defTemplate = new KafkaTemplate<>(pf, true);
-        defTemplate.setDefaultTopic("game-state");
+        defTemplate.setDefaultTopic("kafka-chat");
         for (KeyValue<String, String> defaultAction : defaultActions) {
             defTemplate.sendDefault(defaultAction.key, defaultAction.value);
         }

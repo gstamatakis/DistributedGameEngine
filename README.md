@@ -103,11 +103,16 @@ Remove the registry
     
 
 # Sources
+
 ### Authentication
 
     https://blog.ngopal.com.np/2017/10/10/spring-boot-with-jwt-authentication-using-redis/
 
     https://medium.com/@xoor/jwt-authentication-service-44658409e12c
+    
+### STOMP
+
+    https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#websocket-stomp-message-flow
     
 ### Kafka
 
