@@ -6,7 +6,7 @@ import javax.persistence.*;
 import javax.validation.constraints.Size;
 
 @Entity
-public class User {
+public class UserEntity {
 
     Role role;
     @Id

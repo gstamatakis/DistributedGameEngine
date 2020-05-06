@@ -1,6 +1,6 @@
 package ui.security;
 
-import ui.model.User;
+import ui.model.UserEntity;
 import ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,7 +16,7 @@ public class MyUserDetails implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        final User user = userRepository.findByUsername(username);
+        final UserEntity user = userRepository.findByUsername(username);
 
         if (user == null) {
             throw new UsernameNotFoundException("User '" + username + "' not found");

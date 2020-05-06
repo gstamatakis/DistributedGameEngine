@@ -1,4 +1,4 @@
-package kafka.message;
+package message;
 
 public class PlayerAction {
     String player;

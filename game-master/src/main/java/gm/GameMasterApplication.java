@@ -1,6 +1,8 @@
 package gm;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -8,7 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 
 @SpringBootApplication
 @EnableWebSecurity
-public class GameMasterApplication {
+public class GameMasterApplication implements ApplicationRunner {
     @Bean
     public ModelMapper modelMapper() {
         return new ModelMapper();
@@ -16,5 +18,10 @@ public class GameMasterApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(GameMasterApplication.class, args);
+    }
+
+    @Override
+    public void run(ApplicationArguments args) {
+
     }
 }

@@ -8,7 +8,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import ui.model.User;
+import ui.model.UserEntity;
 import ui.repository.UserRepository;
 import ui.security.JwtTokenProvider;
 
@@ -38,7 +38,7 @@ public class UserService {
         }
     }
 
-    public String signup(User user) {
+    public String signup(UserEntity user) {
         if (!userRepository.existsByUsername(user.getUsername())) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             userRepository.save(user);
@@ -52,20 +52,19 @@ public class UserService {
         userRepository.deleteByUsername(username);
     }
 
-    public User search(String username) {
-        User user = userRepository.findByUsername(username);
+    public UserEntity search(String username) {
+        UserEntity user = userRepository.findByUsername(username);
         if (user == null) {
             throw new CustomException("The user doesn't exist", HttpStatus.NOT_FOUND);
         }
         return user;
     }
 
-    public User whoami(HttpServletRequest req) {
+    public UserEntity whoami(HttpServletRequest req) {
         return userRepository.findByUsername(jwtTokenProvider.getUsername(jwtTokenProvider.resolveToken(req)));
     }
 
     public String refresh(String username) {
         return jwtTokenProvider.createToken(username, userRepository.findByUsername(username).getRole());
     }
-
 }

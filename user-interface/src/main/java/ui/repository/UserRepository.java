@@ -1,15 +1,15 @@
 package ui.repository;
 
-import ui.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import ui.model.UserEntity;
 
 import javax.transaction.Transactional;
 
-public interface UserRepository extends JpaRepository<User, Integer> {
+public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 
     boolean existsByUsername(String username);
 
-    User findByUsername(String username);
+    UserEntity findByUsername(String username);
 
     @Transactional
     void deleteByUsername(String username);

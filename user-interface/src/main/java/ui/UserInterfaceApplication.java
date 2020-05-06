@@ -7,7 +7,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import model.Role;
-import ui.model.User;
+import ui.model.UserEntity;
 import ui.service.UserService;
 
 @SpringBootApplication
@@ -28,14 +28,14 @@ public class UserInterfaceApplication implements CommandLineRunner {
     @Override
     public void run(String... params) {
         //Register 2 important users
-        User admin = new User();
+        UserEntity admin = new UserEntity();
         admin.setUsername("admin");
         admin.setPassword("admin");
         admin.setEmail("admin@email.com");
         admin.setRole(Role.ROLE_ADMIN);
         userService.signup(admin);
 
-        User client = new User();
+        UserEntity client = new UserEntity();
         client.setUsername("client");
         client.setPassword("client");
         client.setEmail("client@email.com");

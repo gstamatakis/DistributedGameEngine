@@ -1,6 +1,6 @@
-package kafka;
+package ui.kafka;
 
-import kafka.message.RegionWithClicks;
+
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.Grouped;
@@ -12,6 +12,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.stream.binder.kafka.streams.InteractiveQueryService;
 import org.springframework.context.annotation.Bean;
+import message.RegionWithClicks;
 
 import java.util.function.BiFunction;
 

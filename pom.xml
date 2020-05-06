@@ -22,7 +22,6 @@
         <module>play-master</module>
         <module>game-master</module>
         <module>core</module>
-        <module>test</module>
         <module>client</module>
     </modules>
 

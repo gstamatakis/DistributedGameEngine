@@ -1,27 +1,37 @@
 package ui.controller;
 
-import io.swagger.annotations.*;
 import dto.UserDataDTO;
 import dto.UserResponseDTO;
-import ui.model.User;
-import ui.service.UserService;
+import exception.CustomException;
+import io.swagger.annotations.*;
+import message.UserJoinQueueMessage;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
+import ui.model.UserEntity;
+import ui.service.UserService;
 
 import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/users")
 @Api(tags = "users")
-public class UIController {
+public class UserController {
 
     @Autowired
     private UserService userService;
 
     @Autowired
     private ModelMapper modelMapper;
+
+    @ExceptionHandler({CustomException.class})
+    public ResponseEntity<String> handleConflict(CustomException ex, WebRequest request) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+    }
 
     @PostMapping("/signin")
     @ApiOperation(value = "${UserController.signin}")
@@ -42,7 +52,7 @@ public class UIController {
             @ApiResponse(code = 422, message = "Username is already in use"),
             @ApiResponse(code = 500, message = "Expired or invalid JWT token")})
     public String signup(@ApiParam("Signup User") @RequestBody UserDataDTO user) {
-        return userService.signup(modelMapper.map(user, User.class));
+        return userService.signup(modelMapper.map(user, UserEntity.class));
     }
 
     @DeleteMapping(value = "/{username}")

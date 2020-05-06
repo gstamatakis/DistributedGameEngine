@@ -1,4 +1,4 @@
-package kafka.config;
+package ui.kafka;
 
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -16,12 +16,8 @@ public class KafkaTopicConfig {
     @Value(value = "${spring.cloud.stream.kafka.binder.brokers}")
     private String bootstrapAddress;
 
-    @Value(value = "${deployment.max-parallelism}")
-    private int defaultTopicPartitions;
-
-    @Value(value = "${deployment.replication}")
-    private short defaultReplication;
-
+    @Value(value = "${spring.cloud.stream.kafka.binder.replication-factor}")
+    private short replicationFactor;
 
     @Bean
     public KafkaAdmin kafkaAdmin() {
@@ -30,10 +26,15 @@ public class KafkaTopicConfig {
         return new KafkaAdmin(configs);
     }
 
+
+    //String name, int numPartitions, short replicationFactor
     @Bean
-    public NewTopic topicPlayerActions() {
-        return new NewTopic("player-actions", defaultTopicPartitions, defaultReplication);
+    public NewTopic practiceQueueTopic() {
+        return new NewTopic("practice", 1, replicationFactor);
     }
 
-
+    @Bean
+    public NewTopic tournamentQueueTopic() {
+        return new NewTopic("tournament", 1, replicationFactor);
+    }
 }
