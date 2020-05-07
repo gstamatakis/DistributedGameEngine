@@ -1,9 +1,7 @@
-package ui.kafka;
+package gm.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +19,7 @@ public class KafkaConsumerConfig {
     @Value(value = "${spring.cloud.stream.kafka.binder.brokers}")
     private String bootstrapAddress;
 
-    private final String consumerGroupId = "uiCG";
+    private String consumerGroupId = "gmCG";
 
     @Bean
     public Map<String, Object> consumerConfigs() {

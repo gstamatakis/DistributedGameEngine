@@ -1,4 +1,4 @@
-package ui.kafka;
+package gm.kafka;
 
 import message.UserJoinQueueMessage;
 import org.apache.kafka.clients.producer.ProducerConfig;

@@ -59,6 +59,7 @@ public class GameClient {
 
         //User token
         String token = "";
+        String username = "";
 
         while (true) {
             try {
@@ -86,6 +87,7 @@ public class GameClient {
                         System.out.print("Enter username, password, email and role (separated with spaces): ");
                         Map<String, String> signupParams = new LinkedHashMap<>();
                         signupParams.put("username", scanner.next());
+                        username = signupParams.get("username");
                         signupParams.put("password", scanner.next());
                         signupParams.put("email", scanner.next());
                         signupParams.put("role", scanner.next());
@@ -128,7 +130,7 @@ public class GameClient {
                     case 3:
                         //Arguments
                         System.out.print("Queueing up for a practice play.");
-                        UserJoinQueueMessage message = new UserJoinQueueMessage();
+                        UserJoinQueueMessage message = new UserJoinQueueMessage(username);
 
                         //Queue up
                         HttpEntity<String> practiceResponse;
@@ -138,13 +140,14 @@ public class GameClient {
                             System.out.println(e.getMessage());
                             break;
                         }
+                        System.out.println(practiceResponse.getBody());
 
                         //Start
                         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
                         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
                         List<String> subs = new ArrayList<>();
                         subs.add("/topic/messages");
-                        StompSession stompSession = null;
+                        StompSession stompSession;
                         try {
                             stompSession = stompClient.connect("ws://localhost:8080/chat", new MyStompSessionHandler(subs)).get();
                         } catch (Exception e) {

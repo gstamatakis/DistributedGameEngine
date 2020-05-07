@@ -14,8 +14,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
+import java.util.Random;
+
 @Service
 public class KafkaService {
+    private final String practiceTopic = "practice";
+    private final String practicePairedTopic = "practice-paired";
+    private final Random random = new Random();
 
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
@@ -23,14 +28,28 @@ public class KafkaService {
     @Autowired
     private KafkaTemplate<String, UserJoinQueueMessage> kafkaJoinQueueTemplate;
 
+    public void enqueuePractice(UserJoinQueueMessage message) {
+        ListenableFuture<SendResult<String, UserJoinQueueMessage>> future = kafkaJoinQueueTemplate.send(practiceTopic, String.valueOf(random.nextInt(3)), message);
+        future.addCallback(new ListenableFutureCallback<SendResult<String, UserJoinQueueMessage>>() {
+
+            @Override
+            public void onSuccess(SendResult<String, UserJoinQueueMessage> result) {
+                System.out.println("Sent message=[" + message + "] with offset=[" + result.getRecordMetadata().offset() + "]");
+            }
+
+            @Override
+            public void onFailure(Throwable ex) {
+                System.out.println("Unable to send message=[" + message + "] due to : " + ex.getMessage());
+            }
+        });
+    }
+
     //Listeners
-//    @KafkaListener(topics = "topicName")
-//    public void listenWithHeaders(
-//            @Payload String message,
-//            @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
-//        System.out.println("Received Message: " + message + "from partition: " + partition);
-//    }
-//
+    @KafkaListener(topics = practicePairedTopic)
+    public void listenWithHeaders(@Payload String message, @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
+        System.out.println("Received Message: " + message + "from partition: " + partition);
+    }
+
 //    @KafkaListener(topicPartitions = @TopicPartition(topic = "topicName",
 //            partitionOffsets = {
 //                    @PartitionOffset(partition = "0", initialOffset = "0"),
@@ -42,13 +61,7 @@ public class KafkaService {
 //        System.out.println("Received Message: " + message + "from partition: " + partition);
 //    }
 
-    //Public methods
-    public void enqueuePractice(UserJoinQueueMessage joinQueueMessage) {
-
-    }
-
-    //COM methods
-    private void sendMessage(String message, String topicName) {
+    public void sendMessage(String message, String topicName) {
         ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(topicName, message);
         future.addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
 
@@ -63,20 +76,4 @@ public class KafkaService {
             }
         });
     }
-
-    private void sendMessage(UserJoinQueueMessage message, String topicName) {
-        ListenableFuture<SendResult<String, UserJoinQueueMessage>> future = kafkaJoinQueueTemplate.send(topicName, message);
-        future.addCallback(new ListenableFutureCallback<SendResult<String, UserJoinQueueMessage>>() {
-            @Override
-            public void onSuccess(SendResult<String, UserJoinQueueMessage> result) {
-                System.out.println("Sent message=[" + message + "] with offset=[" + result.getRecordMetadata().offset() + "]");
-            }
-
-            @Override
-            public void onFailure(Throwable ex) {
-                System.out.println("Unable to send message=[" + message + "] due to : " + ex.getMessage());
-            }
-        });
-    }
-
 }

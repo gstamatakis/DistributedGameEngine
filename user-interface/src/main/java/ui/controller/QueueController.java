@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.WebRequest;
 import ui.service.KafkaService;
 
@@ -18,6 +19,8 @@ import ui.service.KafkaService;
 @RequestMapping("/queue")
 @Api(tags = "queue")
 public class QueueController {
+
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @Autowired
     private KafkaService kafkaService;
@@ -33,7 +36,8 @@ public class QueueController {
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Something went wrong"),
             @ApiResponse(code = 422, message = "Invalid username/password supplied")})
-    public String practice(@RequestBody UserJoinQueueMessage joinQueueMessage) {
+    public ResponseEntity<String> practice(@RequestBody UserJoinQueueMessage joinQueueMessage) {
         kafkaService.enqueuePractice(joinQueueMessage);
+        return new ResponseEntity<>("OK", HttpStatus.OK);
     }
 }

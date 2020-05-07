@@ -1,4 +1,4 @@
-package ui.websocket;
+package ui.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;

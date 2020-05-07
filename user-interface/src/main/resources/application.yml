@@ -18,24 +18,15 @@ spring:
         id:
           new_generator_mappings: false
   cloud.stream:
-    bindings:
-      playerActions-in-0:
-        destination: p1-actions
-      playerActions-in-1:
-        destination: game-state
-      playerActions-out-0:
-        destination: ---
     kafka:
       binder:
         brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
         replication-factor: 3
-      producer-group-id: g1
-      consumer-group-id: g1
-      streams.binder:
-        configuration:
-          default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-          default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-          commit.interval.ms: 1000
+
+secets:
+  ui-token: token_ui
+  gm-token: token_gm
+  pm-token: token_pm
 
 redis:
   host: 192.168.1.100

@@ -26,7 +26,6 @@ public class KafkaTopicConfig {
         return new KafkaAdmin(configs);
     }
 
-
     //String name, int numPartitions, short replicationFactor
     @Bean
     public NewTopic practiceQueueTopic() {
@@ -34,7 +33,17 @@ public class KafkaTopicConfig {
     }
 
     @Bean
+    public NewTopic practiceQueuePairedTopic() {
+        return new NewTopic("practice-paired", 1, replicationFactor);
+    }
+
+    @Bean
     public NewTopic tournamentQueueTopic() {
         return new NewTopic("tournament", 1, replicationFactor);
+    }
+
+    @Bean
+    public NewTopic tournamentQueuePairedTopic() {
+        return new NewTopic("tournament-paired", 1, replicationFactor);
     }
 }

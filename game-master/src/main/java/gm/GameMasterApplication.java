@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 @SpringBootApplication
 @EnableWebSecurity
 public class GameMasterApplication implements ApplicationRunner {
+
     @Bean
     public ModelMapper modelMapper() {
         return new ModelMapper();
