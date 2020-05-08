@@ -27,20 +27,29 @@ Set the redis flags
     docker node update --label-add spring=true docker-desktop
     docker node update --label-add kafka=true docker-desktop
     docker node update --label-add zookeeper=true docker-desktop
+    docker node update --label-add mysql=true docker-desktop
 
 
-Deploy the stack
+Deploy the FULL stack
 
-    docker stack deploy -c docker-compose.yml dge
+    docker stack deploy -c swarm.yml dge
+
     
-    
+Deploy just the Databases and Kafka (useful for testing)
+
+    docker stack deploy -c auxiliary.yml dge
+
     
 # Docker commands (run from PowerShell)
 
+Stop a deployed stack
+
+    docker stack rm dge
+    
+
 Update the service images 
 
-    docker service update --force spring
-    
+    docker service update --force dge_game-master
 
 
 Stop all services
@@ -57,6 +66,10 @@ Remove all unused images
 
     docker image prune -f
     
+Remove all dangling images (none tags)
+    
+    docker rmi $(docker images -aq --filter dangling=true)
+
 
 Stop and remove all containers
 
@@ -69,13 +82,42 @@ Remove all instances and containers
     docker rm -f $(docker ps -a -q)
     docker rmi -f $(docker images -q)
 
+# Registry
+
+Deploy a Docker registry so other nodes can access your images
+
+    docker service create --name registry --publish published=5000,target=5000 registry:2
+
+Verify that it works (should return '{}')
+
+    curl http://localhost:5000/v2/
+    
+Push something
+
+    make build 
+    make push
+    
+Remove the registry
+
+    docker service rm registry
+    
 
 # Sources
+
 ### Authentication
 
     https://blog.ngopal.com.np/2017/10/10/spring-boot-with-jwt-authentication-using-redis/
 
+    https://medium.com/@xoor/jwt-authentication-service-44658409e12c
+    
+### STOMP
 
+    https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#websocket-stomp-message-flow
+    
 ### Kafka
 
     https://github.com/wurstmeister/kafka-docker
+    
+### MySQL
+
+    https://github.com/robinong79/docker-swarm-mysql-masterslave-failover
