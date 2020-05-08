@@ -9,6 +9,7 @@ The following instruction can be used to deploy the entire application in a Dock
 Swarm environment. The following steps assume that the path is at the top-level
 directory of the project (same as this README).
 
+
 Build the project
     
     mvn clean package 
