@@ -1,4 +1,5 @@
 package game;
 
-public interface GameType {
+public enum GameType {
+    TIC_TAC_TOE, CHESS
 }

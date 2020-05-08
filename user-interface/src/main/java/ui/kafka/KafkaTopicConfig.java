@@ -5,12 +5,15 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.kafka.core.KafkaAdmin;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@Order(Ordered.HIGHEST_PRECEDENCE + 1000)
 public class KafkaTopicConfig {
 
     @Value(value = "${spring.cloud.stream.kafka.binder.brokers}")
@@ -28,22 +31,12 @@ public class KafkaTopicConfig {
 
     //String name, int numPartitions, short replicationFactor
     @Bean
-    public NewTopic practiceQueueTopic() {
-        return new NewTopic("practice", 1, replicationFactor);
+    public NewTopic playsTopic() {
+        return new NewTopic("plays", 1, replicationFactor);
     }
 
     @Bean
-    public NewTopic practiceQueuePairedTopic() {
-        return new NewTopic("practice-paired", 1, replicationFactor);
-    }
-
-    @Bean
-    public NewTopic tournamentQueueTopic() {
-        return new NewTopic("tournament", 1, replicationFactor);
-    }
-
-    @Bean
-    public NewTopic tournamentQueuePairedTopic() {
-        return new NewTopic("tournament-paired", 1, replicationFactor);
+    public NewTopic joinPlayTopic() {
+        return new NewTopic("join-play", 1, replicationFactor);
     }
 }

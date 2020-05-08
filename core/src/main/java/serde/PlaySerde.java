@@ -1,34 +1,34 @@
 package serde;
 
 import com.google.gson.Gson;
-import message.PracticePlayMessage;
+import message.PlayMessage;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serializer;
 
 import java.util.Map;
 
-public class PracticePlaySerde implements Serde<PracticePlayMessage>, Serializer<PracticePlayMessage>, Deserializer<PracticePlayMessage> {
+public class PlaySerde implements Serde<PlayMessage>, Serializer<PlayMessage>, Deserializer<PlayMessage> {
     static private Gson gson = new Gson();
 
     @Override
-    public Serializer<PracticePlayMessage> serializer() {
+    public Serializer<PlayMessage> serializer() {
         return (topic, data) -> gson.toJson(data).getBytes();
     }
 
     @Override
-    public Deserializer<PracticePlayMessage> deserializer() {
-        return ((topic, data) -> gson.fromJson(new String(data), PracticePlayMessage.class));
+    public Deserializer<PlayMessage> deserializer() {
+        return ((topic, data) -> gson.fromJson(new String(data), PlayMessage.class));
     }
 
     @Override
-    public byte[] serialize(String topic, PracticePlayMessage data) {
+    public byte[] serialize(String topic, PlayMessage data) {
         return gson.toJson(data).getBytes();
     }
 
     @Override
-    public PracticePlayMessage deserialize(String topic, byte[] data) {
-        return gson.fromJson(new String(data), PracticePlayMessage.class);
+    public PlayMessage deserialize(String topic, byte[] data) {
+        return gson.fromJson(new String(data), PlayMessage.class);
     }
 
     @Override

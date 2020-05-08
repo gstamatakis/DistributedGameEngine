@@ -4,7 +4,6 @@ import dto.UserDataDTO;
 import dto.UserResponseDTO;
 import exception.CustomException;
 import io.swagger.annotations.*;
-import message.UserJoinQueueMessage;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

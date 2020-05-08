@@ -15,13 +15,9 @@ spring:
   cloud.stream:
     bindings:
       processUsersJoinGame-in-0:
-        destination: practice
-        consumer:
-          valueSerde: serde.UserJoinQueueSerde
+        destination: join-play
       processUsersJoinGame-out-0:
-        destination: practice-paired
-        producer:
-          valueSerde: serder.PracticePlaySerde
+        destination: plays
     kafka:
       binder:
         brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096

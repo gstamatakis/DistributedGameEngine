@@ -1,6 +1,8 @@
 package main;
 
-import message.UserJoinQueueMessage;
+import game.GameType;
+import game.PlayType;
+import message.JoinPlayMessage;
 import org.apache.commons.cli.*;
 import org.springframework.http.HttpEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
@@ -129,18 +131,22 @@ public class GameClient {
 
                     case 3:
                         //Arguments
-                        System.out.print("Queueing up for a practice play.");
-                        UserJoinQueueMessage message = new UserJoinQueueMessage(username);
+                        System.out.print("Queueing up for a practice play. Enter preferred game type: ");
+                        GameType gameType = GameType.valueOf(scanner.next());
 
                         //Queue up
                         HttpEntity<String> practiceResponse;
                         try {
-                            practiceResponse = client.practice(PRACTICE_URL, token, message);
+                            practiceResponse = client.practice(PRACTICE_URL, token, gameType);
                         } catch (Exception e) {
                             System.out.println(e.getMessage());
                             break;
                         }
                         System.out.println(practiceResponse.getBody());
+
+                        if (1==1){
+                            System.exit(9);
+                        }
 
                         //Start
                         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());

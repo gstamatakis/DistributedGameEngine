@@ -1,34 +1,34 @@
 package serde;
 
 import com.google.gson.Gson;
-import message.UserJoinQueueMessage;
+import message.JoinPlayMessage;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serializer;
 
 import java.util.Map;
 
-public class UserJoinQueueSerde implements Serde<UserJoinQueueMessage>, Serializer<UserJoinQueueMessage>, Deserializer<UserJoinQueueMessage> {
+public class JoinPlaySerde implements Serde<JoinPlayMessage>, Serializer<JoinPlayMessage>, Deserializer<JoinPlayMessage> {
     static private Gson gson = new Gson();
 
     @Override
-    public Serializer<UserJoinQueueMessage> serializer() {
+    public Serializer<JoinPlayMessage> serializer() {
         return this;
     }
 
     @Override
-    public Deserializer<UserJoinQueueMessage> deserializer() {
+    public Deserializer<JoinPlayMessage> deserializer() {
         return this;
     }
 
     @Override
-    public byte[] serialize(String topic, UserJoinQueueMessage data) {
+    public byte[] serialize(String topic, JoinPlayMessage data) {
         return gson.toJson(data).getBytes();
     }
 
     @Override
-    public UserJoinQueueMessage deserialize(String topic, byte[] data) {
-        return gson.fromJson(new String(data), UserJoinQueueMessage.class);
+    public JoinPlayMessage deserialize(String topic, byte[] data) {
+        return gson.fromJson(new String(data), JoinPlayMessage.class);
     }
 
     @Override

@@ -2,8 +2,8 @@ package main;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import message.UserJoinQueueMessage;
+import game.GameType;
+import message.JoinPlayMessage;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -62,7 +62,7 @@ public class RESTClient {
         return restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
     }
 
-    public HttpEntity<String> practice(String practiceURL, String token, UserJoinQueueMessage message) throws JsonProcessingException {
+    public HttpEntity<String> practice(String practiceURL, String token, GameType gameType) {
         //Headers
         HttpHeaders headers = new HttpHeaders();
         headers.setCacheControl(CacheControl.noCache());
@@ -70,10 +70,10 @@ public class RESTClient {
         headers.setBearerAuth(token);
 
         //Entity = Headers + Arguments
-        HttpEntity<Object> entity = new HttpEntity<>(message, headers);
+        HttpEntity<Object> entity = new HttpEntity<>(headers);
 
         //Response = executed entity
-        return restTemplate.exchange(practiceURL, HttpMethod.POST, entity, String.class);
+        return restTemplate.exchange(practiceURL + "/" + gameType.toString(), HttpMethod.POST, entity, String.class);
     }
 
     public HttpEntity<String> search(String searchUrl, String usernameToSearch, String token) {
