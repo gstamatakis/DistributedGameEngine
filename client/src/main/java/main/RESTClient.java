@@ -3,7 +3,8 @@ package main;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import game.GameType;
-import message.JoinPlayMessage;
+import message.PlayTypeMessage;
+import message.requests.RequestPracticeMessage;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -62,18 +63,20 @@ public class RESTClient {
         return restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
     }
 
-    public HttpEntity<String> practice(String practiceURL, String token, GameType gameType) {
+    public HttpEntity<String> practice(String practiceURL, String token, GameType gameType, String username) {
         //Headers
         HttpHeaders headers = new HttpHeaders();
         headers.setCacheControl(CacheControl.noCache());
         headers.add("user-agent", USER_AGENT);
         headers.setBearerAuth(token);
 
+        PlayTypeMessage msg = new RequestPracticeMessage(username, gameType);
+
         //Entity = Headers + Arguments
-        HttpEntity<Object> entity = new HttpEntity<>(headers);
+        HttpEntity<Object> entity = new HttpEntity<>(msg, headers);
 
         //Response = executed entity
-        return restTemplate.exchange(practiceURL + "/" + gameType.toString(), HttpMethod.POST, entity, String.class);
+        return restTemplate.exchange(practiceURL, HttpMethod.POST, entity, String.class);
     }
 
     public HttpEntity<String> search(String searchUrl, String usernameToSearch, String token) {

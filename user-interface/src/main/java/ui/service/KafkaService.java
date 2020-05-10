@@ -2,9 +2,15 @@ package ui.service;
 
 import com.google.gson.Gson;
 import game.GameType;
-import game.PlayType;
-import message.JoinPlayMessage;
-import message.PlayMessage;
+import message.DefaultKafkaMessage;
+import message.DefaultPlayMessage;
+import message.PlayTypeMessage;
+import message.created.PlayMessage;
+import message.queue.TournamentQueueMessage;
+import message.requests.RequestCreateTournamentMessage;
+import message.requests.RequestJoinTournamentMessage;
+import message.requests.RequestPracticeMessage;
+import message.queue.PracticeQueueMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -13,6 +19,8 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -23,51 +31,50 @@ public class KafkaService {
     private final String playsTopic = "plays";
     private final Gson gson = new Gson();
     private final long timeout = 5;
+    private final MessageDigest messageDigest;
 
     @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private KafkaTemplate<String, DefaultKafkaMessage> kafkaJoinQueueTemplate;
 
-    @Autowired
-    private KafkaTemplate<String, JoinPlayMessage> kafkaJoinQueueTemplate;
-
-    public void enqueuePractice(String username, GameType gt) throws InterruptedException, ExecutionException, TimeoutException {
-        //Create the message
-        JoinPlayMessage message = new JoinPlayMessage(username, PlayType.PRACTICE, gt, "");
-        //Send the message
-        kafkaJoinQueueTemplate.send(joinPlayTopic, username, message).get(timeout, TimeUnit.SECONDS);
+    public KafkaService() throws NoSuchAlgorithmException {
+        this.messageDigest = MessageDigest.getInstance("SHA-256");
     }
 
-    //Listeners
-    @KafkaListener(topics = playsTopic, groupId = "observer")
-    public void listenForNewPlays(@Payload String message, @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
+    public void enqueuePractice(String username, RequestPracticeMessage reqMsg) throws InterruptedException, ExecutionException, TimeoutException {
+        kafkaJoinQueueTemplate
+                .send(joinPlayTopic, username, new DefaultKafkaMessage(new PracticeQueueMessage(username, reqMsg)))
+                .get(timeout, TimeUnit.SECONDS);
+    }
+
+    //Create a tournament ID
+    //Use the tournament ID as the key
+    //TODO consider verifying uniqueness of tournament ID.
+    public String createTournament(String username, RequestCreateTournamentMessage reqMsg) throws InterruptedException, ExecutionException, TimeoutException {
+        //Create the tournamentID by hashing part of the input
+        messageDigest.reset();
+        messageDigest.update(String.format("%s_%s_%d", username, reqMsg.getGameType().toString(), System.nanoTime()).getBytes());
+        String tournamentID = new String(messageDigest.digest());
+
+        //Send the message
+        kafkaJoinQueueTemplate
+                .send(joinPlayTopic, tournamentID, new DefaultKafkaMessage(new RequestCreateTournamentMessage(username, reqMsg, tournamentID)))
+                .get(timeout, TimeUnit.SECONDS);
+
+        return tournamentID;
+    }
+
+    //Queue a user for a tournament
+    public void enqueueTournament(String username, RequestJoinTournamentMessage joinMsg) throws InterruptedException, ExecutionException, TimeoutException {
+        kafkaJoinQueueTemplate
+                .send(joinPlayTopic, username, new DefaultKafkaMessage(new TournamentQueueMessage(username, joinMsg)))
+                .get(timeout, TimeUnit.SECONDS);
+    }
+
+    @KafkaListener(topics = playsTopic, groupId = "observer", containerFactory = "containerFactoryWithRecovery")
+    public void listenForNewPlays(@Payload String message,
+                                  @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
+                                  @Header(KafkaHeaders.OFFSET) int offset) {
         PlayMessage newPlay = gson.fromJson(message, PlayMessage.class);
         System.out.println("Received Message: " + newPlay.toString() + "from partition: " + partition);
     }
-
-//    @KafkaListener(topicPartitions = @TopicPartition(topic = "topicName",
-//            partitionOffsets = {
-//                    @PartitionOffset(partition = "0", initialOffset = "0"),
-//                    @PartitionOffset(partition = "3", initialOffset = "0")
-//            }))
-//    public void listenToParition(
-//            @Payload String message,
-//            @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
-//        System.out.println("Received Message: " + message + "from partition: " + partition);
-//    }
-
-//    public void sendMessage(String message, String topicName) {
-//        ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(topicName, message);
-//        future.addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
-//
-//            @Override
-//            public void onSuccess(SendResult<String, String> result) {
-//                System.out.println("Sent message=[" + message + "] with offset=[" + result.getRecordMetadata().offset() + "]");
-//            }
-//
-//            @Override
-//            public void onFailure(Throwable ex) {
-//                System.out.println("Unable to send message=[" + message + "] due to : " + ex.getMessage());
-//            }
-//        });
-//    }
 }

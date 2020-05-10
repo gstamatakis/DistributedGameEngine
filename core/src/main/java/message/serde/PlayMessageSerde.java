@@ -1,15 +1,15 @@
-package serde;
+package message.serde;
 
 import com.google.gson.Gson;
-import message.PlayMessage;
+import message.created.PlayMessage;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serializer;
 
 import java.util.Map;
 
-public class PlaySerde implements Serde<PlayMessage>, Serializer<PlayMessage>, Deserializer<PlayMessage> {
-    static private Gson gson = new Gson();
+public class PlayMessageSerde implements Serde<PlayMessage>, Serializer<PlayMessage>, Deserializer<PlayMessage> {
+    private final Gson gson = new Gson();
 
     @Override
     public Serializer<PlayMessage> serializer() {

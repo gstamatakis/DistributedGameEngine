@@ -53,3 +53,5 @@ UserController:
 
 QueueController:
   practice: Queue up for a practice play.
+  tournament: Queue up for a tournament.
+  tournament_create: Create a tournament and get its ID

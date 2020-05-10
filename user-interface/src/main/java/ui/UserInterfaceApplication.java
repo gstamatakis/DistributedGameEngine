@@ -7,10 +7,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import model.Role;
+import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import ui.model.UserEntity;
 import ui.service.UserService;
 
 @SpringBootApplication
+@EnableWebSecurity
 public class UserInterfaceApplication implements CommandLineRunner {
 
     @Autowired

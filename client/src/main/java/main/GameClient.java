@@ -1,8 +1,6 @@
 package main;
 
 import game.GameType;
-import game.PlayType;
-import message.JoinPlayMessage;
 import org.apache.commons.cli.*;
 import org.springframework.http.HttpEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
@@ -22,7 +20,7 @@ import java.util.*;
 public class GameClient {
     private static final String SIGNIN_URL = "http://localhost:8080/users/signin";
     private static final String SIGNUP_URL = "http://localhost:8080/users/signup";
-    private static final String PRACTICE_URL = "http://localhost:8080/queue/practice/";
+    private static final String PRACTICE_URL = "http://localhost:8080/queue/practice";
     private static final String SEARCH_URL = "http://localhost:8080/users/";
     private static Random random = new Random();
 
@@ -137,14 +135,14 @@ public class GameClient {
                         //Queue up
                         HttpEntity<String> practiceResponse;
                         try {
-                            practiceResponse = client.practice(PRACTICE_URL, token, gameType);
+                            practiceResponse = client.practice(PRACTICE_URL, token, gameType, username);
                         } catch (Exception e) {
                             System.out.println(e.getMessage());
                             break;
                         }
                         System.out.println(practiceResponse.getBody());
 
-                        if (1==1){
+                        if (1 == 1) {
                             System.exit(9);
                         }
 
