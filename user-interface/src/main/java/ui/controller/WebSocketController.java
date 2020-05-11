@@ -1,15 +1,17 @@
 package ui.controller;
 
+import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 import websocket.Message;
 import websocket.OutputMessage;
 
+import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -24,18 +26,13 @@ public class WebSocketController {
     @Autowired
     private SimpMessageSendingOperations messagingTemplate;
 
+    private Gson gson = new Gson();
+
     @MessageMapping("/echo")
     @SendToUser("/queue/reply")
-    public OutputMessage greeting(final Message message) {
+    public OutputMessage greeting(@Payload Message message, Principal principal) {
         final String time = new SimpleDateFormat("HH:mm").format(new Date());
-        return new OutputMessage(message.getSender(), message.getPayload(), time);
-    }
-
-    @MessageMapping("/chat")
-    @SendTo("/topic/messages")
-    public OutputMessage chat(final Message message) {
-        final String time = new SimpleDateFormat("HH:mm").format(new Date());
-        return new OutputMessage(message.getSender(), message.getPayload(), time);
+        return new OutputMessage(principal, message.getSender(), message.getPayload(), time);
     }
 
     @MessageExceptionHandler

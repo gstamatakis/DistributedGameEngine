@@ -4,27 +4,28 @@ import game.GameType;
 import org.apache.commons.cli.*;
 import org.springframework.http.HttpEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import websocket.Message;
 import websocket.MyStompSessionHandler;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.*;
 
 public class GameClient {
-    private static final String SIGNIN_URL = "http://localhost:8080/users/signin";
+    private static final String SIGN_IN_URL = "http://localhost:8080/users/signin";
     private static final String SIGNUP_URL = "http://localhost:8080/users/signup";
     private static final String PRACTICE_URL = "http://localhost:8080/queue/practice";
     private static final String SEARCH_URL = "http://localhost:8080/users/";
-    private static Random random = new Random();
+    private static final String STOMP_CONNECT_URL = "ws://localhost:8080/echo";
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws Exception {
         //Parse input
         CommandLine cmd = parseInput(args);
         if (cmd == null) {
@@ -33,26 +34,45 @@ public class GameClient {
         }
 
         //Check if we need to read from file
+        Scanner scanner;
         if (cmd.hasOption("fromFile")) {
-            System.setIn(new FileInputStream(cmd.getOptionValue("fromFile")));
+            scanner = new Scanner(new FileInputStream(cmd.getOptionValue("fromFile")));
+        } else {
+            scanner = new Scanner(System.in);
         }
 
+        //Destination stream
+        OutputStream outputStream = System.out;
+        if (cmd.hasOption("silent")) {
+            if (cmd.getOptionValue("silent").equals("true")) {
+                outputStream = new NullPrintStream();
+            }
+        }
+
+        //Output writer
+        OutputStreamWriter output = new OutputStreamWriter(new BufferedOutputStream(outputStream));
+
+        //Execute the main loop
+        int result = handleInputs(scanner, output);
+        output.flush();
+        output.close();
+
         //For user input
-        Scanner scanner = new Scanner(System.in);
-        System.exit(handleInputs(scanner));
+        System.exit(result);
     }
 
-    private static int handleInputs(Scanner scanner) {
+    public static int handleInputs(Scanner scanner, OutputStreamWriter output) throws Exception {
         Map<Integer, String> options = new HashMap<>();
         options.put(1, "Sign-Up");  //OK
         options.put(2, "Sign in");  //OK
         options.put(3, "Practice Play");    //TODO in-progress
         options.put(4, "Create Tournament (OFFICIAL ONLY)");
         options.put(5, "Join Tournament");
-        options.put(6, "Spectate Game");
-        options.put(7, "Search user (ADMIN ONLY)"); //OK
-        options.put(8, "My stats");
-        options.put(9, "Exit"); //OK
+        options.put(6, "Rejoin game");
+        options.put(7, "Spectate Game");
+        options.put(8, "Search user (ADMIN ONLY)"); //OK
+        options.put(9, "My stats");
+        options.put(10, "Exit"); //OK
 
         //REST client
         RESTClient client = new RESTClient();
@@ -61,137 +81,136 @@ public class GameClient {
         String token = "";
         String username = "";
 
-        while (true) {
-            try {
-                //Check if we need to exit
-                if (!scanner.hasNext()) {
+        while (scanner.hasNext()) {
+            //Check if we need to exit
+
+            //Print the menu
+            output.write("\n\n*** Menu ***");
+            for (Map.Entry<Integer, String> entry : options.entrySet()) {
+                output.write(String.format("\n%d. %s", entry.getKey(), entry.getValue()));
+            }
+
+            //Chose an option
+            output.write("\nAnswer: ");
+            int choice = Integer.parseInt(scanner.next());
+            output.write(String.valueOf(choice));
+
+            //Perform an action
+            switch (choice) {
+                //Sign up
+                case 1:
+                    //Arguments
+                    output.write("\nEnter username, password, email and role (separated with spaces): ");
+                    Map<String, String> signupParams = new LinkedHashMap<>();
+                    signupParams.put("username", scanner.next());
+                    username = signupParams.get("username");
+                    signupParams.put("password", scanner.next());
+                    signupParams.put("email", scanner.next());
+                    signupParams.put("role", scanner.next());
+                    output.write("\n" + signupParams.toString());
+
+                    //Response = executed entity
+                    HttpEntity<String> signUpResponse;
+                    try {
+                        signUpResponse = client.signup(SIGNUP_URL, signupParams);
+                    } catch (HttpClientErrorException.UnprocessableEntity e1) {
+                        output.write("\n" + e1.getMessage());
+                        break;
+                    }
+                    token = signUpResponse.getBody();
+                    output.write("\nToken: " + token);
                     break;
-                }
 
-                //Print the menu
-                System.out.println("\n\n*** Menu ***");
-                for (Map.Entry<Integer, String> entry : options.entrySet()) {
-                    System.out.println(String.format("%d. %s", entry.getKey(), entry.getValue()));
-                }
+                //Sign In
+                case 2:
+                    //Arguments
+                    output.write("\nEnter username and password: ");
+                    MultiValueMap<String, String> loginParams = new LinkedMultiValueMap<>();
+                    loginParams.add("username", scanner.next());
+                    loginParams.add("password", scanner.next());
+                    output.write("\n" + loginParams);
 
-                //Chose an option
-                System.out.print("Answer: ");
-                int choice = Integer.parseInt(scanner.next());
-                System.out.println(choice);
-
-                //Perform an action
-                switch (choice) {
-                    //Sign up
-                    case 1:
-                        //Arguments
-                        System.out.print("Enter username, password, email and role (separated with spaces): ");
-                        Map<String, String> signupParams = new LinkedHashMap<>();
-                        signupParams.put("username", scanner.next());
-                        username = signupParams.get("username");
-                        signupParams.put("password", scanner.next());
-                        signupParams.put("email", scanner.next());
-                        signupParams.put("role", scanner.next());
-                        System.out.println(signupParams);
-
-                        //Response = executed entity
-                        HttpEntity<String> signUpResponse;
-                        try {
-                            signUpResponse = client.signup(SIGNUP_URL, signupParams);
-                        } catch (HttpClientErrorException.UnprocessableEntity e1) {
-                            System.out.println(e1.getMessage());
-                            break;
-                        }
-                        token = signUpResponse.getBody();
-                        System.out.println("Token: " + token);
+                    HttpEntity<String> loginResponse;
+                    try {
+                        loginResponse = client.login(SIGN_IN_URL, loginParams);
+                    } catch (Exception e) {
+                        output.write("\n" + e.getMessage());
                         break;
+                    }
 
-                    //Sign In
-                    case 2:
-                        //Arguments
-                        System.out.print("Enter username and password: ");
-                        MultiValueMap<String, String> loginParams = new LinkedMultiValueMap<>();
-                        loginParams.add("username", scanner.next());
-                        loginParams.add("password", scanner.next());
-                        System.out.println(loginParams);
+                    //Token
+                    token = loginResponse.getBody();
+                    output.write("\nToken: " + token);
+                    break;
 
-                        HttpEntity<String> loginResponse;
-                        try {
-                            loginResponse = client.login(SIGNIN_URL, loginParams);
-                        } catch (Exception e) {
-                            System.out.println(e.getMessage());
-                            break;
-                        }
+                case 3:
+                    //Arguments
+                    output.write("\nQueueing up for a practice play. Enter preferred game type: ");
+                    GameType gameType = GameType.valueOf(scanner.next());
+                    output.write(gameType.toString());
 
-                        //Token
-                        token = loginResponse.getBody();
-                        System.out.println("Token: " + token);
+                    //Queue up
+                    HttpEntity<String> practiceResponse;
+                    try {
+                        practiceResponse = client.practice(PRACTICE_URL, token, gameType, username);
+                    } catch (Exception e) {
+                        output.write("\n" + e.getMessage());
                         break;
+                    }
+                    output.write("\nStatus: " + practiceResponse.getBody());
 
-                    case 3:
-                        //Arguments
-                        System.out.print("Queueing up for a practice play. Enter preferred game type: ");
-                        GameType gameType = GameType.valueOf(scanner.next());
+                    //Start
+                    WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
+                    stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+                    StompSession stompSession;
+                    try {
+                        WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
+                        webSocketHttpHeaders.add("Authorization", "Bearer " + token);
 
-                        //Queue up
-                        HttpEntity<String> practiceResponse;
-                        try {
-                            practiceResponse = client.practice(PRACTICE_URL, token, gameType, username);
-                        } catch (Exception e) {
-                            System.out.println(e.getMessage());
-                            break;
-                        }
-                        System.out.println(practiceResponse.getBody());
+                        StompHeaders stompHeaders = new StompHeaders();
+                        stompHeaders.add("Authorization", "Bearer " + token);
 
-                        if (1 == 1) {
-                            System.exit(9);
-                        }
-
-                        //Start
-                        WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
-                        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
                         List<String> subs = new ArrayList<>();
-                        subs.add("/topic/messages");
-                        StompSession stompSession;
-                        try {
-                            stompSession = stompClient.connect("ws://localhost:8080/chat", new MyStompSessionHandler(subs)).get();
-                        } catch (Exception e) {
-                            System.out.println(e.getMessage());
-                            break;
-                        }
-                        int seed = random.nextInt(100000);
-                        stompSession.send("/app/chat", new Message("User" + seed, "payload" + seed));
+                        subs.add("/user/queue/reply");
+                        subs.add("/user/queue/errors");
+
+                        stompSession = stompClient.connect(STOMP_CONNECT_URL,
+                                webSocketHttpHeaders, stompHeaders, new MyStompSessionHandler(subs)).get();
+                    } catch (Exception e) {
+                        output.write("\n" + e.getMessage());
                         break;
+                    }
 
-                    case 7:
-                        //Arguments
-                        System.out.print("Search username: ");
-                        String usernameToSearch = scanner.next();
-                        System.out.println(usernameToSearch);
+                    stompSession.send("/app/echo", new Message(username, "payload_" + username));
+                    break;
 
-                        HttpEntity<String> searchResponse;
-                        try {
-                            searchResponse = client.search(SEARCH_URL, usernameToSearch, token);
-                        } catch (Exception e) {
-                            System.out.println(e.getMessage());
-                            break;
-                        }
+                case 7:
+                    //Arguments
+                    output.write("\nSearch username: ");
+                    String usernameToSearch = scanner.next();
+                    output.write("\n" + usernameToSearch);
 
-                        //Token
-                        String searchResult = searchResponse.getBody();
-                        System.out.println("Result: " + searchResult);
+                    HttpEntity<String> searchResponse;
+                    try {
+                        searchResponse = client.search(SEARCH_URL, usernameToSearch, token);
+                    } catch (Exception e) {
+                        output.write("\n" + e.getMessage());
                         break;
+                    }
 
-                    //Exit
-                    case 9:
-                        System.out.println("Exiting..");
-                        break;
+                    //Token
+                    String searchResult = searchResponse.getBody();
+                    output.write("\nResult: " + searchResult);
+                    break;
 
-                    //Handle errors
-                    default:
-                        System.out.println("Invalid option");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+                //Exit
+                case 10:
+                    output.write("\n\nExiting..");
+                    return 0;
+
+                //Handle errors
+                default:
+                    throw new IllegalStateException("Invalid option");
             }
         }
         return 0;
@@ -204,35 +223,45 @@ public class GameClient {
         output.setRequired(true);
         options.addOption(output);
 
+        Option silent = new Option("s", "silent", true, "Redirect everything to STDOUT.");
+        silent.setRequired(false);
+        options.addOption(silent);
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
-        CommandLine cmd;
 
         try {
-            cmd = parser.parse(options, args);
+            return parser.parse(options, args);
         } catch (ParseException e) {
-            System.out.println(e.getMessage());
-            formatter.printHelp("utility-name", options);
+            formatter.printHelp("User client", options);
             return null;
         }
-        return cmd;
     }
 
+
+    public static class NullPrintStream extends PrintStream {
+
+        public NullPrintStream() {
+            super(new NullByteArrayOutputStream());
+        }
+
+        private static class NullByteArrayOutputStream extends ByteArrayOutputStream {
+
+            @Override
+            public void write(int b) {
+                // do nothing
+            }
+
+            @Override
+            public void write(byte[] b, int off, int len) {
+                // do nothing
+            }
+
+            @Override
+            public void writeTo(OutputStream out) throws IOException {
+                // do nothing
+            }
+
+        }
+    }
 }
-
-/*
-
-    HttpHeaders headers = new HttpHeaders();
-                        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-                                HttpEntity<String> entity = new HttpEntity<>("body", headers);
-        restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-
-        Map<String, String> arguments = new HashMap<>();
-        arguments.put("username", scanner.next());
-        arguments.put("password", scanner.next());
-        ResponseEntity<String> response = restTemplate.getForEntity(
-        "http://127.0.0.1:8080/users/signin?username={username}&password={password}",
-        String.class,
-        arguments);
-
- */

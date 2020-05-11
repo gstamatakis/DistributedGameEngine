@@ -11,10 +11,11 @@ import java.util.Map;
 
 public class UserHandshakeHandler extends DefaultHandshakeHandler {
     private static final Logger log = LoggerFactory.getLogger(UserHandshakeHandler.class);
+    private static final String ATTR_PRINCIPAL = "__principal__";
 
     @Override
     protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler, Map<String, Object> attributes) {
-        String name = "";
+        String name = (String) attributes.get(ATTR_PRINCIPAL);
         log.info("!");
         return () -> name;
     }
