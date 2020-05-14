@@ -11,4 +11,8 @@ secets:
   gm-token: token_gm
   pm-token: token_pm
 
-spring.application.name: PlayMasterApplication
+spring:
+  application.name: PlayMasterApplication
+  devtools:
+    livereload:
+      port: 12345

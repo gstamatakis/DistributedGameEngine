@@ -1,7 +1,0 @@
-1
-admin admin admin@email.com ROLE_ADMIN
-2
-admin admin
-7
-client
-9

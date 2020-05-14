@@ -30,13 +30,20 @@ public class UserInterfaceApplication implements CommandLineRunner {
 
     @Override
     public void run(String... params) {
-        //Register 2 important users
+        //Register 3 users with 3 different Roles
         UserEntity admin = new UserEntity();
         admin.setUsername("admin");
         admin.setPassword("admin");
         admin.setEmail("admin@email.com");
         admin.setRole(Role.ROLE_ADMIN);
         userService.signup(admin);
+
+        UserEntity official = new UserEntity();
+        official.setUsername("official");
+        official.setPassword("official");
+        official.setEmail("official@email.com");
+        official.setRole(Role.ROLE_OFFICIAL);
+        userService.signup(official);
 
         UserEntity client = new UserEntity();
         client.setUsername("client");

@@ -54,11 +54,8 @@ public class GameClient {
 
         //Execute the main loop
         int result = handleInputs(scanner, output);
+        output.write("\nExit code: " + result + "\n");
         output.flush();
-        output.close();
-
-        //For user input
-        System.exit(result);
     }
 
     public static int handleInputs(Scanner scanner, OutputStreamWriter output) throws Exception {
@@ -66,8 +63,8 @@ public class GameClient {
         options.put(1, "Sign-Up");  //OK
         options.put(2, "Sign in");  //OK
         options.put(3, "Practice Play");    //TODO in-progress
-        options.put(4, "Create Tournament (OFFICIAL ONLY)");
-        options.put(5, "Join Tournament");
+        options.put(4, "Join Tournament");
+        options.put(5, "Create Tournament (OFFICIAL ONLY)");
         options.put(6, "Rejoin game");
         options.put(7, "Spectate Game");
         options.put(8, "Search user (ADMIN ONLY)"); //OK
@@ -157,7 +154,10 @@ public class GameClient {
                         output.write("\n" + e.getMessage());
                         break;
                     }
-                    output.write("\nStatus: " + practiceResponse.getBody());
+                    output.write("\nPractice play enqueued status: " + practiceResponse.getBody());
+                    if (1 == 1) {
+                        return -1;
+                    }
 
                     //Start
                     WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
@@ -195,7 +195,7 @@ public class GameClient {
                         searchResponse = client.search(SEARCH_URL, usernameToSearch, token);
                     } catch (Exception e) {
                         output.write("\n" + e.getMessage());
-                        break;
+                        return -1;
                     }
 
                     //Token
@@ -206,7 +206,7 @@ public class GameClient {
                 //Exit
                 case 10:
                     output.write("\n\nExiting..");
-                    return 0;
+                    break;
 
                 //Handle errors
                 default:

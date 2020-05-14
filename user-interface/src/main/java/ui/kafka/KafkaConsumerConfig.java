@@ -42,6 +42,7 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroupId);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         return props;
     }
 
@@ -51,17 +52,28 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+    public ConsumerFactory<Object, Object> recoveryConsumerFactory() {
+        Map<String, Object> props = consumerConfigs();
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaDefaultListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;
     }
 
     @Bean
-    public ConsumerFactory<Object, Object> recoveryConsumerFactory() {
-        Map<String, Object> props = consumerConfigs();
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-        return new DefaultKafkaConsumerFactory<>(props);
+    public ConcurrentKafkaListenerContainerFactory<String, String> containerFactoryWithRecovery() {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(recoveryConsumerFactory());
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+        factory.getContainerProperties().setSyncCommitTimeout(Duration.ofSeconds(60));
+        factory.setStatefulRetry(true);
+        factory.setErrorHandler(errorHandler());
+        return factory;
     }
 
     @Bean
@@ -77,17 +89,6 @@ public class KafkaConsumerConfig {
         SeekToCurrentErrorHandler eh = new SeekToCurrentErrorHandler(recoveryFunction, backoff);
         eh.setCommitRecovered(true);
         return eh;
-    }
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String> containerFactoryWithRecovery() {
-        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(recoveryConsumerFactory());
-        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
-        factory.getContainerProperties().setSyncCommitTimeout(Duration.ofSeconds(60));
-        factory.setStatefulRetry(true);
-        factory.setErrorHandler(errorHandler());
-        return factory;
     }
 
 }

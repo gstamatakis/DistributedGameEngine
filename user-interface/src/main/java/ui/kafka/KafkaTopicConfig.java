@@ -39,4 +39,9 @@ public class KafkaTopicConfig {
     public NewTopic joinPlayTopic() {
         return new NewTopic("join-play", 1, replicationFactor);
     }
+
+    @Bean
+    public NewTopic errorTopic() {
+        return new NewTopic("errors", 1, replicationFactor);
+    }
 }

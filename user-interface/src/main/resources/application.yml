@@ -1,4 +1,8 @@
 spring:
+  application.name: UserInterfaceApplication
+  devtools:
+    livereload:
+      port: 12345
   datasource:
     url: jdbc:mysql://192.168.1.100:3306/uidb
     username: user1

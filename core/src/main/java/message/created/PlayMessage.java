@@ -5,28 +5,27 @@ import game.PlayType;
 import message.queue.PracticeQueueMessage;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 public class PlayMessage {
-    private List<String> playerUsernames;
+    private String p1, p2;
     private String ID;
     private PlayType playType;
     private GameType gameType;
     private LocalDateTime createdAt;
 
     public PlayMessage(PracticeQueueMessage msg1, PracticeQueueMessage msg2) {
-        playerUsernames = new ArrayList<>();
-        playerUsernames.add(msg1.getCreatedBy());
-        playerUsernames.add(msg2.getCreatedBy());
+        p1 = msg1.getCreatedBy();
+        p2 = msg2.getCreatedBy();
         ID = generateID(msg1, msg2);
         playType = PlayType.PRACTICE;
         gameType = msg1.getGameType();
         createdAt = LocalDateTime.now();
     }
 
-    public PlayMessage(TournamentPlayMessage message) {
-        playerUsernames = message.getPlayerUsernames();
+    public PlayMessage(TournamentPlayMessage message, String msg1, String msg2) {
+        p1 = msg1;
+        p2 = msg2;
         ID = message.getTournamentID();
         playType = PlayType.TOURNAMENT;
         gameType = message.getGameType();
@@ -40,16 +39,12 @@ public class PlayMessage {
     @Override
     public String toString() {
         return "PlayMessage{" +
-                "playerUsernames=" + playerUsernames +
+                "playerUsernames=" + p1 + ',' + p2 +
                 ", ID='" + ID + '\'' +
                 ", playType=" + playType +
                 ", gameType=" + gameType +
                 ", createdAt=" + createdAt +
                 '}';
-    }
-
-    public List<String> getPlayerUsernames() {
-        return playerUsernames;
     }
 
     public String getID() {

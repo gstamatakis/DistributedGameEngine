@@ -12,19 +12,35 @@ secets:
   pm-token: token_pm
 
 spring:
+  application.name: GameMasterApplication
+  devtools:
+    livereload:
+      port: 12347
   cloud.stream:
     bindings:
       processUsersJoinGame-in-0:
         destination: join-play
+        group: group1
+        auto.offset.reset: latest
       processUsersJoinGame-out-0:
         destination: plays
     kafka:
       binder:
         brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
         replication-factor: 3
-      streams.binder:
         configuration:
+          auto.offset.reset: latest
+      streams.binder:
+        functions:
+          processUsersJoinGame:
+            applicationId: app1
+        brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
+        deserialization-exception-handler: logandfail
+        stateStoreRetry:
+          maxAttempts: 3
+          backoff-period: 5000
+        configuration:
+          #application.server: localhost:9094
           default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
           default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
           commit.interval.ms: 1000
-

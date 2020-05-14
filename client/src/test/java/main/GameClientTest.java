@@ -6,21 +6,20 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
 class GameClientTest {
     private static final Logger logger = LoggerFactory.getLogger(GameClientTest.class);
-    private static final String clientActionsPath = "C:\\Users\\gstamatakis\\IdeaProjects\\DistributedGameEngine\\input\\clients";
     private static File[] clientActionFiles;
     private static ExecutorService executorService;
 
     @BeforeAll
     static void setUp() {
-        clientActionFiles = getClientActionFiles(clientActionsPath);
+        clientActionFiles = getClientActionFiles("input/practice");
         executorService = new ForkJoinPool(4);
     }
 
@@ -38,53 +37,51 @@ class GameClientTest {
     }
 
     @Test
-    public void concurrent_users_test() {
+    public void concurrent_practice_players_test() throws ExecutionException, InterruptedException {
         //Submit user actions
         List<Future<String>> futures = new ArrayList<>();
         for (File file : clientActionFiles) {
-            Future<String> future = executorService.submit(new UserActionTask(file, true));
+            UserActionTask callable = new UserActionTask(file, false);
+            Future<String> future = executorService.submit(callable);
             futures.add(future);
         }
         logger.info("Invoked all actions.");
 
         //Wait for futures to complete
         for (Future<String> future : futures) {
-            try {
-                String res = future.get();
-                logger.info(res);
-            } catch (Exception e) {
-                logger.error(e.getMessage());
-            }
+            String res = future.get();
+            logger.info(res);
         }
         logger.info("Completed the processing of all Futures.");
     }
 
-    public static class UserActionTask implements Callable<String> {
+    private static class UserActionTask implements Callable<String> {
         private final File file;
         private boolean silent;
-
-        public UserActionTask(File file) {
-            this.file = file;
-        }
 
         public UserActionTask(File file, boolean silent) {
             this.file = file;
             this.silent = silent;
         }
 
-        public String call() throws Exception {
-            GameClient.main(new String[]{
-                    "-f",
-                    file.getAbsolutePath(),
-                    "-s",
-                    String.valueOf(silent)
-            });
-            return "";
+        public String call() {
+            try {
+                GameClient.main(new String[]{
+                        "-f",
+                        file.getAbsolutePath(),
+                        "-s",
+                        String.valueOf(silent)
+                });
+                return "CALLABLE_OK";
+            } catch (Exception e) {
+                return e.getMessage();
+            }
         }
     }
 
-    private static File[] getClientActionFiles(String dirPath) {
-        File dir = new File(dirPath);
+    private static File[] getClientActionFiles(String resource) {
+        String dirName = Thread.currentThread().getContextClassLoader().getResource(resource).getFile();
+        File dir = new File(dirName);
         return dir.listFiles((dir1, name) -> name.startsWith("client_actions_") && name.endsWith(".txt"));
     }
 }
