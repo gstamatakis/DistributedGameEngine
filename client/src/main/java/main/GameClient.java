@@ -1,6 +1,7 @@
 package main;
 
 import game.GameType;
+import message.requests.RequestCreateTournamentMessage;
 import org.apache.commons.cli.*;
 import org.springframework.http.HttpEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
@@ -22,6 +23,8 @@ public class GameClient {
     private static final String SIGN_IN_URL = "http://localhost:8080/users/signin";
     private static final String SIGNUP_URL = "http://localhost:8080/users/signup";
     private static final String PRACTICE_URL = "http://localhost:8080/queue/practice";
+    private static final String TOURNAMENT_CREATE_URL = "http://localhost:8080/queue/tournament/create";
+    private static final String TOURNAMENT_JOIN_URL = "http://localhost:8080/queue/tournament/join";
     private static final String SEARCH_URL = "http://localhost:8080/users/";
     private static final String STOMP_CONNECT_URL = "ws://localhost:8080/echo";
 
@@ -144,7 +147,7 @@ public class GameClient {
                     //Arguments
                     output.write("\nQueueing up for a practice play. Enter preferred game type: ");
                     GameType gameType = GameType.valueOf(scanner.next());
-                    output.write(gameType.toString());
+                    output.write("\n" + gameType.toString());
 
                     //Queue up
                     HttpEntity<String> practiceResponse;
@@ -155,7 +158,7 @@ public class GameClient {
                         break;
                     }
                     output.write("\nPractice play enqueued status: " + practiceResponse.getBody());
-                    if (1 == 1) {
+                    if (true) {
                         return -1;
                     }
 
@@ -174,14 +177,50 @@ public class GameClient {
                         subs.add("/user/queue/reply");
                         subs.add("/user/queue/errors");
 
-                        stompSession = stompClient.connect(STOMP_CONNECT_URL,
-                                webSocketHttpHeaders, stompHeaders, new MyStompSessionHandler(subs)).get();
+                        stompSession = stompClient.connect(STOMP_CONNECT_URL, webSocketHttpHeaders, stompHeaders, new MyStompSessionHandler(subs)).get();
                     } catch (Exception e) {
                         output.write("\n" + e.getMessage());
                         break;
                     }
 
                     stompSession.send("/app/echo", new Message(username, "payload_" + username));
+                    break;
+
+                case 4:
+                    //Arguments
+                    output.write("\nEnter the tournament ID to join a tournament: ");
+                    String tournamentID = scanner.next();
+                    output.write("\n" + tournamentID);
+
+                    //Queue up
+                    HttpEntity<String> tournamentJoinResponse;
+                    try {
+                        tournamentJoinResponse = client.joinTournament(TOURNAMENT_JOIN_URL, token, tournamentID);
+                    } catch (Exception e) {
+                        output.write("\n" + e.getMessage());
+                        break;
+                    }
+                    output.write("\nTournament play enqueued status: " + tournamentJoinResponse.getBody());
+                    break;
+
+                case 5:
+                    output.write("\nCreating a tournament play. Enter preferred game type,num of participants and tournament ID: ");
+                    GameType tournamentGameType = GameType.valueOf(scanner.next());
+                    int numOfParticipants = Integer.parseInt(scanner.next());
+                    String newTournamentID = scanner.next();
+                    Set<String> blackList = new HashSet<>();
+                    RequestCreateTournamentMessage msg = new RequestCreateTournamentMessage(tournamentGameType, blackList, numOfParticipants, newTournamentID);
+                    output.write("\n" + msg.toString());
+
+                    //Queue up
+                    HttpEntity<String> tournamentResponse;
+                    try {
+                        tournamentResponse = client.createTournament(TOURNAMENT_CREATE_URL, token, msg);
+                    } catch (Exception e) {
+                        output.write("\n" + e.getMessage());
+                        break;
+                    }
+                    output.write("\nTournament play created status: " + tournamentResponse.getBody());
                     break;
 
                 case 7:

@@ -31,8 +31,13 @@ public class KafkaTopicConfig {
 
     //String name, int numPartitions, short replicationFactor
     @Bean
-    public NewTopic playsTopic() {
-        return new NewTopic("plays", 1, replicationFactor);
+    public NewTopic newPlaysTopic() {
+        return new NewTopic("new-plays", 1, replicationFactor);
+    }
+
+    @Bean
+    public NewTopic finishedPlaysTopic() {
+        return new NewTopic("completed-plays", 1, replicationFactor);
     }
 
     @Bean

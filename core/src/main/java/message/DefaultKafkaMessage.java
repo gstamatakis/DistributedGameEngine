@@ -1,35 +1,35 @@
 package message;
 
 import message.queue.PracticeQueueMessage;
-import message.queue.TournamentQueueMessage;
-import message.requests.RequestCreateTournamentMessage;
+import message.queue.JoinTournamentQueueMessage;
+import message.queue.CreateTournamentQueueMessage;
 
 import java.io.Serializable;
 
 public class DefaultKafkaMessage implements Serializable {
     private PracticeQueueMessage practiceQueueMessage;
-    private TournamentQueueMessage tournamentQueueMessage;
-    private RequestCreateTournamentMessage requestCreateTournamentMessage;
+    private JoinTournamentQueueMessage joinTournamentQueueMessage;
+    private CreateTournamentQueueMessage createTournamentQueueMessage;
 
     public DefaultKafkaMessage() {
     }
 
     public DefaultKafkaMessage(PracticeQueueMessage practiceQueueMessage) {
         this.practiceQueueMessage = practiceQueueMessage;
-        this.tournamentQueueMessage = null;
-        this.requestCreateTournamentMessage = null;
+        this.joinTournamentQueueMessage = null;
+        this.createTournamentQueueMessage = null;
     }
 
-    public DefaultKafkaMessage(TournamentQueueMessage tournamentQueueMessage) {
+    public DefaultKafkaMessage(JoinTournamentQueueMessage joinTournamentQueueMessage) {
         this.practiceQueueMessage = null;
-        this.tournamentQueueMessage = tournamentQueueMessage;
-        this.requestCreateTournamentMessage = null;
+        this.joinTournamentQueueMessage = joinTournamentQueueMessage;
+        this.createTournamentQueueMessage = null;
     }
 
-    public DefaultKafkaMessage(RequestCreateTournamentMessage requestCreateTournamentMessage) {
+    public DefaultKafkaMessage(CreateTournamentQueueMessage createTournamentQueueMessage) {
         this.practiceQueueMessage = null;
-        this.tournamentQueueMessage = null;
-        this.requestCreateTournamentMessage = requestCreateTournamentMessage;
+        this.joinTournamentQueueMessage = null;
+        this.createTournamentQueueMessage = createTournamentQueueMessage;
     }
 
     public boolean isPracticeMessage() {
@@ -37,11 +37,11 @@ public class DefaultKafkaMessage implements Serializable {
     }
 
     public boolean isJoinTournamentMessage() {
-        return this.tournamentQueueMessage != null;
+        return this.joinTournamentQueueMessage != null;
     }
 
     public boolean isCreateTournamentMessage() {
-        return this.requestCreateTournamentMessage != null;
+        return this.createTournamentQueueMessage != null;
     }
 
     public PracticeQueueMessage getPracticeQueueMessage() {
@@ -52,19 +52,19 @@ public class DefaultKafkaMessage implements Serializable {
         this.practiceQueueMessage = practiceQueueMessage;
     }
 
-    public TournamentQueueMessage getTournamentQueueMessage() {
-        return tournamentQueueMessage;
+    public JoinTournamentQueueMessage getJoinTournamentQueueMessage() {
+        return joinTournamentQueueMessage;
     }
 
-    public void setTournamentQueueMessage(TournamentQueueMessage tournamentQueueMessage) {
-        this.tournamentQueueMessage = tournamentQueueMessage;
+    public void setJoinTournamentQueueMessage(JoinTournamentQueueMessage joinTournamentQueueMessage) {
+        this.joinTournamentQueueMessage = joinTournamentQueueMessage;
     }
 
-    public RequestCreateTournamentMessage getRequestCreateTournamentMessage() {
-        return requestCreateTournamentMessage;
+    public CreateTournamentQueueMessage getCreateTournamentQueueMessage() {
+        return createTournamentQueueMessage;
     }
 
-    public void setRequestCreateTournamentMessage(RequestCreateTournamentMessage requestCreateTournamentMessage) {
-        this.requestCreateTournamentMessage = requestCreateTournamentMessage;
+    public void setCreateTournamentQueueMessage(CreateTournamentQueueMessage createTournamentQueueMessage) {
+        this.createTournamentQueueMessage = createTournamentQueueMessage;
     }
 }

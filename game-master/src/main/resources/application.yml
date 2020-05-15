@@ -23,7 +23,7 @@ spring:
         group: group1
         auto.offset.reset: latest
       processUsersJoinGame-out-0:
-        destination: plays
+        destination: new-plays
     kafka:
       binder:
         brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096

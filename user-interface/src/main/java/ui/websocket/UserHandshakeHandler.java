@@ -13,10 +13,15 @@ public class UserHandshakeHandler extends DefaultHandshakeHandler {
     private static final Logger log = LoggerFactory.getLogger(UserHandshakeHandler.class);
     private static final String ATTR_PRINCIPAL = "__principal__";
 
+    //@Autowired
+    //private JwtTokenProvider jwtTokenProvider;
+    //jwtTokenProvider.getUsername(jwtTokenProvider.resolveToken(req))
+
     @Override
     protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler, Map<String, Object> attributes) {
         String name = (String) attributes.get(ATTR_PRINCIPAL);
-        log.info("!");
+        String token = request.getHeaders().get("Authentication").toString();
+        log.info("Assigned username " + name + " of token: " + token);
         return () -> name;
     }
 }

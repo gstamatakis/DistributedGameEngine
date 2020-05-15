@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import game.GameType;
 import message.PlayTypeMessage;
+import message.requests.RequestCreateTournamentMessage;
 import message.requests.RequestPracticeMessage;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
@@ -92,5 +93,33 @@ public class RESTClient {
 
         //Response = executed entity
         return restTemplate.exchange(searchUrl + "/" + usernameToSearch, HttpMethod.GET, entity, String.class);
+    }
+
+    public HttpEntity<String> createTournament(String tournamentCreateUrl, String token, RequestCreateTournamentMessage message) {
+        //Headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setCacheControl(CacheControl.noCache());
+        headers.add("user-agent", USER_AGENT);
+        headers.setBearerAuth(token);
+
+        //Entity = Headers + Argument
+        HttpEntity<Object> entity = new HttpEntity<>(message, headers);
+
+        //Response = executed entity
+        return restTemplate.exchange(tournamentCreateUrl, HttpMethod.POST, entity, String.class);
+    }
+
+    public HttpEntity<String> joinTournament(String tournamentJoinUrl, String token, String tournamentID) {
+        //Headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setCacheControl(CacheControl.noCache());
+        headers.add("user-agent", USER_AGENT);
+        headers.setBearerAuth(token);
+
+        //Entity = Headers + Argument
+        HttpEntity<Object> entity = new HttpEntity<>(tournamentID, headers);
+
+        //Response = executed entity
+        return restTemplate.exchange(tournamentJoinUrl, HttpMethod.POST, entity, String.class);
     }
 }

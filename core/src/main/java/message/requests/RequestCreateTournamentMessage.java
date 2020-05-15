@@ -1,36 +1,45 @@
 package message.requests;
 
-import game.PlayType;
-import message.DefaultPlayMessage;
+import game.GameType;
 
 import java.util.Set;
 
-public class RequestCreateTournamentMessage extends DefaultPlayMessage {
-    private final String tournamentID;
-    private Set<String> usernameBlackList;
-    private int numOfParticipants;
+public class RequestCreateTournamentMessage {
+    private final GameType tournamentGameType;
+    private final Set<String> blackList;
+    private final int numOfParticipants;
+    private String tournamentID;
 
-    public RequestCreateTournamentMessage(String username, RequestCreateTournamentMessage reqMsg, String tournamentID) {
-        super(reqMsg.getGameType(), username);
+    public RequestCreateTournamentMessage(GameType tournamentGameType, Set<String> blackList, int numOfParticipants, String tournamentID) {
+        this.tournamentGameType = tournamentGameType;
+        this.blackList = blackList;
+        this.numOfParticipants = numOfParticipants;
         this.tournamentID = tournamentID;
-        this.usernameBlackList = reqMsg.usernameBlackList;
-        this.numOfParticipants = reqMsg.numOfParticipants;
     }
 
     @Override
-    public PlayType playType() {
-        return PlayType.TOURNAMENT;
+    public String toString() {
+        return "CreateTournamentMessage{" +
+                "tournamentGameType=" + tournamentGameType +
+                ", blackList=" + blackList +
+                ", numOfParticipants=" + numOfParticipants +
+                ", tournamentID='" + tournamentID + '\'' +
+                '}';
     }
 
-    public String getTournamentID() {
-        return tournamentID;
+    public GameType getTournamentGameType() {
+        return tournamentGameType;
     }
 
-    public Set<String> getUsernameBlackList() {
-        return usernameBlackList;
+    public Set<String> getBlackList() {
+        return blackList;
     }
 
     public int getNumOfParticipants() {
         return numOfParticipants;
+    }
+
+    public String getTournamentID() {
+        return tournamentID;
     }
 }

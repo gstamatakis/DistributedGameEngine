@@ -1,0 +1,7 @@
+1
+user00003 pass00003 user00003@gmail.com ROLE_CLIENT
+2
+user00003 pass00003
+3
+TIC_TAC_TOE
+10

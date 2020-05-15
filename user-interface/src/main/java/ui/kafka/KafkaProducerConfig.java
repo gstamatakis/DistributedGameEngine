@@ -3,8 +3,8 @@ package ui.kafka;
 import message.DefaultKafkaMessage;
 import message.created.TournamentPlayMessage;
 import message.queue.PracticeQueueMessage;
-import message.queue.TournamentQueueMessage;
-import message.requests.RequestCreateTournamentMessage;
+import message.queue.JoinTournamentQueueMessage;
+import message.queue.CreateTournamentQueueMessage;
 import message.requests.RequestJoinTournamentMessage;
 import message.requests.RequestPracticeMessage;
 import message.serde.*;
@@ -60,16 +60,16 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, TournamentQueueMessage> TournamentQueueMessageTemplate() {
+    public KafkaTemplate<String, JoinTournamentQueueMessage> JoinTournamentQueueMessageTemplate() {
         Map<String, Object> cfg = producerConfigs();
-        cfg.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, TournamentQueueMessageSerde.class);
+        cfg.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JoinTournamentQueueMessageSerde.class);
         return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(cfg));
     }
 
     @Bean
-    public KafkaTemplate<String, RequestCreateTournamentMessage> RequestCreateTournamentMessageTemplate() {
+    public KafkaTemplate<String, CreateTournamentQueueMessage> CreateTournamentQueueMessageTemplate() {
         Map<String, Object> cfg = producerConfigs();
-        cfg.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, RequestCreateTournamentMessageSerde.class);
+        cfg.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CreateTournamentQueueMessageSerde.class);
         return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(cfg));
     }
 

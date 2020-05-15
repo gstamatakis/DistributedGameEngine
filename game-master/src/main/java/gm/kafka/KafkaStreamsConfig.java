@@ -5,9 +5,9 @@ import gm.transformer.JoinTournamentTransformer;
 import gm.transformer.PracticeQueueTransformer;
 import message.DefaultKafkaMessage;
 import message.created.PlayMessage;
+import message.queue.CreateTournamentQueueMessage;
+import message.queue.JoinTournamentQueueMessage;
 import message.queue.PracticeQueueMessage;
-import message.queue.TournamentQueueMessage;
-import message.requests.RequestCreateTournamentMessage;
 import message.serde.*;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
@@ -36,7 +36,7 @@ public class KafkaStreamsConfig {
 
     @Bean
     public StoreBuilder pairTournamentPlayersStore() {
-        return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(pairTournamentPlayersStore), Serdes.String(), new TournamentQueueMessageSerde());
+        return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(pairTournamentPlayersStore), Serdes.String(), new TournamentPlayMessageSerde());
     }
 
     @Bean
@@ -61,13 +61,13 @@ public class KafkaStreamsConfig {
     }
 
     @Bean
-    public Serde<TournamentQueueMessage> TournamentQueueMessageSerde() {
-        return new TournamentQueueMessageSerde();
+    public Serde<JoinTournamentQueueMessage> JoinTournamentQueueMessageSerde() {
+        return new JoinTournamentQueueMessageSerde();
     }
 
     @Bean
-    public Serde<RequestCreateTournamentMessage> RequestCreateTournamentMessageSerde() {
-        return new RequestCreateTournamentMessageSerde();
+    public Serde<CreateTournamentQueueMessage> CreateTournamentQueueMessageSerde() {
+        return new CreateTournamentQueueMessageSerde();
     }
 
     @Bean
@@ -89,12 +89,11 @@ public class KafkaStreamsConfig {
             KStream<String, PracticeQueueMessage> practiceStream =
                     forks[0].map((key, value) -> new KeyValue<>(key, value.getPracticeQueueMessage()));
 
-            KStream<String, TournamentQueueMessage> joinTournamentStream =
-                    forks[1].map((key, value) -> new KeyValue<>(key, value.getTournamentQueueMessage()));
+            KStream<String, JoinTournamentQueueMessage> joinTournamentStream =
+                    forks[1].map((key, value) -> new KeyValue<>(key, value.getJoinTournamentQueueMessage()));
 
-            KStream<String, RequestCreateTournamentMessage> createTournamentStream =
-                    forks[2].map((key, value) -> new KeyValue<>(key, value.getRequestCreateTournamentMessage()));
-
+            KStream<String, CreateTournamentQueueMessage> createTournamentStream =
+                    forks[2].map((key, value) -> new KeyValue<>(key, value.getCreateTournamentQueueMessage()));
 
             //Handle practice play pairs
             KStream<String, PlayMessage> practiceBranch = practiceStream.transform(

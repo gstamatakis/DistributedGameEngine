@@ -2,7 +2,7 @@ package gm.transformer;
 
 import message.created.PlayMessage;
 import message.created.TournamentPlayMessage;
-import message.queue.TournamentQueueMessage;
+import message.queue.JoinTournamentQueueMessage;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.Transformer;
 import org.apache.kafka.streams.processor.ProcessorContext;
@@ -10,10 +10,12 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class JoinTournamentTransformer implements Transformer<String, TournamentQueueMessage, KeyValue<String, PlayMessage>> {
+@SuppressWarnings("unchecked")
+public class JoinTournamentTransformer implements Transformer<String, JoinTournamentQueueMessage, KeyValue<String, PlayMessage>> {
     private static final Logger logger = LoggerFactory.getLogger(JoinTournamentTransformer.class);
 
     private final String pairTournamentPlayersStore;
@@ -39,30 +41,48 @@ public class JoinTournamentTransformer implements Transformer<String, Tournament
     }
 
     @Override
-    public KeyValue<String, PlayMessage> transform(String key, TournamentQueueMessage newPlayer) {
-        TournamentPlayMessage tournamentPlay = pairTournamentPlayersKVStore.get(newPlayer.getTournamentID());
-        if (tournamentPlay == null) {
+    public KeyValue<String, PlayMessage> transform(String key, JoinTournamentQueueMessage newPlayer) {
+        TournamentPlayMessage tournament = pairTournamentPlayersKVStore.get(newPlayer.getTournamentID());
+        if (tournament == null) {
             logger.error("Tried to join a non existing tournament: " + newPlayer.toString());
         } else {
-            if (tournamentPlay.addPlayer(newPlayer)) {
-                logger.info("Added " + newPlayer.getCreatedBy() + " to tournament " + tournamentPlay.getTournamentID());
-                if (tournamentPlay.isFull()) {
-                    Iterator<String> playerIter = tournamentPlay.getPlayerUsernames().iterator();
+            if (tournament.addPlayer(newPlayer)) {
+                logger.info("Added " + newPlayer.toString() + " to tournament " + tournament.getTournamentID());
+                if (tournament.isFull()) {
+                    List<String> players = new ArrayList<>();
+                    tournament.getPlayerUsernames().iterator().forEachRemaining(players::add);
+                    Iterator<String> playerIter = players.iterator();
+                    int div = players.size() / 4;
+                    int rem = players.size() % 4;
                     while (playerIter.hasNext()) {
+                        int rounds = div - 1;
+                        if (rem > 0) {
+                            rounds += 1;
+                            rem -= 1;
+                        }
                         String p1 = playerIter.next();
                         String p2 = playerIter.next();
-                        PlayMessage newPlay = new PlayMessage(tournamentPlay, p1, p2);
+                        PlayMessage newPlay = new PlayMessage(tournament, p1, p2, rounds);
                         userToGameKVStore.put(p1, newPlay);
                         userToGameKVStore.put(p2, newPlay);
                         gameIDToGameKVStore.put(newPlay.getID(), newPlay);
-                        pairTournamentPlayersKVStore.delete(newPlay.getID());
                         this.ctx.forward(newPlay.getID(), newPlay);
                     }
-                } else {
-                    pairTournamentPlayersKVStore.put(tournamentPlay.getTournamentID(), tournamentPlay);
+
+                    //If the tournament is over just delete the tournament message
+                    //Otherwise, create a new smaller tournament with the same tournamentID and 0 participants
+                    if (div == 0) {
+                        pairTournamentPlayersKVStore.delete(tournament.getTournamentID());
+                    } else {
+                        tournament.progressTournament();
+                        pairTournamentPlayersKVStore.put(tournament.getTournamentID(), tournament);
+                    }
+                }else {
+                    //Put the tournament message back into the store
+                    pairTournamentPlayersKVStore.put(tournament.getTournamentID(), tournament);
                 }
             } else {
-                logger.error("Failed to add " + newPlayer.getCreatedBy() + " to tournament " + tournamentPlay.getTournamentID());
+                logger.error("Failed to add " + newPlayer.getCreatedBy() + " to tournament " + tournament.getTournamentID());
             }
         }
         return null;    //Null values are dropped from stream by default

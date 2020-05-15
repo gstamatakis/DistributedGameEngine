@@ -15,7 +15,7 @@ if __name__ == '__main__':
                           "2\n" \
                           "user{0:05d} pass{0:05d}\n" \
                           "4\n" \
-                          "TIC_TAC_TOE\n" \
+                          "abcd1234\n" \
                           "10"
 
     for i in range(numOfFiles):
@@ -23,5 +23,5 @@ if __name__ == '__main__':
             out_file.write(template_practice.format(i))
 
     for i in range(numOfFiles):
-        with open(destination_tournament_folder + r'\client_actions_{0:05d}.txt'.format(i), 'w') as out_file:
+        with open(destination_tournament_folder + r'\tournament_player_actions_{0:05d}.txt'.format(i), 'w') as out_file:
             out_file.write(template_tournament.format(i))

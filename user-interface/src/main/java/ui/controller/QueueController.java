@@ -3,7 +3,6 @@ package ui.controller;
 import exception.CustomException;
 import io.swagger.annotations.*;
 import message.requests.RequestCreateTournamentMessage;
-import message.requests.RequestJoinTournamentMessage;
 import message.requests.RequestPracticeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,7 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
-import ui.service.KafkaService;
+import ui.service.PlayService;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -24,7 +23,7 @@ import java.util.concurrent.TimeoutException;
 public class QueueController {
 
     @Autowired
-    private KafkaService kafkaService;
+    private PlayService playService;
 
     @ExceptionHandler({CustomException.class})
     public ResponseEntity<String> handleConflict(CustomException ex, WebRequest request) {
@@ -41,10 +40,9 @@ public class QueueController {
                                            @AuthenticationPrincipal UserDetails userDetails)
             throws InterruptedException, ExecutionException, TimeoutException {
 
-        kafkaService.enqueuePractice(userDetails.getUsername(), msg);
+        playService.enqueuePractice(userDetails.getUsername(), msg);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
-
 
     @PostMapping("/tournament/create")
     @ApiOperation(value = "${QueueController.tournament_create}")
@@ -56,8 +54,8 @@ public class QueueController {
                                                    @ApiParam("Create tournament msg") @RequestBody RequestCreateTournamentMessage msg)
             throws InterruptedException, ExecutionException, TimeoutException {
 
-        String tournamentID = kafkaService.createTournament(userDetails.getUsername(), msg);
-        return new ResponseEntity<>(tournamentID, HttpStatus.OK);
+        playService.createTournament(userDetails.getUsername(), msg);
+        return new ResponseEntity<>("OK", HttpStatus.OK);
     }
 
     @PostMapping("/tournament/join")
@@ -67,10 +65,10 @@ public class QueueController {
             @ApiResponse(code = 400, message = "Something went wrong"),
             @ApiResponse(code = 422, message = "Invalid username/password supplied")})
     public ResponseEntity<String> joinTournament(@AuthenticationPrincipal UserDetails userDetails,
-                                                 @ApiParam("Join tournament msg") @RequestBody RequestJoinTournamentMessage msg)
+                                                 @ApiParam("Join tournament msg") @RequestBody String tournamentID)
             throws InterruptedException, ExecutionException, TimeoutException {
 
-        kafkaService.enqueueTournament(userDetails.getUsername(), msg);
+        playService.joinTournament(userDetails.getUsername(), tournamentID);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
 }

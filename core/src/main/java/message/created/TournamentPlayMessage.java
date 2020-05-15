@@ -2,20 +2,20 @@ package message.created;
 
 import game.PlayType;
 import message.DefaultPlayMessage;
-import message.queue.TournamentQueueMessage;
-import message.requests.RequestCreateTournamentMessage;
+import message.queue.JoinTournamentQueueMessage;
+import message.queue.CreateTournamentQueueMessage;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 public class TournamentPlayMessage extends DefaultPlayMessage {
+    private String tournamentID;
     private Set<String> blacklist;
     private List<String> playerUsernames;
     private int remainingSlots;
-    private String tournamentID;
 
-    public TournamentPlayMessage(RequestCreateTournamentMessage incomingMsg) {
+    public TournamentPlayMessage(CreateTournamentQueueMessage incomingMsg) {
         super(incomingMsg.getGameType(), incomingMsg.getCreatedBy());
         this.blacklist = incomingMsg.getUsernameBlackList();
         this.playerUsernames = new ArrayList<>();
@@ -27,8 +27,11 @@ public class TournamentPlayMessage extends DefaultPlayMessage {
         return this.remainingSlots == 0;
     }
 
-    public boolean addPlayer(TournamentQueueMessage msg) {
+    public boolean addPlayer(JoinTournamentQueueMessage msg) {
         if (isFull()) {
+            return false;
+        }
+        if (blacklist.contains(msg.getCreatedBy())) {
             return false;
         }
         this.playerUsernames.add(msg.getCreatedBy());
@@ -55,5 +58,10 @@ public class TournamentPlayMessage extends DefaultPlayMessage {
 
     public String getTournamentID() {
         return tournamentID;
+    }
+
+    public void progressTournament() {
+        this.playerUsernames.clear();
+        this.remainingSlots /= 2;
     }
 }
