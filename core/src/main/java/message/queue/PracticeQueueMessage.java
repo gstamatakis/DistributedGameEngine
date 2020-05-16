@@ -1,6 +1,6 @@
 package message.queue;
 
-import game.PlayType;
+import model.PlayTypeEnum;
 import message.DefaultPlayMessage;
 import message.requests.RequestPracticeMessage;
 
@@ -10,7 +10,7 @@ public class PracticeQueueMessage extends DefaultPlayMessage {
     }
 
     @Override
-    public PlayType playType() {
-        return PlayType.PRACTICE;
+    public PlayTypeEnum playType() {
+        return PlayTypeEnum.PRACTICE;
     }
 }

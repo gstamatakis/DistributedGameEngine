@@ -1,17 +1,17 @@
 package message.completed;
 
-import game.GameType;
-import game.PlayType;
+import model.GameTypeEnum;
+import model.PlayTypeEnum;
 
 public class CompletedPlayMessage {
     private final String playID;
     private final String winnerPlayer;
     private final String loserPlayer;
     private final String createdBy;
-    private final GameType gameType;
-    private final PlayType playType;
+    private final GameTypeEnum gameType;
+    private final PlayTypeEnum playType;
 
-    public CompletedPlayMessage(String playID, String winnerPlayer, String loserPlayer, String createdBy, GameType gameType, PlayType playType) {
+    public CompletedPlayMessage(String playID, String winnerPlayer, String loserPlayer, String createdBy, GameTypeEnum gameType, PlayTypeEnum playType) {
         this.playID = playID;
         this.winnerPlayer = winnerPlayer;
         this.loserPlayer = loserPlayer;
@@ -48,11 +48,11 @@ public class CompletedPlayMessage {
         return createdBy;
     }
 
-    public GameType getGameType() {
+    public GameTypeEnum getGameType() {
         return gameType;
     }
 
-    public PlayType getPlayType() {
+    public PlayTypeEnum getPlayType() {
         return playType;
     }
 }

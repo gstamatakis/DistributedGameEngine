@@ -1,7 +1,7 @@
 package ui.service;
 
 import com.google.gson.Gson;
-import game.GameType;
+import model.GameTypeEnum;
 import message.DefaultKafkaMessage;
 import message.completed.CompletedMoveMessage;
 import message.completed.CompletedPlayMessage;
@@ -55,7 +55,7 @@ public class PlayService {
     //Use the tournament ID as the key
     public void createTournament(String username, RequestCreateTournamentMessage msg) throws IllegalStateException, InterruptedException, ExecutionException, TimeoutException {
         //Create the tournamentID by hashing part of the input
-        GameType gameType = msg.getTournamentGameType();
+        GameTypeEnum gameType = msg.getTournamentGameType();
         String tournamentID = msg.getTournamentID();
         Set<String> blacklist = msg.getBlackList();
         int numOfParticipants = msg.getNumOfParticipants();

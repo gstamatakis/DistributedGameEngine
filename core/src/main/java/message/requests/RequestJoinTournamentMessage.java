@@ -1,7 +1,7 @@
 package message.requests;
 
-import game.GameType;
-import game.PlayType;
+import model.GameTypeEnum;
+import model.PlayTypeEnum;
 import message.DefaultPlayMessage;
 
 import java.util.HashSet;
@@ -12,21 +12,21 @@ public class RequestJoinTournamentMessage extends DefaultPlayMessage {
     private Set<String> usernameWhitelist;
     private int numOfParticipants;
 
-    public RequestJoinTournamentMessage(GameType gameType, String createdBy, int numOfParticipants) {
+    public RequestJoinTournamentMessage(GameTypeEnum gameType, String createdBy, int numOfParticipants) {
         super(gameType, createdBy);
         this.numOfParticipants = numOfParticipants;
         this.usernameWhitelist = new HashSet<>();
     }
 
-    public RequestJoinTournamentMessage(GameType gameType, String createdBy, int numOfParticipants, Set<String> usernameWhitelist) {
+    public RequestJoinTournamentMessage(GameTypeEnum gameType, String createdBy, int numOfParticipants, Set<String> usernameWhitelist) {
         super(gameType, createdBy);
         this.numOfParticipants = numOfParticipants;
         this.usernameWhitelist = usernameWhitelist;
     }
 
     @Override
-    public PlayType playType() {
-        return PlayType.TOURNAMENT;
+    public PlayTypeEnum playType() {
+        return PlayTypeEnum.TOURNAMENT;
     }
 
     public String getTournamentID() {

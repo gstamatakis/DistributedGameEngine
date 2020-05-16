@@ -1,6 +1,6 @@
 package message.created;
 
-import game.PlayType;
+import model.PlayTypeEnum;
 import message.DefaultPlayMessage;
 import message.queue.JoinTournamentQueueMessage;
 import message.queue.CreateTournamentQueueMessage;
@@ -40,8 +40,8 @@ public class TournamentPlayMessage extends DefaultPlayMessage {
     }
 
     @Override
-    public PlayType playType() {
-        return PlayType.TOURNAMENT;
+    public PlayTypeEnum playType() {
+        return PlayTypeEnum.TOURNAMENT;
     }
 
     public Set<String> getWhitelist() {

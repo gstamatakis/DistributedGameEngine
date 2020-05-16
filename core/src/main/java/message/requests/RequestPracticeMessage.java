@@ -1,17 +1,17 @@
 package message.requests;
 
-import game.GameType;
-import game.PlayType;
+import model.GameTypeEnum;
+import model.PlayTypeEnum;
 import message.DefaultPlayMessage;
 
 public class RequestPracticeMessage extends DefaultPlayMessage {
-    public RequestPracticeMessage(String username, GameType gameType) {
+    public RequestPracticeMessage(String username, GameTypeEnum gameType) {
         super(gameType, username);
     }
 
     @Override
-    public PlayType playType() {
-        return PlayType.PRACTICE;
+    public PlayTypeEnum playType() {
+        return PlayTypeEnum.PRACTICE;
     }
 }
 

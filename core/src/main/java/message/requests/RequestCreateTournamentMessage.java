@@ -1,16 +1,16 @@
 package message.requests;
 
-import game.GameType;
+import model.GameTypeEnum;
 
 import java.util.Set;
 
 public class RequestCreateTournamentMessage {
-    private final GameType tournamentGameType;
+    private final GameTypeEnum tournamentGameType;
     private final Set<String> blackList;
     private final int numOfParticipants;
     private String tournamentID;
 
-    public RequestCreateTournamentMessage(GameType tournamentGameType, Set<String> blackList, int numOfParticipants, String tournamentID) {
+    public RequestCreateTournamentMessage(GameTypeEnum tournamentGameType, Set<String> blackList, int numOfParticipants, String tournamentID) {
         this.tournamentGameType = tournamentGameType;
         this.blackList = blackList;
         this.numOfParticipants = numOfParticipants;
@@ -27,7 +27,7 @@ public class RequestCreateTournamentMessage {
                 '}';
     }
 
-    public GameType getTournamentGameType() {
+    public GameTypeEnum getTournamentGameType() {
         return tournamentGameType;
     }
 

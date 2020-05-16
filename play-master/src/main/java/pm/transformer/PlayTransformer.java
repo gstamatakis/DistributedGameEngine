@@ -2,6 +2,8 @@ package pm.transformer;
 
 import message.completed.CompletedMoveMessage;
 import message.created.JoinedPlayMoveMessage;
+import message.created.MoveMessage;
+import message.created.PlayMessage;
 import message.created.PlayStateMessage;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.Transformer;
@@ -31,17 +33,15 @@ public class PlayTransformer implements Transformer<String, JoinedPlayMoveMessag
     @Override
     public KeyValue<String, CompletedMoveMessage> transform(String key, JoinedPlayMoveMessage value) {
         logger.info(key, value);
-        String playID = value.getPlay().getID();
-        PlayStateMessage curGame = playStateKVStore.get(playID);
+        PlayMessage play = value.getPlay();
+        MoveMessage move = value.getMove();
+        PlayStateMessage curGame = playStateKVStore.get(play.getID());
         if (curGame == null) {
-            playStateKVStore.put(playID, new PlayStateMessage(value));
-        } else {
-            boolean accepted = curGame.considerMove(value.getMove());
-            if (!accepted) {
-                return new KeyValue<>("ERROR", new CompletedMoveMessage());
-            }
+            curGame = new PlayStateMessage(play);
         }
-        return null;
+        CompletedMoveMessage output = curGame.considerMove(move);
+        playStateKVStore.put(play.getID(), curGame);
+        return new KeyValue<>(key, output);
     }
 
     @Override

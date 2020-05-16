@@ -1,17 +1,17 @@
 package message.created;
 
-import game.GameType;
-import game.PlayType;
+
 import message.queue.PracticeQueueMessage;
+import model.GameTypeEnum;
+import model.PlayTypeEnum;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public class PlayMessage {
     private String p1, p2;
     private String ID;
-    private PlayType playType;
-    private GameType gameType;
+    private PlayTypeEnum playType;
+    private GameTypeEnum gameType;
     private LocalDateTime createdAt;
     private int remainingRounds;
 
@@ -19,17 +19,17 @@ public class PlayMessage {
         p1 = msg1.getCreatedBy();
         p2 = msg2.getCreatedBy();
         ID = generateID(msg1, msg2);
-        playType = PlayType.PRACTICE;
+        playType = PlayTypeEnum.PRACTICE;
         gameType = msg1.getGameType();
         createdAt = LocalDateTime.now();
         remainingRounds = 1;
     }
 
-    public PlayMessage(TournamentPlayMessage message, String msg1, String msg2,int remainingRounds) {
+    public PlayMessage(TournamentPlayMessage message, String msg1, String msg2, int remainingRounds) {
         p1 = msg1;
         p2 = msg2;
         ID = message.getTournamentID();
-        playType = PlayType.TOURNAMENT;
+        playType = PlayTypeEnum.TOURNAMENT;
         gameType = message.getGameType();
         createdAt = LocalDateTime.now();
         this.remainingRounds = remainingRounds;
@@ -50,6 +50,10 @@ public class PlayMessage {
                 '}';
     }
 
+    public String getOpponent(String username) {
+        return this.p1.equals(username) ? p2 : p1;
+    }
+
     public String getP1() {
         return p1;
     }
@@ -62,11 +66,11 @@ public class PlayMessage {
         return ID;
     }
 
-    public PlayType getPlayType() {
+    public PlayTypeEnum getPlayType() {
         return playType;
     }
 
-    public GameType getGameType() {
+    public GameTypeEnum getGameType() {
         return gameType;
     }
 

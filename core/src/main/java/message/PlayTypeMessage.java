@@ -1,7 +1,7 @@
 package message;
 
-import game.PlayType;
+import model.PlayTypeEnum;
 
 public interface PlayTypeMessage {
-    PlayType playType();
+    PlayTypeEnum playType();
 }

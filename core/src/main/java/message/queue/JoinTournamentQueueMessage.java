@@ -1,6 +1,6 @@
 package message.queue;
 
-import game.PlayType;
+import model.PlayTypeEnum;
 import message.DefaultPlayMessage;
 
 public class JoinTournamentQueueMessage extends DefaultPlayMessage {
@@ -12,8 +12,8 @@ public class JoinTournamentQueueMessage extends DefaultPlayMessage {
     }
 
     @Override
-    public PlayType playType() {
-        return PlayType.TOURNAMENT;
+    public PlayTypeEnum playType() {
+        return PlayTypeEnum.TOURNAMENT;
     }
 
     public String getTournamentID() {

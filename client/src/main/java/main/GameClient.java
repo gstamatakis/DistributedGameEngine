@@ -1,12 +1,11 @@
 package main;
 
 import com.google.common.collect.Queues;
-import game.GameType;
+import model.GameTypeEnum;
 import message.requests.RequestCreateTournamentMessage;
 import org.apache.commons.cli.*;
 import org.springframework.http.HttpEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -148,7 +147,7 @@ public class GameClient {
                 case 3:
                     //Arguments
                     output.write("\nQueueing up for a practice play. Enter preferred game type: ");
-                    GameType gameType = GameType.valueOf(scanner.next());
+                    GameTypeEnum gameType = GameTypeEnum.valueOf(scanner.next());
                     output.write("\n" + gameType.toString());
 
                     //Queue up
@@ -202,7 +201,7 @@ public class GameClient {
 
                 case 5:
                     output.write("\nCreating a tournament play. Enter preferred game type,num of participants and tournament ID: ");
-                    GameType tournamentGameType = GameType.valueOf(scanner.next());
+                    GameTypeEnum tournamentGameType = GameTypeEnum.valueOf(scanner.next());
                     int numOfParticipants = Integer.parseInt(scanner.next());
                     String newTournamentID = scanner.next();
                     Set<String> blackList = new HashSet<>();

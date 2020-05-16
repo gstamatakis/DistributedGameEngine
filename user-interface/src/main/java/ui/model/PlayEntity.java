@@ -1,9 +1,8 @@
 package ui.model;
 
-import game.GameType;
-import game.PlayType;
+import model.GameTypeEnum;
+import model.PlayTypeEnum;
 import message.completed.CompletedPlayMessage;
-import message.created.PlayMessage;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -21,14 +20,14 @@ public class PlayEntity {
     @Column
     private String createdBy;   //Official
     @Column
-    private GameType gameType;
+    private GameTypeEnum gameType;
     @Column
-    private PlayType playType;
+    private PlayTypeEnum playType;
 
     public PlayEntity() {
     }
 
-    public PlayEntity(String playID, String winnerPlayer, String loserPlayer, String createdBy, GameType gameType, PlayType playType) {
+    public PlayEntity(String playID, String winnerPlayer, String loserPlayer, String createdBy, GameTypeEnum gameType, PlayTypeEnum playType) {
         this.playID = playID;
         this.winnerPlayer = winnerPlayer;
         this.loserPlayer = loserPlayer;
@@ -120,19 +119,19 @@ public class PlayEntity {
         this.createdBy = createdBy;
     }
 
-    public GameType getGameType() {
+    public GameTypeEnum getGameType() {
         return gameType;
     }
 
-    public void setGameType(GameType gameType) {
+    public void setGameType(GameTypeEnum gameType) {
         this.gameType = gameType;
     }
 
-    public PlayType getPlayType() {
+    public PlayTypeEnum getPlayType() {
         return playType;
     }
 
-    public void setPlayType(PlayType playType) {
+    public void setPlayType(PlayTypeEnum playType) {
         this.playType = playType;
     }
 }

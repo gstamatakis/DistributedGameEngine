@@ -2,7 +2,7 @@ package main;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import game.GameType;
+import model.GameTypeEnum;
 import message.PlayTypeMessage;
 import message.requests.RequestCreateTournamentMessage;
 import message.requests.RequestPracticeMessage;
@@ -64,7 +64,7 @@ public class RESTClient {
         return restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
     }
 
-    public HttpEntity<String> practice(String practiceURL, String token, GameType gameType, String username) {
+    public HttpEntity<String> practice(String practiceURL, String token, GameTypeEnum gameType, String username) {
         //Headers
         HttpHeaders headers = new HttpHeaders();
         headers.setCacheControl(CacheControl.noCache());
