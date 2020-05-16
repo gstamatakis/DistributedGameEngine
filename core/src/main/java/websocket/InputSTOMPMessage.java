@@ -2,14 +2,14 @@ package websocket;
 
 import java.io.Serializable;
 
-public class Message implements Serializable {
+public class InputSTOMPMessage implements Serializable {
     private String sender;
     private String payload;
 
-    public Message() {
+    public InputSTOMPMessage() {
     }
 
-    public Message(String sender, String payload) {
+    public InputSTOMPMessage(String sender, String payload) {
         this.sender = sender;
         this.payload = payload;
     }

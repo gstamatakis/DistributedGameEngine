@@ -1,5 +1,6 @@
 package main;
 
+import com.google.common.collect.Queues;
 import game.GameType;
 import message.requests.RequestCreateTournamentMessage;
 import org.apache.commons.cli.*;
@@ -13,8 +14,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
-import websocket.Message;
+import websocket.InputSTOMPMessage;
 import websocket.MyStompSessionHandler;
+import websocket.OutputSTOMPMessage;
 
 import java.io.*;
 import java.util.*;
@@ -26,7 +28,7 @@ public class GameClient {
     private static final String TOURNAMENT_CREATE_URL = "http://localhost:8080/queue/tournament/create";
     private static final String TOURNAMENT_JOIN_URL = "http://localhost:8080/queue/tournament/join";
     private static final String SEARCH_URL = "http://localhost:8080/users/";
-    private static final String STOMP_CONNECT_URL = "ws://localhost:8080/echo";
+    private static final String STOMP_CONNECT_URL = "ws://localhost:8080/play";
 
     public static void main(String[] args) throws Exception {
         //Parse input
@@ -158,32 +160,27 @@ public class GameClient {
                         break;
                     }
                     output.write("\nPractice play enqueued status: " + practiceResponse.getBody());
-                    if (true) {
-                        return -1;
-                    }
 
                     //Start
                     WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
                     stompClient.setMessageConverter(new MappingJackson2MessageConverter());
                     StompSession stompSession;
+                    Queue<OutputSTOMPMessage> queue = Queues.newArrayBlockingQueue(10);
                     try {
                         WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
                         webSocketHttpHeaders.add("Authorization", "Bearer " + token);
-
-                        StompHeaders stompHeaders = new StompHeaders();
-                        stompHeaders.add("Authorization", "Bearer " + token);
 
                         List<String> subs = new ArrayList<>();
                         subs.add("/user/queue/reply");
                         subs.add("/user/queue/errors");
 
-                        stompSession = stompClient.connect(STOMP_CONNECT_URL, webSocketHttpHeaders, stompHeaders, new MyStompSessionHandler(subs)).get();
+                        stompSession = stompClient.connect(STOMP_CONNECT_URL, webSocketHttpHeaders, new MyStompSessionHandler(subs,queue)).get();
                     } catch (Exception e) {
                         output.write("\n" + e.getMessage());
                         break;
                     }
 
-                    stompSession.send("/app/echo", new Message(username, "payload_" + username));
+                    stompSession.send("/app/play", new InputSTOMPMessage(username, "payload_" + username));
                     break;
 
                 case 4:

@@ -34,4 +34,4 @@ Received Message: Hello To Partioned Topic! from partition: 3
 >Received Message in filtered listener: Hello Baeldung!
 
 #### Message (Serialized Java Object) received from the 'greeting' topic
->Received greeting message: Greetings, World!!
+>Received greeting inputSTOMPMessage: Greetings, World!!

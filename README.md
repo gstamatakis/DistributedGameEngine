@@ -113,7 +113,7 @@ Remove the registry
     
 ### STOMP
 
-    https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#websocket-stomp-message-flow
+    https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#websocket-stomp-inputSTOMPMessage-flow
     
 ### Kafka
 

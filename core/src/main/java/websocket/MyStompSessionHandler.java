@@ -9,13 +9,17 @@ import org.springframework.messaging.simp.stomp.StompSessionHandler;
 
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Queue;
 
+@SuppressWarnings("NullableProblems")
 public class MyStompSessionHandler implements StompSessionHandler {
     private static final Logger logger = LoggerFactory.getLogger(MyStompSessionHandler.class);
     private List<String> subs;
+    private final Queue<OutputSTOMPMessage> receivedMessageQueue;
 
-    public MyStompSessionHandler(List<String> subs) {
+    public MyStompSessionHandler(List<String> subs,Queue<OutputSTOMPMessage> queue) {
         this.subs = subs;
+        this.receivedMessageQueue = queue;
     }
 
     @Override
@@ -37,12 +41,14 @@ public class MyStompSessionHandler implements StompSessionHandler {
 
     @Override
     public Type getPayloadType(StompHeaders headers) {
-        return OutputMessage.class;
+        return OutputSTOMPMessage.class;
     }
 
     @Override
     public void handleFrame(StompHeaders headers, Object payload) {
-        OutputMessage msg = (OutputMessage) payload;
-        logger.info("Received: " + msg);
+        OutputSTOMPMessage msg = (OutputSTOMPMessage) payload;
+        if (!receivedMessageQueue.offer(msg)) {
+            logger.warn("Queue of received STOMP messages is full! Discarding messages!");
+        }
     }
 }

@@ -73,4 +73,8 @@ public class PlayMessage {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+
+    public int getRemainingRounds() {
+        return remainingRounds;
+    }
 }

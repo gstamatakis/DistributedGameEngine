@@ -8,8 +8,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
-import websocket.Message;
-import websocket.OutputMessage;
+import websocket.InputSTOMPMessage;
+import websocket.OutputSTOMPMessage;
 
 import java.security.Principal;
 import java.text.SimpleDateFormat;
@@ -30,10 +30,18 @@ public class WebSocketController {
 
     @MessageMapping("/echo")
     @SendToUser("/queue/reply")
-    public OutputMessage greeting(@Payload Message message, Principal principal) {
+    public OutputSTOMPMessage echo(@Payload InputSTOMPMessage inputSTOMPMessage, Principal principal) {
         final String time = new SimpleDateFormat("HH:mm").format(new Date());
-        return new OutputMessage(principal, message.getSender(), message.getPayload(), time);
+        return new OutputSTOMPMessage(principal, inputSTOMPMessage.getSender(), inputSTOMPMessage.getPayload(), time);
     }
+
+    @MessageMapping("/broadcast")
+    @SendToUser("/topic/broadcast")
+    public OutputSTOMPMessage broadcast(@Payload InputSTOMPMessage inputSTOMPMessage, Principal principal) {
+        final String time = new SimpleDateFormat("HH:mm").format(new Date());
+        return new OutputSTOMPMessage(principal, inputSTOMPMessage.getSender(), inputSTOMPMessage.getPayload(), time);
+    }
+
 
     @MessageExceptionHandler
     @SendToUser("/queue/errors")

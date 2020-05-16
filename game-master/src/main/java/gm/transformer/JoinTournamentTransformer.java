@@ -17,7 +17,6 @@ import java.util.List;
 @SuppressWarnings("unchecked")
 public class JoinTournamentTransformer implements Transformer<String, JoinTournamentQueueMessage, KeyValue<String, PlayMessage>> {
     private static final Logger logger = LoggerFactory.getLogger(JoinTournamentTransformer.class);
-
     private final String pairTournamentPlayersStore;
     private final String userToGameIDStore;
     private final String gameIDToGameStore;
@@ -90,20 +89,6 @@ public class JoinTournamentTransformer implements Transformer<String, JoinTourna
 
     @Override
     public void close() {
-        if (pairTournamentPlayersKVStore != null) {
-            if (pairTournamentPlayersKVStore.isOpen()) {
-                pairTournamentPlayersKVStore.close();
-            }
-        }
-        if (userToGameKVStore != null) {
-            if (userToGameKVStore.isOpen()) {
-                userToGameKVStore.close();
-            }
-        }
-        if (gameIDToGameKVStore != null) {
-            if (gameIDToGameKVStore.isOpen()) {
-                gameIDToGameKVStore.close();
-            }
-        }
+
     }
 }

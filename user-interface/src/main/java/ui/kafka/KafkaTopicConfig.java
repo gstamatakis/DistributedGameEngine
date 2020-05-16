@@ -46,6 +46,16 @@ public class KafkaTopicConfig {
     }
 
     @Bean
+    public NewTopic inputMovesTopic() {
+        return new NewTopic("in-plays", 1, replicationFactor);
+    }
+
+    @Bean
+    public NewTopic outputMovesTopic() {
+        return new NewTopic("out-plays", 1, replicationFactor);
+    }
+
+    @Bean
     public NewTopic errorTopic() {
         return new NewTopic("errors", 1, replicationFactor);
     }

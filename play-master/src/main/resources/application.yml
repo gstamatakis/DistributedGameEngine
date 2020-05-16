@@ -11,8 +11,41 @@ secets:
   gm-token: token_gm
   pm-token: token_pm
 
+
 spring:
   application.name: PlayMasterApplication
   devtools:
     livereload:
-      port: 12345
+      port: 12346
+  cloud.stream:
+    bindings:
+      processPlaysAndMoves-in-0:
+        destination: input-moves
+        group: group1
+        auto.offset.reset: latest
+      processPlaysAndMoves-in-1:
+        destination: new-plays
+        group: group1
+        auto.offset.reset: latest
+      processPlaysAndMoves-out-0:
+        destination: output-moves
+    kafka:
+      binder:
+        brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
+        replication-factor: 3
+        configuration:
+          auto.offset.reset: latest
+      streams.binder:
+        functions:
+          processPlaysAndMoves:
+            applicationId: app1
+        brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
+        deserialization-exception-handler: logandfail
+        stateStoreRetry:
+          maxAttempts: 3
+          backoff-period: 5000
+        configuration:
+          #application.server: localhost:9094
+          default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+          default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+          commit.interval.ms: 1000

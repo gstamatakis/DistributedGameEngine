@@ -3,6 +3,7 @@ package ui.service;
 import com.google.gson.Gson;
 import game.GameType;
 import message.DefaultKafkaMessage;
+import message.completed.CompletedMoveMessage;
 import message.completed.CompletedPlayMessage;
 import message.created.PlayMessage;
 import message.queue.JoinTournamentQueueMessage;
@@ -33,6 +34,7 @@ public class PlayService {
     private final String joinPlayTopic = "join-play";
     private final String newPlaysTopic = "new-plays";
     private final String completedPlaysTopic = "completed-plays";
+    private final String outMovesTopic = "out-moves";
     private final String errorsTopic = "errors";
     private final Gson gson = new Gson();
     private final long timeout = 5;
@@ -85,21 +87,29 @@ public class PlayService {
                 .get(timeout, TimeUnit.SECONDS);
     }
 
-    @KafkaListener(topics = completedPlaysTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
-    public void listenForFinishedPlays(@Payload String message,
-                                       @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
-                                       @Header(KafkaHeaders.OFFSET) int offset) {
-        CompletedPlayMessage completedPlayMessage = gson.fromJson(message, CompletedPlayMessage.class);
-        playRepository.save(new PlayEntity(completedPlayMessage));
-        logger.info("Received Message: " + message.toString() + " from partition " + partition);
-    }
-
     @KafkaListener(topics = newPlaysTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
     public void listenForNewPlays(@Payload String message,
                                   @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
                                   @Header(KafkaHeaders.OFFSET) int offset) {
         PlayMessage newPlay = gson.fromJson(message, PlayMessage.class);
         logger.info("Received Message: " + newPlay.toString() + " from partition " + partition);
+    }
+
+    @KafkaListener(topics = completedPlaysTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
+    public void listenForFinishedPlays(@Payload String message,
+                                       @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
+                                       @Header(KafkaHeaders.OFFSET) int offset) {
+        CompletedPlayMessage completedPlayMessage = gson.fromJson(message, CompletedPlayMessage.class);
+        playRepository.save(new PlayEntity(completedPlayMessage));
+        logger.info("Received Message: " + completedPlayMessage.toString() + " from partition " + partition);
+    }
+
+    @KafkaListener(topics = outMovesTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
+    public void listenForFinishedMoves(@Payload String message,
+                                       @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
+                                       @Header(KafkaHeaders.OFFSET) int offset) {
+        CompletedMoveMessage completedMoveMessage = gson.fromJson(message, CompletedMoveMessage.class);
+        logger.info("Received Message: " + completedMoveMessage.toString() + " from partition " + partition);
     }
 
     @KafkaListener(topics = errorsTopic, containerFactory = "kafkaListenerContainerFactory")

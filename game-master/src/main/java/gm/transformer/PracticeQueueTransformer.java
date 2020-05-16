@@ -78,21 +78,7 @@ public class PracticeQueueTransformer implements Transformer<String, PracticeQue
 
     @Override
     public void close() {
-        if (pairPracticePlayersKVStore != null) {
-            if (pairPracticePlayersKVStore.isOpen()) {
-                pairPracticePlayersKVStore.close();
-            }
-        }
-        if (userToGameKVStore != null) {
-            if (userToGameKVStore.isOpen()) {
-                userToGameKVStore.close();
-            }
-        }
-        if (gameIDToGameKVStore != null) {
-            if (gameIDToGameKVStore.isOpen()) {
-                gameIDToGameKVStore.close();
-            }
-        }
+
     }
 
 }

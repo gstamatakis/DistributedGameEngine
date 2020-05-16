@@ -32,7 +32,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/echo").setAllowedOrigins("*");
+        registry.addEndpoint("/play").setAllowedOrigins("*");
     }
 
     @Override
@@ -42,23 +42,25 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     @EventListener
-    public void handleSubscribeEvent(SessionSubscribeEvent event) {
+    public void handleConnectEvent(SessionConnectEvent event) {
         if (event.getUser() != null) {
-            log.info("<==> handleSubscribeEvent: username=" + event.getUser().getName() + ", event=" + event);
+            log.info("===> handleConnectEvent: username=" + event.getUser().getName() + ", event=" + event.toString());
         }
     }
 
     @EventListener
-    public void handleConnectEvent(SessionConnectEvent event) {
+    public void handleSubscribeEvent(SessionSubscribeEvent event) {
         if (event.getUser() != null) {
-            log.info("===> handleConnectEvent: username=" + event.getUser().getName() + ", event=" + event);
+            log.info("<==> handleSubscribeEvent: username=" + event.getUser().getName() + ", event=" + event.toString());
         }
     }
 
     @EventListener
     public void handleDisconnectEvent(SessionDisconnectEvent event) {
         if (event.getUser() != null) {
-            log.info("<=== handleDisconnectEvent: username=" + event.getUser().getName() + ", event=" + event);
+            log.info("<=== handleDisconnectEvent: username=" + event.getUser().getName() + ", event=" + event.toString());
         }
     }
+
+
 }

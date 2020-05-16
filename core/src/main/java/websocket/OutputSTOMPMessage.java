@@ -3,16 +3,16 @@ package websocket;
 import java.io.Serializable;
 import java.security.Principal;
 
-public class OutputMessage implements Serializable {
+public class OutputSTOMPMessage implements Serializable {
     private Principal principal;
     private String sender;
     private String payload;
     private String time;
 
-    public OutputMessage() {
+    public OutputSTOMPMessage() {
     }
 
-    public OutputMessage(String sender, String payload, String time) {
+    public OutputSTOMPMessage(String sender, String payload, String time) {
         this.sender = sender;
         this.payload = payload;
         this.time = time;
@@ -20,7 +20,7 @@ public class OutputMessage implements Serializable {
     }
 
 
-    public OutputMessage(Principal principal, String sender, String payload, String time) {
+    public OutputSTOMPMessage(Principal principal, String sender, String payload, String time) {
         this.principal = principal;
         this.sender = sender;
         this.payload = payload;

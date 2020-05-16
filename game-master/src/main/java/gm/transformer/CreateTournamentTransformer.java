@@ -30,10 +30,6 @@ public class CreateTournamentTransformer implements Transformer<String, CreateTo
 
     @Override
     public void close() {
-        if (pairTournamentPlayersKVStore != null) {
-            if (pairTournamentPlayersKVStore.isOpen()) {
-                pairTournamentPlayersKVStore.close();
-            }
-        }
+
     }
 }

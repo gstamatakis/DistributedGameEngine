@@ -7,19 +7,19 @@
 #### Server-Client Relationship
 - Server will be up always.
 - User will deal only with client. User should be prompted to start the game. As soon as she wants to play, client should connect to server prompting to join the game.
-- At a time, only two clients can be connected to server. The server should send a Busy/Wait message in case third client wants to connect. 
+- At a time, only two clients can be connected to server. The server should send a Busy/Wait inputSTOMPMessage in case third client wants to connect. 
 
 #### Game Play
-- When first client connects, the server should wait for the second client to connect and send a corresponding message to the first client.
+- When first client connects, the server should wait for the second client to connect and send a corresponding inputSTOMPMessage to the first client.
 - As soon as second client connects, it assigns player1/player2 randomly to the two clients and should start the game. Player 1 has ‘x’ marker and Player 2 has ‘o’ marker.
 - Whichever player has to make a move will receive the current state of the board from the server and other player will wait for the other player to make a move. Respective messages should be displayed for both.
 - Player 1 is requested to make a move first.
 - As soon as Player 1 makes the move, updates in the board state will be made and Player 2 will receive the updated board state.
 - When the game is over:
-    - Player who won should get the **Win** message
-    - Player who lost should get the **Lose** message
-    - In case of draw, both should get **Draw** message.
-    - Both should be prompted with **Play another game?** message. If both agrees, fresh game should start else both the clients disconnect and close.
+    - Player who won should get the **Win** inputSTOMPMessage
+    - Player who lost should get the **Lose** inputSTOMPMessage
+    - In case of draw, both should get **Draw** inputSTOMPMessage.
+    - Both should be prompted with **Play another game?** inputSTOMPMessage. If both agrees, fresh game should start else both the clients disconnect and close.
 * **Game Parallelization**
     * The server should be able to run multiple games in parallel.
     * If X clients connect to server, where X is even, X/2 games should run in parallel.

@@ -1,23 +1,36 @@
 package ui.websocket;
 
 import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.*;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
-import websocket.Message;
+import org.springframework.web.util.UriComponentsBuilder;
+import websocket.InputSTOMPMessage;
 import websocket.MyStompSessionHandler;
+import websocket.OutputSTOMPMessage;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MyStompSessionHandlerTest {
     private static Random random = new Random();
     private static ExecutorService pool;
+    private static RestTemplate restTemplate = new RestTemplate();
+    private static final String SIGN_IN_URL = "http://localhost:8080/users/signin";
+    private static final Logger logger = LoggerFactory.getLogger(MyStompSessionHandlerTest.class);
 
     @BeforeAll
     static void setUp() {
@@ -27,56 +40,13 @@ class MyStompSessionHandlerTest {
     @AfterEach
     void afterEach() {
         try {
-            Thread.sleep(5000);
+            Thread.sleep(3000);
         } catch (InterruptedException ignored) {
         }
     }
 
     @AfterAll
     static void tearDown() {
-        pool.shutdown();
-    }
-
-    @Test
-    public void echo_test() {
-        WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
-        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-        List<String> subs = new ArrayList<>();
-        subs.add("/user/queue/errors");
-        subs.add("/user/queue/reply");
-        StompSession stompSession = null;
-        try {
-            stompSession = stompClient.connect("ws://localhost:8080/echo", new MyStompSessionHandler(subs)).get();
-        } catch (Exception e) {
-            Assertions.fail(e);
-        }
-        int seed = random.nextInt(100000);
-        stompSession.send("/app/echo", new Message("User" + seed, "payload" + seed));
-    }
-
-    @Test
-    public void chat_test() {
-        WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
-        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-        List<String> subs = new ArrayList<>();
-        subs.add("/topic/messages");
-        StompSession stompSession = null;
-        try {
-            stompSession = stompClient.connect("ws://localhost:8080/chat", new MyStompSessionHandler(subs)).get();
-        } catch (Exception e) {
-            Assertions.fail(e);
-        }
-        int seed = random.nextInt(100000);
-        stompSession.send("/app/chat", new Message("User" + seed, "payload" + seed));
-    }
-
-    @Test
-    public void multiple_chat_test() {
-        pool.submit(this::chat_test);
-        pool.submit(this::chat_test);
-        pool.submit(this::chat_test);
-        pool.submit(this::chat_test);
-
         try {
             // Wait a while for existing tasks to terminate
             if (!pool.awaitTermination(10, TimeUnit.SECONDS)) {
@@ -90,6 +60,87 @@ class MyStompSessionHandlerTest {
             pool.shutdownNow();
             // Preserve interrupt status
             Thread.currentThread().interrupt();
+        }
+    }
+
+    //Get a valid token from the UI service
+    private synchronized static String login(String username, String password) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("username", username);
+        params.add("password", password);
+
+        //Headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.ALL));
+        headers.setCacheControl(CacheControl.noCache());
+
+        //Arguments
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(SIGN_IN_URL).queryParams(params);
+
+        //Entity = Headers + Arguments
+        HttpEntity<Object> entity = new HttpEntity<>(headers);
+
+        //Response = executed entity
+        return restTemplate.postForEntity(builder.toUriString(), entity, String.class).getBody();
+    }
+
+    @Test
+    @Order(1)
+    public void echo_test() {
+        WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
+        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+        StompSession stompSession = null;
+        String token = login("admin", "admin");
+        ArrayBlockingQueue<OutputSTOMPMessage> queue = new ArrayBlockingQueue<>(10);
+        try {
+            WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
+            webSocketHttpHeaders.add("Authorization", "Bearer " + token);
+
+            List<String> subs = new ArrayList<>();
+            subs.add("/user/queue/reply");
+            subs.add("/user/queue/errors");
+            subs.add("/topic/broadcast");
+            stompSession = stompClient.connect("ws://localhost:8080/play", webSocketHttpHeaders, new MyStompSessionHandler(subs, queue)).get();
+        } catch (Exception e) {
+            Assertions.fail(e);
+        }
+
+        for (int i = 0; i < 10; i++) {
+            //Send something
+            int seed = random.nextInt(100000);
+            InputSTOMPMessage newInputMsg = new InputSTOMPMessage(String.format("User%06d", seed), String.format("payload%06d", seed));
+            stompSession.send("/app/echo", newInputMsg);
+
+            //Get an echo response
+            try {
+                OutputSTOMPMessage newOutputMsg = queue.poll(5, TimeUnit.SECONDS);
+                if (newOutputMsg == null) {
+                    break;
+                }
+                Assertions.assertEquals(newInputMsg.getPayload(), newOutputMsg.getPayload());
+                //Wait before sending the next message
+                Thread.sleep(100);
+            } catch (InterruptedException ignored) {
+            }
+        }
+    }
+
+    @Test
+    @Order(2)
+    @Disabled
+    public void concurrent_echo_test() {
+        List<Future<?>> futures = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            futures.add(pool.submit(this::echo_test));
+        }
+        int cnt = 1;
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+                logger.info(String.format("Future %d completed.", cnt++));
+            } catch (Exception e) {
+                Assertions.fail(e);
+            }
         }
     }
 }
