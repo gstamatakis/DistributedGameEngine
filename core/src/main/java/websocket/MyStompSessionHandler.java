@@ -15,9 +15,9 @@ import java.util.Queue;
 public class MyStompSessionHandler implements StompSessionHandler {
     private static final Logger logger = LoggerFactory.getLogger(MyStompSessionHandler.class);
     private List<String> subs;
-    private final Queue<OutputSTOMPMessage> receivedMessageQueue;
+    private final Queue<ServerSTOMPMessage> receivedMessageQueue;
 
-    public MyStompSessionHandler(List<String> subs,Queue<OutputSTOMPMessage> queue) {
+    public MyStompSessionHandler(List<String> subs,Queue<ServerSTOMPMessage> queue) {
         this.subs = subs;
         this.receivedMessageQueue = queue;
     }
@@ -41,12 +41,13 @@ public class MyStompSessionHandler implements StompSessionHandler {
 
     @Override
     public Type getPayloadType(StompHeaders headers) {
-        return OutputSTOMPMessage.class;
+        return ServerSTOMPMessage.class;
     }
 
     @Override
     public void handleFrame(StompHeaders headers, Object payload) {
-        OutputSTOMPMessage msg = (OutputSTOMPMessage) payload;
+        ServerSTOMPMessage msg = (ServerSTOMPMessage) payload;
+        msg.setAckID(headers.getAck());
         if (!receivedMessageQueue.offer(msg)) {
             logger.warn("Queue of received STOMP messages is full! Discarding messages!");
         }

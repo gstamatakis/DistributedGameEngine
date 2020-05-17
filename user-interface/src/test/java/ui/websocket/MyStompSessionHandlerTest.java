@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -14,9 +13,9 @@ import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.util.UriComponentsBuilder;
-import websocket.InputSTOMPMessage;
+import websocket.ClientSTOMPMessage;
 import websocket.MyStompSessionHandler;
-import websocket.OutputSTOMPMessage;
+import websocket.ServerSTOMPMessage;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -91,7 +90,7 @@ class MyStompSessionHandlerTest {
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
         StompSession stompSession = null;
         String token = login("admin", "admin");
-        ArrayBlockingQueue<OutputSTOMPMessage> queue = new ArrayBlockingQueue<>(10);
+        ArrayBlockingQueue<ServerSTOMPMessage> queue = new ArrayBlockingQueue<>(10);
         try {
             WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
             webSocketHttpHeaders.add("Authorization", "Bearer " + token);
@@ -108,12 +107,12 @@ class MyStompSessionHandlerTest {
         for (int i = 0; i < 10; i++) {
             //Send something
             int seed = random.nextInt(100000);
-            InputSTOMPMessage newInputMsg = new InputSTOMPMessage(String.format("User%06d", seed), String.format("payload%06d", seed));
+            ClientSTOMPMessage newInputMsg = new ClientSTOMPMessage(String.format("payload%06d", seed));
             stompSession.send("/app/echo", newInputMsg);
 
             //Get an echo response
             try {
-                OutputSTOMPMessage newOutputMsg = queue.poll(5, TimeUnit.SECONDS);
+                ServerSTOMPMessage newOutputMsg = queue.poll(5, TimeUnit.SECONDS);
                 if (newOutputMsg == null) {
                     break;
                 }

@@ -8,8 +8,9 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
-import websocket.InputSTOMPMessage;
-import websocket.OutputSTOMPMessage;
+import websocket.ClientSTOMPMessage;
+import websocket.STOMPMessageType;
+import websocket.ServerSTOMPMessage;
 
 import java.security.Principal;
 import java.text.SimpleDateFormat;
@@ -30,16 +31,16 @@ public class WebSocketController {
 
     @MessageMapping("/echo")
     @SendToUser("/queue/reply")
-    public OutputSTOMPMessage echo(@Payload InputSTOMPMessage inputSTOMPMessage, Principal principal) {
+    public ServerSTOMPMessage echo(@Payload ClientSTOMPMessage clientSTOMPMessage, Principal principal) {
         final String time = new SimpleDateFormat("HH:mm").format(new Date());
-        return new OutputSTOMPMessage(principal, inputSTOMPMessage.getSender(), inputSTOMPMessage.getPayload(), time);
+        return new ServerSTOMPMessage(principal, clientSTOMPMessage.getPayload(), time, STOMPMessageType.NOTIFICATION);
     }
 
     @MessageMapping("/broadcast")
     @SendToUser("/topic/broadcast")
-    public OutputSTOMPMessage broadcast(@Payload InputSTOMPMessage inputSTOMPMessage, Principal principal) {
+    public ServerSTOMPMessage broadcast(@Payload ClientSTOMPMessage clientSTOMPMessage, Principal principal) {
         final String time = new SimpleDateFormat("HH:mm").format(new Date());
-        return new OutputSTOMPMessage(principal, inputSTOMPMessage.getSender(), inputSTOMPMessage.getPayload(), time);
+        return new ServerSTOMPMessage(principal, clientSTOMPMessage.getPayload(), time, STOMPMessageType.NOTIFICATION);
     }
 
 

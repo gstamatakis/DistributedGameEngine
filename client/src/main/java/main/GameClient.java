@@ -1,11 +1,13 @@
 package main;
 
-import com.google.common.collect.Queues;
-import model.GameTypeEnum;
+import com.google.gson.Gson;
+import message.completed.CompletedMoveMessage;
 import message.requests.RequestCreateTournamentMessage;
+import model.GameTypeEnum;
 import org.apache.commons.cli.*;
 import org.springframework.http.HttpEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -13,12 +15,14 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
-import websocket.InputSTOMPMessage;
+import websocket.ClientSTOMPMessage;
 import websocket.MyStompSessionHandler;
-import websocket.OutputSTOMPMessage;
+import websocket.ServerSTOMPMessage;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class GameClient {
     private static final String SIGN_IN_URL = "http://localhost:8080/users/signin";
@@ -27,9 +31,14 @@ public class GameClient {
     private static final String TOURNAMENT_CREATE_URL = "http://localhost:8080/queue/tournament/create";
     private static final String TOURNAMENT_JOIN_URL = "http://localhost:8080/queue/tournament/join";
     private static final String SEARCH_URL = "http://localhost:8080/users/";
+    private static final String SELF_SEARCH_URL = "http://localhost:8080/users/whpami";
     private static final String STOMP_CONNECT_URL = "ws://localhost:8080/play";
 
+    private static final Gson gson = new Gson();
+    private static boolean ctrlC = false;
+
     public static void main(String[] args) throws Exception {
+
         //Parse input
         CommandLine cmd = parseInput(args);
         if (cmd == null) {
@@ -56,6 +65,9 @@ public class GameClient {
         //Output writer
         OutputStreamWriter output = new OutputStreamWriter(new BufferedOutputStream(outputStream));
 
+        //Handle Ctrl+C
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> ctrlC = true));
+
         //Execute the main loop
         int result = handleInputs(scanner, output);
         output.write("\nExit code: " + result + "\n");
@@ -66,10 +78,10 @@ public class GameClient {
         Map<Integer, String> options = new HashMap<>();
         options.put(1, "Sign-Up");  //OK
         options.put(2, "Sign in");  //OK
-        options.put(3, "Practice Play");    //TODO in-progress
-        options.put(4, "Join Tournament");
-        options.put(5, "Create Tournament (OFFICIAL ONLY)");
-        options.put(6, "Rejoin game");
+        options.put(3, "Queue up for a Practice Play");    //TODO in-progress
+        options.put(4, "Join a Tournament");
+        options.put(5, "Create a Tournament (OFFICIAL ONLY)");
+        options.put(6, "(Re)Join game");
         options.put(7, "Spectate Game");
         options.put(8, "Search user (ADMIN ONLY)"); //OK
         options.put(9, "My stats");
@@ -159,27 +171,6 @@ public class GameClient {
                         break;
                     }
                     output.write("\nPractice play enqueued status: " + practiceResponse.getBody());
-
-                    //Start
-                    WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
-                    stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-                    StompSession stompSession;
-                    Queue<OutputSTOMPMessage> queue = Queues.newArrayBlockingQueue(10);
-                    try {
-                        WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
-                        webSocketHttpHeaders.add("Authorization", "Bearer " + token);
-
-                        List<String> subs = new ArrayList<>();
-                        subs.add("/user/queue/reply");
-                        subs.add("/user/queue/errors");
-
-                        stompSession = stompClient.connect(STOMP_CONNECT_URL, webSocketHttpHeaders, new MyStompSessionHandler(subs,queue)).get();
-                    } catch (Exception e) {
-                        output.write("\n" + e.getMessage());
-                        break;
-                    }
-
-                    stompSession.send("/app/play", new InputSTOMPMessage(username, "payload_" + username));
                     break;
 
                 case 4:
@@ -219,7 +210,90 @@ public class GameClient {
                     output.write("\nTournament play created status: " + tournamentResponse.getBody());
                     break;
 
-                case 7:
+                case 6:
+                    //Start by connecting to the STOMP endpoint
+                    WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
+                    stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+                    StompSession stompSession;
+                    ArrayBlockingQueue<ServerSTOMPMessage> queue = new ArrayBlockingQueue<>(10);
+                    try {
+                        //Include the user token and other
+                        WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
+                        webSocketHttpHeaders.add("Authorization", "Bearer " + token);
+                        StompHeaders stompHeaders = new StompHeaders();
+                        stompHeaders.setAck("client-individual");
+
+                        //Subscribe to necessary topics
+                        List<String> subs = new ArrayList<>();
+                        subs.add("/user/queue/reply");
+                        subs.add("/user/queue/errors");
+                        subs.add("/topic/broadcast");
+                        stompSession = stompClient.connect(STOMP_CONNECT_URL, webSocketHttpHeaders, stompHeaders, new MyStompSessionHandler(subs, queue)).get();
+                    } catch (Exception e) {
+                        output.write("Failed to connect to UI service.. [" + e.getMessage() + "]");
+                        break;
+                    }
+
+                    //Get an echo response
+                    boolean finished = false;
+                    while (!finished) {
+                        ServerSTOMPMessage srvMessage = queue.poll(100, TimeUnit.MILLISECONDS);
+                        if (ctrlC) {
+                            ctrlC = false;
+                            output.write("\nLeaving game..");
+                            if (srvMessage != null) {
+                                stompSession.acknowledge(srvMessage.getAck(), false);
+                            }
+                            break;
+                        }
+                        if (srvMessage == null) {
+                            continue;
+                        }
+
+                        //Process incoming messages
+                        switch (srvMessage.getMessageType()) {
+                            case GAME_START:
+                                output.write("\nGAME START");
+                                break;
+                            case NOTIFICATION:
+                                output.write("\nNOTIFICATION: " + srvMessage.getPayload());
+                                break;
+                            case MOVE_DENIED:
+                                CompletedMoveMessage deniedMoveMessage = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
+                                output.write("\nMove denied:  " + deniedMoveMessage.getMoveMessage());
+                            case NEED_TO_MOVE:
+                                output.write("\nEnter a new move: ");
+                                String newMove = scanner.next();
+                                stompSession.send("/app/play", new ClientSTOMPMessage(newMove));
+                                break;
+                            case NEW_MOVE:
+                            case MOVE_ACCEPTED:
+                                CompletedMoveMessage successfulMoveMessage = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
+                                output.write("\nNew move:  " + successfulMoveMessage.getMoveMessage());
+                                break;
+                            case ERROR:
+                                output.write("\nERROR: " + srvMessage.getPayload());
+                                break;
+                            case GAME_OVER:
+                                output.write("\nGame result: " + srvMessage.getPayload());
+                                finished = true;
+                                break;
+                            case KEEP_ALIVE:
+                                break;
+                            default:
+                                stompSession.acknowledge(srvMessage.getAck(), true);
+                                throw new IllegalStateException("Default case at case6 switch statement!");
+                        }
+
+                        //Acknowledge the message
+                        stompSession.acknowledge(srvMessage.getAck(), true);
+                    }
+                    //Disconnect and continue
+                    stompSession.disconnect();
+                    output.write("\nDisconnected,,,");
+                    break;
+
+                case 8:
                     //Arguments
                     output.write("\nSearch username: ");
                     String usernameToSearch = scanner.next();
@@ -236,6 +310,23 @@ public class GameClient {
                     //Token
                     String searchResult = searchResponse.getBody();
                     output.write("\nResult: " + searchResult);
+                    break;
+
+                case 9:
+                    //Arguments
+                    output.write("\nSearching for my stats (" + username + ").");
+
+                    HttpEntity<String> selfSearchResponse;
+                    try {
+                        selfSearchResponse = client.search(SELF_SEARCH_URL, username, token);
+                    } catch (Exception e) {
+                        output.write("\n" + e.getMessage());
+                        return -1;
+                    }
+
+                    //Token
+                    String selfSearchResult = selfSearchResponse.getBody();
+                    output.write("\nResult: " + selfSearchResult);
                     break;
 
                 //Exit
