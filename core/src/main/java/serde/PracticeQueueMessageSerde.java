@@ -1,4 +1,4 @@
-package message.serde;
+package serde;
 
 import com.google.gson.Gson;
 import message.queue.PracticeQueueMessage;

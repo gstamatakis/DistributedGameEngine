@@ -36,23 +36,23 @@ public class KafkaTopicConfig {
     }
 
     @Bean
-    public NewTopic finishedPlaysTopic() {
-        return new NewTopic("completed-plays", 1, replicationFactor);
-    }
-
-    @Bean
     public NewTopic joinPlayTopic() {
         return new NewTopic("join-play", 1, replicationFactor);
     }
 
     @Bean
+    public NewTopic finishedPlaysTopic() {
+        return new NewTopic("completed-plays", 1, replicationFactor);
+    }
+
+    @Bean
     public NewTopic inputMovesTopic() {
-        return new NewTopic("in-plays", 1, replicationFactor);
+        return new NewTopic("input-plays", 1, replicationFactor);
     }
 
     @Bean
     public NewTopic outputMovesTopic() {
-        return new NewTopic("out-plays", 1, replicationFactor);
+        return new NewTopic("output-plays", 1, replicationFactor);
     }
 
     @Bean

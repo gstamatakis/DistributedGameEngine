@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import message.DefaultKafkaMessage;
 import message.completed.CompletedMoveMessage;
 import message.completed.CompletedPlayMessage;
+import message.created.MoveMessage;
 import message.created.PlayMessage;
 import message.queue.CreateTournamentQueueMessage;
 import message.queue.JoinTournamentQueueMessage;
@@ -37,8 +38,10 @@ public class PlayService {
     private final String joinPlayTopic = "join-play";
     private final String newPlaysTopic = "new-plays";
     private final String completedPlaysTopic = "completed-plays";
-    private final String outMovesTopic = "out-moves";
+    private final String inputMovesTopic = "input-moves";
+    private final String outMovesTopic = "output-moves";
     private final String errorsTopic = "errors";
+
     private final Gson gson = new Gson();
     private final long timeout = 5;
 
@@ -93,24 +96,36 @@ public class PlayService {
                 .get(timeout, TimeUnit.SECONDS);
     }
 
+    //Send new move to play
+    public void sendMoveToPlay(String sentBy, String move, String playID) throws InterruptedException, ExecutionException, TimeoutException {
+        kafkaJoinQueueTemplate
+                .send(inputMovesTopic, playID, new DefaultKafkaMessage(new MoveMessage(sentBy, move, playID)))
+                .get(timeout, TimeUnit.SECONDS);
+    }
+
     @KafkaListener(topics = newPlaysTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
     public void listenForNewPlays(@Payload String message,
                                   @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
                                   @Header(KafkaHeaders.OFFSET) int offset) {
         PlayMessage newPlay = gson.fromJson(message, PlayMessage.class);
+        String playID = newPlay.getID();
         logger.info("Received new play message: " + newPlay.toString() + " from partition " + partition);
-        //Alert the 2 players that their game has started
-        messagingTemplate.convertAndSendToUser(newPlay.getP1(), "/queue/reply",
-                new ServerSTOMPMessage(STOMPMessageType.GAME_START));
 
-        messagingTemplate.convertAndSendToUser(newPlay.getP2(), "/queue/reply",
-                new ServerSTOMPMessage(STOMPMessageType.GAME_START));
+        //Alert the 2 players that their game has started
+        //P1
+        messagingTemplate.convertAndSendToUser(newPlay.getP1(), "/queue/reply",
+                new ServerSTOMPMessage(playID, STOMPMessageType.GAME_START));
 
         messagingTemplate.convertAndSendToUser(newPlay.getP1(), "/queue/reply",
                 new ServerSTOMPMessage(STOMPMessageType.NEED_TO_MOVE));
 
+        //P2
+        messagingTemplate.convertAndSendToUser(newPlay.getP2(), "/queue/reply",
+                new ServerSTOMPMessage(playID, STOMPMessageType.GAME_START));
+
         messagingTemplate.convertAndSendToUser(newPlay.getP2(), "/queue/reply",
                 new ServerSTOMPMessage("Waiting for opponent..", STOMPMessageType.NOTIFICATION));
+
     }
 
     @KafkaListener(topics = completedPlaysTopic, containerFactory = "kafkaDefaultListenerContainerFactory")

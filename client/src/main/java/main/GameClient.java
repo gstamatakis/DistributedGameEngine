@@ -2,6 +2,7 @@ package main;
 
 import com.google.gson.Gson;
 import message.completed.CompletedMoveMessage;
+import message.created.PlayMessage;
 import message.requests.RequestCreateTournamentMessage;
 import model.GameTypeEnum;
 import org.apache.commons.cli.*;
@@ -259,11 +260,14 @@ public class GameClient {
                     case 6:
                         if (stompSession == null) {
                             output.write("\nNeed to sign-in first.");
+                            output.flush();
                             break;
                         }
 
-                        //Get an echo response
+
                         boolean finished = false;
+                        String playID = "";
+
                         while (!finished) {
                             ServerSTOMPMessage srvMessage = queue.poll(1000, TimeUnit.MILLISECONDS);
 
@@ -286,7 +290,8 @@ public class GameClient {
                             //Process incoming messages
                             switch (srvMessage.getMessageType()) {
                                 case GAME_START:
-                                    output.write("\nGAME START");
+                                    playID = srvMessage.getPayload();
+                                    output.write(String.format("\nGame with id=[%s] started.", playID));
                                     break;
                                 case NOTIFICATION:
                                     output.write("\nNOTIFICATION: " + srvMessage.getPayload());
@@ -299,7 +304,12 @@ public class GameClient {
                                     output.write("\nEnter a new move: ");
                                     output.flush();
                                     String newMove = scanner.next();
-                                    stompSession.send("/app/move", new ClientSTOMPMessage(newMove));
+                                    stompSession.send("/app/move", new ClientSTOMPMessage(newMove, playID));
+                                    break;
+                                case FETCH_PLAY:
+                                    PlayMessage playMessage = gson.fromJson(srvMessage.getPayload(), PlayMessage.class);
+                                    output.write("\nRetrieved play: " + playMessage.toString());
+                                    output.flush();
                                     break;
                                 case NEW_MOVE:
                                 case MOVE_ACCEPTED:

@@ -1,16 +1,17 @@
 package message.created;
 
 
-import game.GenericGameType;
 import game.ChessGame;
+import game.GenericGameType;
 import game.TicTacToeGame;
 import message.queue.PracticeQueueMessage;
 import model.GameTypeEnum;
 import model.PlayTypeEnum;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class PlayMessage {
+public class PlayMessage implements Serializable {
     private String p1, p2;
     private String ID;
     private PlayTypeEnum playTypeEnum;
@@ -41,13 +42,13 @@ public class PlayMessage {
         initGameType();
     }
 
-    void initGameType(){
+    void initGameType() {
         switch (this.gameTypeEnum) {
             case TIC_TAC_TOE:
-                gameType = new TicTacToeGame(p1,p2);
+                gameType = new TicTacToeGame(p1, p2);
                 break;
             case CHESS:
-                gameType = new ChessGame(p1,p2);
+                gameType = new ChessGame(p1, p2);
                 break;
             default:
                 throw new IllegalStateException("Default case in PlayMessage 2nd constructor!");
