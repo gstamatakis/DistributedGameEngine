@@ -4,7 +4,6 @@ import message.completed.CompletedMoveMessage;
 import message.created.JoinedPlayMoveMessage;
 import message.created.MoveMessage;
 import message.created.PlayMessage;
-import message.created.PlayStateMessage;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.Transformer;
 import org.apache.kafka.streams.processor.ProcessorContext;
@@ -17,7 +16,7 @@ public class PlayTransformer implements Transformer<String, JoinedPlayMoveMessag
     private static final Logger logger = LoggerFactory.getLogger(PlayTransformer.class);
 
     private final String playStateStoreName;
-    private KeyValueStore<String, PlayStateMessage> playStateKVStore;
+    private KeyValueStore<String, PlayMessage> playStateKVStore;
     private ProcessorContext ctx;
 
     public PlayTransformer(String playStateStoreName) {
@@ -26,22 +25,25 @@ public class PlayTransformer implements Transformer<String, JoinedPlayMoveMessag
 
     @Override
     public void init(ProcessorContext context) {
-        this.playStateKVStore = (KeyValueStore<String, PlayStateMessage>) context.getStateStore(playStateStoreName);
+        this.playStateKVStore = (KeyValueStore<String, PlayMessage>) context.getStateStore(playStateStoreName);
         this.ctx = context;
     }
 
     @Override
     public KeyValue<String, CompletedMoveMessage> transform(String key, JoinedPlayMoveMessage value) {
         logger.info(key, value);
-        PlayMessage play = value.getPlay();
-        MoveMessage move = value.getMove();
-        PlayStateMessage curGame = playStateKVStore.get(play.getID());
+        String playID = value.getPlay().getID();
+        MoveMessage input_move = value.getMove();
+        PlayMessage input_play = value.getPlay();
+
+        PlayMessage curGame = playStateKVStore.get(playID);
         if (curGame == null) {
-            curGame = new PlayStateMessage(play);
+            curGame = input_play;
         }
-        CompletedMoveMessage output = curGame.considerMove(move);
-        playStateKVStore.put(play.getID(), curGame);
-        return new KeyValue<>(key, output);
+
+        CompletedMoveMessage output_move = curGame.getGameType().offerMove(input_move);
+        playStateKVStore.put(playID, curGame);
+        return new KeyValue<>(key, output_move);
     }
 
     @Override

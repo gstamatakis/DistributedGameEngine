@@ -98,18 +98,18 @@ public class PlayService {
                                   @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
                                   @Header(KafkaHeaders.OFFSET) int offset) {
         PlayMessage newPlay = gson.fromJson(message, PlayMessage.class);
-        logger.info("Received Message: " + newPlay.toString() + " from partition " + partition);
+        logger.info("Received new play message: " + newPlay.toString() + " from partition " + partition);
         //Alert the 2 players that their game has started
-        messagingTemplate.convertAndSendToUser(newPlay.getP1(), "user/queue/reply",
+        messagingTemplate.convertAndSendToUser(newPlay.getP1(), "/queue/reply",
                 new ServerSTOMPMessage(STOMPMessageType.GAME_START));
 
-        messagingTemplate.convertAndSendToUser(newPlay.getP2(), "user/queue/reply",
+        messagingTemplate.convertAndSendToUser(newPlay.getP2(), "/queue/reply",
                 new ServerSTOMPMessage(STOMPMessageType.GAME_START));
 
-        messagingTemplate.convertAndSendToUser(newPlay.getP1(), "user/queue/reply",
+        messagingTemplate.convertAndSendToUser(newPlay.getP1(), "/queue/reply",
                 new ServerSTOMPMessage(STOMPMessageType.NEED_TO_MOVE));
 
-        messagingTemplate.convertAndSendToUser(newPlay.getP2(), "user/queue/reply",
+        messagingTemplate.convertAndSendToUser(newPlay.getP2(), "/queue/reply",
                 new ServerSTOMPMessage("Waiting for opponent..", STOMPMessageType.NOTIFICATION));
     }
 
@@ -119,12 +119,12 @@ public class PlayService {
                                        @Header(KafkaHeaders.OFFSET) int offset) {
         CompletedPlayMessage completedPlayMessage = gson.fromJson(message, CompletedPlayMessage.class);
         playRepository.save(new PlayEntity(completedPlayMessage));
-        logger.info("Received Message: " + completedPlayMessage.toString() + " from partition " + partition);
+        logger.info("Received completed play message: " + completedPlayMessage.toString() + " from partition " + partition);
 
-        messagingTemplate.convertAndSendToUser(completedPlayMessage.getWinnerPlayer(), "user/queue/reply",
+        messagingTemplate.convertAndSendToUser(completedPlayMessage.getWinnerPlayer(), "/queue/reply",
                 new ServerSTOMPMessage("WINNER", STOMPMessageType.GAME_OVER));
 
-        messagingTemplate.convertAndSendToUser(completedPlayMessage.getLoserPlayer(), "user/queue/reply",
+        messagingTemplate.convertAndSendToUser(completedPlayMessage.getLoserPlayer(), "/queue/reply",
                 new ServerSTOMPMessage("LOSER", STOMPMessageType.GAME_OVER));
     }
 
@@ -133,21 +133,21 @@ public class PlayService {
                                        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
                                        @Header(KafkaHeaders.OFFSET) int offset) {
         CompletedMoveMessage completedMoveMessage = gson.fromJson(message, CompletedMoveMessage.class);
-        logger.info("Received Message: " + completedMoveMessage.toString() + " from partition " + partition);
+        logger.info("Received completed move message: " + completedMoveMessage.toString() + " from partition " + partition);
         if (completedMoveMessage.isValid()) {
             messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(),
-                    "user/queue/reply", new ServerSTOMPMessage(message, STOMPMessageType.MOVE_ACCEPTED));
+                    "/queue/reply", new ServerSTOMPMessage(message, STOMPMessageType.MOVE_ACCEPTED));
             messagingTemplate.convertAndSendToUser(completedMoveMessage.getOpponentUsername(),
-                    "user/queue/reply", new ServerSTOMPMessage(message, STOMPMessageType.NEW_MOVE));
+                    "/queue/reply", new ServerSTOMPMessage(message, STOMPMessageType.NEW_MOVE));
         } else {
             messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(),
-                    "user/queue/reply", new ServerSTOMPMessage(message, STOMPMessageType.MOVE_DENIED));
+                    "/queue/reply", new ServerSTOMPMessage(message, STOMPMessageType.MOVE_DENIED));
         }
     }
 
     @KafkaListener(topics = errorsTopic, containerFactory = "kafkaListenerContainerFactory")
     public void listenForErrors(@Payload String message) {
-        logger.info("Received Message: " + message);
+        logger.info("Received error message: " + message);
         messagingTemplate.convertAndSend("/topic/broadcast", new ServerSTOMPMessage(message, STOMPMessageType.ERROR));
     }
 }

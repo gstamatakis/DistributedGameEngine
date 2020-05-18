@@ -5,6 +5,9 @@ import java.io.Serializable;
 public class ClientSTOMPMessage implements Serializable {
     private String payload;
 
+    public ClientSTOMPMessage() {
+    }
+
     public ClientSTOMPMessage(String payload) {
         this.payload = payload;
     }

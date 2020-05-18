@@ -33,7 +33,7 @@ spring:
       streams.binder:
         functions:
           processUsersJoinGame:
-            applicationId: app1
+            applicationId: app_game_master
         brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
         deserialization-exception-handler: logandfail
         stateStoreRetry:

@@ -4,11 +4,9 @@ import message.completed.CompletedMoveMessage;
 import message.created.JoinedPlayMoveMessage;
 import message.created.MoveMessage;
 import message.created.PlayMessage;
-import message.created.PlayStateMessage;
 import message.serde.JoinedPlayMoveMessageSerde;
 import message.serde.MoveMessageSerde;
 import message.serde.PlayMessageSerde;
-import message.serde.PlayStateMessageSerde;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.kstream.KStream;
@@ -29,7 +27,7 @@ public class KafkaStreamsConfig {
     //State stores
     @Bean
     private StoreBuilder playStateStore() {
-        return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(playStateStoreName), Serdes.String(), new PlayStateMessageSerde());
+        return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(playStateStoreName), Serdes.String(), new PlayMessageSerde());
     }
 
     //Serdes
@@ -41,11 +39,6 @@ public class KafkaStreamsConfig {
     @Bean
     public Serde<MoveMessage> MoveMessageSerde() {
         return new MoveMessageSerde();
-    }
-
-    @Bean
-    public Serde<PlayStateMessage> PlayStateMessageSerde() {
-        return new PlayStateMessageSerde();
     }
 
     @Bean

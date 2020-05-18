@@ -1,10 +1,16 @@
 package ui.controller;
 
+import dto.PlayStateResponseDTO;
 import exception.CustomException;
 import io.swagger.annotations.*;
+import message.created.PlayMessage;
 import message.requests.RequestCreateTournamentMessage;
 import message.requests.RequestPracticeMessage;
+import org.apache.kafka.streams.state.QueryableStoreTypes;
+import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.binder.kafka.streams.InteractiveQueryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 import ui.service.PlayService;
 
+import javax.xml.ws.Response;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -24,6 +31,12 @@ public class QueueController {
 
     @Autowired
     private PlayService playService;
+
+    @Autowired
+    private InteractiveQueryService interactiveQueryService;
+
+    @Autowired
+    private ModelMapper modelMapper;
 
     @ExceptionHandler({CustomException.class})
     public ResponseEntity<String> handleConflict(CustomException ex, WebRequest request) {
@@ -70,5 +83,18 @@ public class QueueController {
 
         playService.joinTournament(userDetails.getUsername(), tournamentID);
         return new ResponseEntity<>("OK", HttpStatus.OK);
+    }
+
+
+    @GetMapping("/play/state/{playID}")
+    @PreAuthorize("hasRole('ROLE_CLIENT')")
+    public PlayStateResponseDTO getStateOfPlay(@ApiParam("playID") @PathVariable String playID) {
+        final ReadOnlyKeyValueStore<String, PlayMessage> songStore =
+                interactiveQueryService.getQueryableStore("plays", QueryableStoreTypes.keyValueStore());
+        final PlayMessage state = songStore.get(playID);
+        if (state == null) {
+            throw new IllegalArgumentException("...");
+        }
+        return modelMapper.map(state, PlayStateResponseDTO.class);
     }
 }

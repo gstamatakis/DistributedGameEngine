@@ -5,15 +5,18 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 
 public class ServerSTOMPMessage implements Serializable {
-    private Principal principal;
+    private String principal;
     private String sender;
     private String payload;
     private String time;
     private STOMPMessageType messageType;
     private String ack;
 
+    public ServerSTOMPMessage() {
+    }
+
     public ServerSTOMPMessage(STOMPMessageType type) {
-        this.principal = () -> "";
+        this.principal = "";
         this.sender = "";
         this.payload = "";
         this.time = String.valueOf(LocalDateTime.now());
@@ -23,7 +26,7 @@ public class ServerSTOMPMessage implements Serializable {
 
 
     public ServerSTOMPMessage(String payload, STOMPMessageType type) {
-        this.principal = () -> "";
+        this.principal = "";
         this.sender = "";
         this.payload = payload;
         this.time = String.valueOf(LocalDateTime.now());
@@ -32,7 +35,7 @@ public class ServerSTOMPMessage implements Serializable {
     }
 
     public ServerSTOMPMessage(Principal principal, String payload, String time, STOMPMessageType type) {
-        this.principal = principal;
+        this.principal = principal.getName();
         this.sender = principal.getName();
         this.payload = payload;
         this.time = time;
@@ -64,7 +67,7 @@ public class ServerSTOMPMessage implements Serializable {
         return time;
     }
 
-    public Principal getPrincipal() {
+    public String getPrincipal() {
         return principal;
     }
 

@@ -55,15 +55,12 @@ public class GameClient {
         }
 
         //Destination stream
-        OutputStream outputStream = System.out;
+        BufferedWriter output;
         if (cmd.hasOption("silent")) {
-            if (cmd.getOptionValue("silent").equals("true")) {
-                outputStream = new NullPrintStream();
-            }
+            output = new BufferedWriter(new OutputStreamWriter(new NullPrintStream()));
+        } else {
+            output = new BufferedWriter(new OutputStreamWriter(System.out));
         }
-
-        //Output writer
-        OutputStreamWriter output = new OutputStreamWriter(new BufferedOutputStream(outputStream));
 
         //Handle Ctrl+C
         Runtime.getRuntime().addShutdownHook(new Thread(() -> ctrlC = true));
@@ -71,14 +68,14 @@ public class GameClient {
         //Execute the main loop
         int result = handleInputs(scanner, output);
         output.write("\nExit code: " + result + "\n");
-        output.flush();
+        output.close();
     }
 
-    public static int handleInputs(Scanner scanner, OutputStreamWriter output) throws Exception {
+    public static int handleInputs(Scanner scanner, BufferedWriter output) throws Exception {
         Map<Integer, String> options = new HashMap<>();
-        options.put(1, "Sign-Up");  //OK
+        options.put(1, "Sign Up");  //OK
         options.put(2, "Sign in");  //OK
-        options.put(3, "Queue up for a Practice Play");    //TODO in-progress
+        options.put(3, "Queue up for a Practice Play");
         options.put(4, "Join a Tournament");
         options.put(5, "Create a Tournament (OFFICIAL ONLY)");
         options.put(6, "(Re)Join game");
@@ -93,260 +90,311 @@ public class GameClient {
         //User token
         String token = "";
         String username = "";
+        WebSocketStompClient stompClient;
+        StompSession stompSession = null;
+        ArrayBlockingQueue<ServerSTOMPMessage> queue = new ArrayBlockingQueue<>(10);
 
-        while (scanner.hasNext()) {
-            //Check if we need to exit
+        while (true) {
+            try {
 
-            //Print the menu
-            output.write("\n\n*** Menu ***");
-            for (Map.Entry<Integer, String> entry : options.entrySet()) {
-                output.write(String.format("\n%d. %s", entry.getKey(), entry.getValue()));
-            }
+                //Print the menu
+                output.write("\n\n*** Menu ***");
+                for (Map.Entry<Integer, String> entry : options.entrySet()) {
+                    output.write(String.format("\n%d. %s", entry.getKey(), entry.getValue()));
+                }
 
-            //Chose an option
-            output.write("\nAnswer: ");
-            int choice = Integer.parseInt(scanner.next());
-            output.write(String.valueOf(choice));
+                //Chose an option
+                output.write("\nAnswer: ");
+                output.flush();
+                int choice = scanner.nextInt();
+                output.write("\nAnswered: " + choice);
+                output.flush();
 
-            //Perform an action
-            switch (choice) {
-                //Sign up
-                case 1:
-                    //Arguments
-                    output.write("\nEnter username, password, email and role (separated with spaces): ");
-                    Map<String, String> signupParams = new LinkedHashMap<>();
-                    signupParams.put("username", scanner.next());
-                    username = signupParams.get("username");
-                    signupParams.put("password", scanner.next());
-                    signupParams.put("email", scanner.next());
-                    signupParams.put("role", scanner.next());
-                    output.write("\n" + signupParams.toString());
+                //Perform an action
+                switch (choice) {
+                    //Sign up
+                    case 1:
+                        //Arguments
+                        Map<String, String> signupParams = new LinkedHashMap<>();
+                        output.write("\nEnter username: ");
+                        output.flush();
+                        signupParams.put("username", scanner.next());
+                        username = signupParams.get("username");
 
-                    //Response = executed entity
-                    HttpEntity<String> signUpResponse;
-                    try {
-                        signUpResponse = client.signup(SIGNUP_URL, signupParams);
-                    } catch (HttpClientErrorException.UnprocessableEntity e1) {
-                        output.write("\n" + e1.getMessage());
-                        break;
-                    }
-                    token = signUpResponse.getBody();
-                    output.write("\nToken: " + token);
-                    break;
+                        output.write("\nEnter password: ");
+                        output.flush();
+                        signupParams.put("password", scanner.next());
 
-                //Sign In
-                case 2:
-                    //Arguments
-                    output.write("\nEnter username and password: ");
-                    MultiValueMap<String, String> loginParams = new LinkedMultiValueMap<>();
-                    loginParams.add("username", scanner.next());
-                    loginParams.add("password", scanner.next());
-                    output.write("\n" + loginParams);
+                        output.write("\nEnter email: ");
+                        output.flush();
+                        signupParams.put("email", scanner.next());
 
-                    HttpEntity<String> loginResponse;
-                    try {
-                        loginResponse = client.login(SIGN_IN_URL, loginParams);
-                    } catch (Exception e) {
-                        output.write("\n" + e.getMessage());
-                        break;
-                    }
+                        output.write("\nEnter role: ");
+                        output.flush();
+                        signupParams.put("role", scanner.next());
 
-                    //Token
-                    token = loginResponse.getBody();
-                    output.write("\nToken: " + token);
-                    break;
+                        output.write("\n" + signupParams.toString());
+                        output.flush();
 
-                case 3:
-                    //Arguments
-                    output.write("\nQueueing up for a practice play. Enter preferred game type: ");
-                    GameTypeEnum gameType = GameTypeEnum.valueOf(scanner.next());
-                    output.write("\n" + gameType.toString());
-
-                    //Queue up
-                    HttpEntity<String> practiceResponse;
-                    try {
-                        practiceResponse = client.practice(PRACTICE_URL, token, gameType, username);
-                    } catch (Exception e) {
-                        output.write("\n" + e.getMessage());
-                        break;
-                    }
-                    output.write("\nPractice play enqueued status: " + practiceResponse.getBody());
-                    break;
-
-                case 4:
-                    //Arguments
-                    output.write("\nEnter the tournament ID to join a tournament: ");
-                    String tournamentID = scanner.next();
-                    output.write("\n" + tournamentID);
-
-                    //Queue up
-                    HttpEntity<String> tournamentJoinResponse;
-                    try {
-                        tournamentJoinResponse = client.joinTournament(TOURNAMENT_JOIN_URL, token, tournamentID);
-                    } catch (Exception e) {
-                        output.write("\n" + e.getMessage());
-                        break;
-                    }
-                    output.write("\nTournament play enqueued status: " + tournamentJoinResponse.getBody());
-                    break;
-
-                case 5:
-                    output.write("\nCreating a tournament play. Enter preferred game type,num of participants and tournament ID: ");
-                    GameTypeEnum tournamentGameType = GameTypeEnum.valueOf(scanner.next());
-                    int numOfParticipants = Integer.parseInt(scanner.next());
-                    String newTournamentID = scanner.next();
-                    Set<String> blackList = new HashSet<>();
-                    RequestCreateTournamentMessage msg = new RequestCreateTournamentMessage(tournamentGameType, blackList, numOfParticipants, newTournamentID);
-                    output.write("\n" + msg.toString());
-
-                    //Queue up
-                    HttpEntity<String> tournamentResponse;
-                    try {
-                        tournamentResponse = client.createTournament(TOURNAMENT_CREATE_URL, token, msg);
-                    } catch (Exception e) {
-                        output.write("\n" + e.getMessage());
-                        break;
-                    }
-                    output.write("\nTournament play created status: " + tournamentResponse.getBody());
-                    break;
-
-                case 6:
-                    //Start by connecting to the STOMP endpoint
-                    WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
-                    stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-                    StompSession stompSession;
-                    ArrayBlockingQueue<ServerSTOMPMessage> queue = new ArrayBlockingQueue<>(10);
-                    try {
-                        //Include the user token and other
-                        WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
-                        webSocketHttpHeaders.add("Authorization", "Bearer " + token);
-                        StompHeaders stompHeaders = new StompHeaders();
-                        stompHeaders.setAck("client-individual");
-
-                        //Subscribe to necessary topics
-                        List<String> subs = new ArrayList<>();
-                        subs.add("/user/queue/reply");
-                        subs.add("/user/queue/errors");
-                        subs.add("/topic/broadcast");
-                        stompSession = stompClient.connect(STOMP_CONNECT_URL, webSocketHttpHeaders, stompHeaders, new MyStompSessionHandler(subs, queue)).get();
-                    } catch (Exception e) {
-                        output.write("Failed to connect to UI service.. [" + e.getMessage() + "]");
-                        break;
-                    }
-
-                    //Get an echo response
-                    boolean finished = false;
-                    while (!finished) {
-                        ServerSTOMPMessage srvMessage = queue.poll(100, TimeUnit.MILLISECONDS);
-                        if (ctrlC) {
-                            ctrlC = false;
-                            output.write("\nLeaving game..");
-                            if (srvMessage != null) {
-                                stompSession.acknowledge(srvMessage.getAck(), false);
-                            }
+                        //Response = executed entity
+                        HttpEntity<String> signUpResponse;
+                        try {
+                            signUpResponse = client.signup(SIGNUP_URL, signupParams);
+                        } catch (HttpClientErrorException.UnprocessableEntity e1) {
+                            output.write("\n" + e1.getMessage());
                             break;
                         }
-                        if (srvMessage == null) {
-                            continue;
+                        token = signUpResponse.getBody();
+                        output.write("\nToken: " + token);
+                        break;
+
+                    //Sign In
+                    case 2:
+                        //Arguments
+                        MultiValueMap<String, String> loginParams = new LinkedMultiValueMap<>();
+
+                        output.write("\nEnter username: ");
+                        output.flush();
+                        loginParams.add("username", scanner.next());
+
+                        output.write("\nEnter password: ");
+                        output.flush();
+                        loginParams.add("password", scanner.next());
+
+                        HttpEntity<String> loginResponse;
+                        try {
+                            loginResponse = client.login(SIGN_IN_URL, loginParams);
+                        } catch (Exception e) {
+                            output.write("\n" + e.getMessage());
+                            break;
                         }
 
-                        //Process incoming messages
-                        switch (srvMessage.getMessageType()) {
-                            case GAME_START:
-                                output.write("\nGAME START");
-                                break;
-                            case NOTIFICATION:
-                                output.write("\nNOTIFICATION: " + srvMessage.getPayload());
-                                break;
-                            case MOVE_DENIED:
-                                CompletedMoveMessage deniedMoveMessage = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
-                                output.write("\nMove denied:  " + deniedMoveMessage.getMoveMessage());
-                            case NEED_TO_MOVE:
-                                output.write("\nEnter a new move: ");
-                                String newMove = scanner.next();
-                                stompSession.send("/app/play", new ClientSTOMPMessage(newMove));
-                                break;
-                            case NEW_MOVE:
-                            case MOVE_ACCEPTED:
-                                CompletedMoveMessage successfulMoveMessage = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
-                                output.write("\nNew move:  " + successfulMoveMessage.getMoveMessage());
-                                break;
-                            case ERROR:
-                                output.write("\nERROR: " + srvMessage.getPayload());
-                                break;
-                            case GAME_OVER:
-                                output.write("\nGame result: " + srvMessage.getPayload());
-                                finished = true;
-                                break;
-                            case KEEP_ALIVE:
-                                break;
-                            default:
-                                stompSession.acknowledge(srvMessage.getAck(), true);
-                                throw new IllegalStateException("Default case at case6 switch statement!");
+                        //Token
+                        token = loginResponse.getBody();
+                        output.write("\nToken: " + token);
+
+                        //Connect to the STOMP endpoint
+                        stompClient = new WebSocketStompClient(new StandardWebSocketClient());
+                        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+
+                        try {
+                            //Include the user token and other
+                            WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
+                            webSocketHttpHeaders.add("Authorization", "Bearer " + token);
+                            StompHeaders stompHeaders = new StompHeaders();
+                            stompHeaders.setAck("client-individual");
+
+                            //Subscribe to necessary topics
+                            List<String> subs = new ArrayList<>();
+                            subs.add("/user/queue/reply");
+                            subs.add("/user/queue/errors");
+                            subs.add("/topic/broadcast");
+                            stompSession = stompClient.connect(STOMP_CONNECT_URL, webSocketHttpHeaders, stompHeaders, new MyStompSessionHandler(subs, queue)).get();
+                            output.write("\nOpened session with server..\n\n");
+                            output.flush();
+                        } catch (Exception e) {
+                            output.write("\nFailed to connect to UI service.. [" + e.getMessage() + "]");
+                            output.flush();
+                            break;
+                        }
+                        break;
+
+                    case 3:
+                        //Arguments
+                        output.write("\nQueueing up for a practice play. Enter preferred game type: ");
+                        output.flush();
+                        GameTypeEnum gameType = GameTypeEnum.valueOf(scanner.next());
+                        output.write("\n" + gameType.toString());
+                        output.flush();
+
+                        //Queue up
+                        HttpEntity<String> practiceResponse;
+                        try {
+                            practiceResponse = client.practice(PRACTICE_URL, token, gameType, username);
+                        } catch (Exception e) {
+                            output.write("\n" + e.getMessage());
+                            break;
+                        }
+                        output.write("\nPractice play enqueued status: " + practiceResponse.getBody());
+                        output.flush();
+                        break;
+
+                    case 4:
+                        //Arguments
+                        output.write("\nEnter the tournament ID to join a tournament: ");
+                        String tournamentID = scanner.next();
+                        output.write("\n" + tournamentID);
+
+                        //Queue up
+                        HttpEntity<String> tournamentJoinResponse;
+                        try {
+                            tournamentJoinResponse = client.joinTournament(TOURNAMENT_JOIN_URL, token, tournamentID);
+                        } catch (Exception e) {
+                            output.write("\n" + e.getMessage());
+                            break;
+                        }
+                        output.write("\nTournament play enqueued status: " + tournamentJoinResponse.getBody());
+                        break;
+
+                    case 5:
+                        output.write("\nCreating a tournament play. Enter preferred game type,num of participants and tournament ID: ");
+                        GameTypeEnum tournamentGameType = GameTypeEnum.valueOf(scanner.next());
+                        int numOfParticipants = Integer.parseInt(scanner.next());
+                        String newTournamentID = scanner.next();
+                        Set<String> blackList = new HashSet<>();
+                        RequestCreateTournamentMessage msg = new RequestCreateTournamentMessage(tournamentGameType, blackList, numOfParticipants, newTournamentID);
+                        output.write("\n" + msg.toString());
+
+                        //Queue up
+                        HttpEntity<String> tournamentResponse;
+                        try {
+                            tournamentResponse = client.createTournament(TOURNAMENT_CREATE_URL, token, msg);
+                        } catch (Exception e) {
+                            output.write("\n" + e.getMessage());
+                            break;
+                        }
+                        output.write("\nTournament play created status: " + tournamentResponse.getBody());
+                        break;
+
+                    case 6:
+                        if (stompSession == null) {
+                            output.write("\nNeed to sign-in first.");
+                            break;
                         }
 
-                        //Acknowledge the message
-                        stompSession.acknowledge(srvMessage.getAck(), true);
-                    }
-                    //Disconnect and continue
-                    stompSession.disconnect();
-                    output.write("\nDisconnected,,,");
-                    break;
+                        //Get an echo response
+                        boolean finished = false;
+                        while (!finished) {
+                            ServerSTOMPMessage srvMessage = queue.poll(1000, TimeUnit.MILLISECONDS);
 
-                case 8:
-                    //Arguments
-                    output.write("\nSearch username: ");
-                    String usernameToSearch = scanner.next();
-                    output.write("\n" + usernameToSearch);
+                            if (ctrlC) {
+                                ctrlC = false;
+                                output.write("\nLeaving game..");
+                                output.flush();
+                                if (srvMessage != null) {
+                                    stompSession.acknowledge(srvMessage.getAck(), false);
+                                }
+                                break;
+                            }
+                            if (srvMessage == null) {
+                                continue;
+                            } else {
+                                output.write("\nRECEIVED MESSAGE: " + srvMessage.toString());
+                                output.flush();
+                            }
 
-                    HttpEntity<String> searchResponse;
-                    try {
-                        searchResponse = client.search(SEARCH_URL, usernameToSearch, token);
-                    } catch (Exception e) {
-                        output.write("\n" + e.getMessage());
-                        return -1;
-                    }
+                            //Process incoming messages
+                            switch (srvMessage.getMessageType()) {
+                                case GAME_START:
+                                    output.write("\nGAME START");
+                                    break;
+                                case NOTIFICATION:
+                                    output.write("\nNOTIFICATION: " + srvMessage.getPayload());
+                                    break;
+                                case MOVE_DENIED:
+                                    CompletedMoveMessage deniedMoveMessage = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
+                                    output.write("\nMove denied:  " + deniedMoveMessage.getMoveMessage());
+                                    output.flush();
+                                case NEED_TO_MOVE:
+                                    output.write("\nEnter a new move: ");
+                                    output.flush();
+                                    String newMove = scanner.next();
+                                    stompSession.send("/app/move", new ClientSTOMPMessage(newMove));
+                                    break;
+                                case NEW_MOVE:
+                                case MOVE_ACCEPTED:
+                                    CompletedMoveMessage successfulMoveMessage = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
+                                    output.write("\nNew move:  " + successfulMoveMessage.getMoveMessage());
+                                    break;
+                                case ERROR:
+                                    output.write("\nERROR: " + srvMessage.getPayload());
+                                    break;
+                                case GAME_OVER:
+                                    output.write("\nGame result: " + srvMessage.getPayload());
+                                    finished = true;
+                                    break;
+                                case KEEP_ALIVE:
+                                    break;
+                                default:
+                                    stompSession.acknowledge(srvMessage.getAck(), true);
+                                    throw new IllegalStateException("Default case at case6 switch statement!");
+                            }
+                            output.flush();
 
-                    //Token
-                    String searchResult = searchResponse.getBody();
-                    output.write("\nResult: " + searchResult);
-                    break;
+                            //Acknowledge the message
+                            stompSession.acknowledge(srvMessage.getAck(), true);
+                        }
+                        //Disconnect and continue
+                        stompSession.disconnect();
+                        output.write("\nDisconnected from server!");
+                        output.flush();
+                        break;
 
-                case 9:
-                    //Arguments
-                    output.write("\nSearching for my stats (" + username + ").");
+                    case 8:
+                        //Arguments
+                        output.write("\nSearch username: ");
+                        output.flush();
+                        String usernameToSearch = scanner.next();
+                        output.write("\n" + usernameToSearch);
+                        output.flush();
 
-                    HttpEntity<String> selfSearchResponse;
-                    try {
-                        selfSearchResponse = client.search(SELF_SEARCH_URL, username, token);
-                    } catch (Exception e) {
-                        output.write("\n" + e.getMessage());
-                        return -1;
-                    }
+                        HttpEntity<String> searchResponse;
+                        try {
+                            searchResponse = client.search(SEARCH_URL, usernameToSearch, token);
+                        } catch (Exception e) {
+                            output.write("\n" + e.getMessage());
+                            output.flush();
+                            return -1;
+                        }
 
-                    //Token
-                    String selfSearchResult = selfSearchResponse.getBody();
-                    output.write("\nResult: " + selfSearchResult);
-                    break;
+                        //Token
+                        String searchResult = searchResponse.getBody();
+                        output.write("\nResult: " + searchResult);
+                        output.flush();
+                        break;
 
-                //Exit
-                case 10:
-                    output.write("\n\nExiting..");
-                    break;
+                    case 9:
+                        //Arguments
+                        output.write("\nSearching for my stats (" + username + ").");
+                        output.flush();
 
-                //Handle errors
-                default:
-                    throw new IllegalStateException("Invalid option");
+                        HttpEntity<String> selfSearchResponse;
+                        try {
+                            selfSearchResponse = client.search(SELF_SEARCH_URL, username, token);
+                        } catch (Exception e) {
+                            output.write("\n" + e.getMessage());
+                            output.flush();
+                            return -1;
+                        }
+
+                        //Token
+                        String selfSearchResult = selfSearchResponse.getBody();
+                        output.write("\nResult: " + selfSearchResult);
+                        output.flush();
+                        break;
+
+                    //Exit
+                    case 10:
+                        output.write("\n\nExiting..");
+                        output.flush();
+                        return 0;
+
+                    //Handle errors
+                    default:
+                        throw new IllegalStateException("Invalid option");
+                }
+            } catch (Exception e) {
+                output.write(e.getMessage());
+                output.flush();
             }
         }
-        return 0;
     }
 
     private static CommandLine parseInput(String[] args) {
         Options options = new Options();
 
         Option output = new Option("f", "fromFile", true, "Get user input from a resource file instead of STDIN.");
-        output.setRequired(true);
+        output.setRequired(false);
         options.addOption(output);
 
         Option silent = new Option("s", "silent", true, "Redirect everything to STDOUT.");

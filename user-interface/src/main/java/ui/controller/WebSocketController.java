@@ -1,6 +1,7 @@
 package ui.controller;
 
-import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -24,10 +25,10 @@ import java.util.Date;
  */
 @Controller
 public class WebSocketController {
+    private static final Logger logger = LoggerFactory.getLogger(WebSocketController.class);
+
     @Autowired
     private SimpMessageSendingOperations messagingTemplate;
-
-    private Gson gson = new Gson();
 
     @MessageMapping("/echo")
     @SendToUser("/queue/reply")
@@ -43,6 +44,11 @@ public class WebSocketController {
         return new ServerSTOMPMessage(principal, clientSTOMPMessage.getPayload(), time, STOMPMessageType.NOTIFICATION);
     }
 
+    @MessageMapping("/move")
+    public void handleMoves(@Payload ClientSTOMPMessage clientSTOMPMessage, Principal principal) {
+        final String time = new SimpleDateFormat("HH:mm").format(new Date());
+        logger.info(principal + " | " + clientSTOMPMessage.toString());
+    }
 
     @MessageExceptionHandler
     @SendToUser("/queue/errors")

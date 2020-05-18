@@ -1,34 +1,34 @@
 package message.serde;
 
 import com.google.gson.Gson;
-import message.created.PlayStateMessage;
+import game.GenericGameType;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serializer;
 
 import java.util.Map;
 
-public class PlayStateMessageSerde implements Serde<PlayStateMessage>, Serializer<PlayStateMessage>, Deserializer<PlayStateMessage> {
+public class GenericGameTypeSerde implements Serde<GenericGameType>, Serializer<GenericGameType>, Deserializer<GenericGameType> {
     private final Gson gson = new Gson();
 
     @Override
-    public Serializer<PlayStateMessage> serializer() {
+    public Serializer<GenericGameType> serializer() {
         return (topic, data) -> gson.toJson(data).getBytes();
     }
 
     @Override
-    public Deserializer<PlayStateMessage> deserializer() {
-        return ((topic, data) -> gson.fromJson(new String(data), PlayStateMessage.class));
+    public Deserializer<GenericGameType> deserializer() {
+        return ((topic, data) -> gson.fromJson(new String(data), GenericGameType.class));
     }
 
     @Override
-    public byte[] serialize(String topic, PlayStateMessage data) {
+    public byte[] serialize(String topic, GenericGameType data) {
         return gson.toJson(data).getBytes();
     }
 
     @Override
-    public PlayStateMessage deserialize(String topic, byte[] data) {
-        return gson.fromJson(new String(data), PlayStateMessage.class);
+    public GenericGameType deserialize(String topic, byte[] data) {
+        return gson.fromJson(new String(data), GenericGameType.class);
     }
 
     @Override

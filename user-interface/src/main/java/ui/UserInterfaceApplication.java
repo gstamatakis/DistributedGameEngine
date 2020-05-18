@@ -45,12 +45,19 @@ public class UserInterfaceApplication implements CommandLineRunner {
         official.setRole(Role.ROLE_OFFICIAL);
         userService.signup(official);
 
-        UserEntity client = new UserEntity();
-        client.setUsername("client");
-        client.setPassword("client");
-        client.setEmail("client@email.com");
-        client.setRole(Role.ROLE_CLIENT);
-        userService.signup(client);
+        UserEntity client1 = new UserEntity();
+        client1.setUsername("client1");
+        client1.setPassword("client1");
+        client1.setEmail("client1@email.com");
+        client1.setRole(Role.ROLE_CLIENT);
+        userService.signup(client1);
+
+        UserEntity client2 = new UserEntity();
+        client2.setUsername("client2");
+        client2.setPassword("client2");
+        client2.setEmail("client2@email.com");
+        client2.setRole(Role.ROLE_CLIENT);
+        userService.signup(client2);
     }
 
 }

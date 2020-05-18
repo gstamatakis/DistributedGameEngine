@@ -26,6 +26,7 @@ spring:
       binder:
         brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
         replication-factor: 3
+      streams.binder.configuration.application.server: localhost:9092
 
 secets:
   ui-token: token_ui

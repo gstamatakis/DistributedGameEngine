@@ -38,7 +38,7 @@ spring:
       streams.binder:
         functions:
           processPlaysAndMoves:
-            applicationId: app1
+            applicationId: app_play_master
         brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
         deserialization-exception-handler: logandfail
         stateStoreRetry:
