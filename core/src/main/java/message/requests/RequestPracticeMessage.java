@@ -1,8 +1,8 @@
 package message.requests;
 
+import message.DefaultPlayMessage;
 import model.GameTypeEnum;
 import model.PlayTypeEnum;
-import message.DefaultPlayMessage;
 
 public class RequestPracticeMessage extends DefaultPlayMessage {
     public RequestPracticeMessage(String username, GameTypeEnum gameType) {

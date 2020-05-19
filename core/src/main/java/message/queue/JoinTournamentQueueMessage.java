@@ -1,7 +1,7 @@
 package message.queue;
 
-import model.PlayTypeEnum;
 import message.DefaultPlayMessage;
+import model.PlayTypeEnum;
 
 public class JoinTournamentQueueMessage extends DefaultPlayMessage {
     private String tournamentID;

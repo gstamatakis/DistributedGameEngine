@@ -40,6 +40,9 @@ public class UserService {
 
     public String signup(UserEntity user) {
         if (!userRepository.existsByUsername(user.getUsername())) {
+            if (user.getUsername().contains(" ")) {
+                throw new CustomException("Username contains invalid character(s).", HttpStatus.UNPROCESSABLE_ENTITY);
+            }
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             userRepository.save(user);
             return jwtTokenProvider.createToken(user.getUsername(), user.getRole());

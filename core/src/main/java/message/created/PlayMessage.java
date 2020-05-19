@@ -1,9 +1,9 @@
 package message.created;
 
 
-import game.ChessGame;
-import game.GenericGameType;
-import game.TicTacToeGame;
+import game.AbstractGameType;
+import game.ChessGameImpl;
+import game.TicTacToeGameImpl;
 import message.queue.PracticeQueueMessage;
 import model.GameTypeEnum;
 import model.PlayTypeEnum;
@@ -16,9 +16,12 @@ public class PlayMessage implements Serializable {
     private String ID;
     private PlayTypeEnum playTypeEnum;
     private GameTypeEnum gameTypeEnum;
-    private LocalDateTime createdAt;
+    private String createdAt;
     private int remainingRounds;
-    private GenericGameType gameType;
+    private AbstractGameType abstractGameType;
+
+    public PlayMessage() {
+    }
 
     public PlayMessage(PracticeQueueMessage msg1, PracticeQueueMessage msg2) {
         p1 = msg1.getCreatedBy();
@@ -26,7 +29,7 @@ public class PlayMessage implements Serializable {
         ID = generateID(msg1, msg2);
         playTypeEnum = PlayTypeEnum.PRACTICE;
         gameTypeEnum = msg1.getGameType();
-        createdAt = LocalDateTime.now();
+        createdAt = String.valueOf(LocalDateTime.now());
         remainingRounds = 1;
         initGameType();
     }
@@ -37,18 +40,29 @@ public class PlayMessage implements Serializable {
         ID = message.getTournamentID();
         playTypeEnum = PlayTypeEnum.TOURNAMENT;
         gameTypeEnum = message.getGameType();
-        createdAt = LocalDateTime.now();
+        createdAt = String.valueOf(LocalDateTime.now());
         this.remainingRounds = remainingRounds;
         initGameType();
+    }
+
+    public PlayMessage(String p1, String p2, String ID, PlayTypeEnum playTypeEnum, GameTypeEnum gameTypeEnum, String createdAt, int remainingRounds, AbstractGameType abstractGameType) {
+        this.p1 = p1;
+        this.p2 = p2;
+        this.ID = ID;
+        this.playTypeEnum = playTypeEnum;
+        this.gameTypeEnum = gameTypeEnum;
+        this.createdAt = createdAt;
+        this.remainingRounds = remainingRounds;
+        this.abstractGameType = abstractGameType;
     }
 
     void initGameType() {
         switch (this.gameTypeEnum) {
             case TIC_TAC_TOE:
-                gameType = new TicTacToeGame(p1, p2);
+                abstractGameType = new TicTacToeGameImpl(p1, p2);
                 break;
             case CHESS:
-                gameType = new ChessGame(p1, p2);
+                abstractGameType = new ChessGameImpl(p1, p2);
                 break;
             default:
                 throw new IllegalStateException("Default case in PlayMessage 2nd constructor!");
@@ -69,7 +83,7 @@ public class PlayMessage implements Serializable {
                 ", gameTypeEnum=" + gameTypeEnum +
                 ", createdAt=" + createdAt +
                 ", remainingRounds=" + remainingRounds +
-                ", gameType=" + gameType +
+                ", gameType=" + abstractGameType.toString() +
                 '}';
     }
 
@@ -97,7 +111,7 @@ public class PlayMessage implements Serializable {
         return gameTypeEnum;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public String getCreatedAt() {
         return createdAt;
     }
 
@@ -105,7 +119,7 @@ public class PlayMessage implements Serializable {
         return remainingRounds;
     }
 
-    public GenericGameType getGameType() {
-        return gameType;
+    public AbstractGameType getAbstractGameType() {
+        return abstractGameType;
     }
 }

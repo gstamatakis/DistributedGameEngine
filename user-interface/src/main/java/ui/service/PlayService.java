@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 import ui.model.PlayEntity;
 import ui.repository.PlayRepository;
 import websocket.STOMPMessageType;
-import websocket.ServerSTOMPMessage;
+import websocket.DefaultSTOMPMessage;
 
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -113,18 +113,36 @@ public class PlayService {
 
         //Alert the 2 players that their game has started
         //P1
-        messagingTemplate.convertAndSendToUser(newPlay.getP1(), "/queue/reply",
-                new ServerSTOMPMessage(playID, STOMPMessageType.GAME_START));
+        messagingTemplate.convertAndSendToUser(newPlay.getP1(), "/queue/reply", new DefaultSTOMPMessage(
+                newPlay.getP1(),
+                String.format("You have been matched with player %s.", newPlay.getP2()),
+                STOMPMessageType.GAME_START,
+                playID,
+                null));
 
         messagingTemplate.convertAndSendToUser(newPlay.getP1(), "/queue/reply",
-                new ServerSTOMPMessage(STOMPMessageType.NEED_TO_MOVE));
+                new DefaultSTOMPMessage(
+                        newPlay.getP1(),
+                        String.format("You need to make a move %s.", newPlay.getP1()),
+                        STOMPMessageType.NEED_TO_MOVE,
+                        playID,
+                        null));
 
         //P2
         messagingTemplate.convertAndSendToUser(newPlay.getP2(), "/queue/reply",
-                new ServerSTOMPMessage(playID, STOMPMessageType.GAME_START));
+                new DefaultSTOMPMessage(
+                        newPlay.getP2(),
+                        String.format("You have been matched with player %s.", newPlay.getP1()),
+                        STOMPMessageType.GAME_START,
+                        playID,
+                        null));
 
-        messagingTemplate.convertAndSendToUser(newPlay.getP2(), "/queue/reply",
-                new ServerSTOMPMessage("Waiting for opponent..", STOMPMessageType.NOTIFICATION));
+        messagingTemplate.convertAndSendToUser(newPlay.getP2(), "/queue/reply", new DefaultSTOMPMessage(
+                newPlay.getP2(),
+                String.format("Waiting for %s to make a move.", newPlay.getP1()),
+                STOMPMessageType.NOTIFICATION,
+                playID,
+                null));
 
     }
 
@@ -137,10 +155,21 @@ public class PlayService {
         logger.info("Received completed play message: " + completedPlayMessage.toString() + " from partition " + partition);
 
         messagingTemplate.convertAndSendToUser(completedPlayMessage.getWinnerPlayer(), "/queue/reply",
-                new ServerSTOMPMessage("WINNER", STOMPMessageType.GAME_OVER));
+                new DefaultSTOMPMessage(
+                        completedPlayMessage.getWinnerPlayer(),
+                        String.format("You *WON* against %s", completedPlayMessage.getLoserPlayer()),
+                        STOMPMessageType.GAME_OVER,
+                        completedPlayMessage.getPlayID(),
+                        null));
 
         messagingTemplate.convertAndSendToUser(completedPlayMessage.getLoserPlayer(), "/queue/reply",
-                new ServerSTOMPMessage("LOSER", STOMPMessageType.GAME_OVER));
+                new DefaultSTOMPMessage(
+                        completedPlayMessage.getLoserPlayer(),
+                        String.format("You *LOST* against %s", completedPlayMessage.getWinnerPlayer()),
+                        STOMPMessageType.GAME_OVER,
+                        completedPlayMessage.getPlayID(),
+                        null));
+
     }
 
     @KafkaListener(topics = outMovesTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
@@ -150,19 +179,35 @@ public class PlayService {
         CompletedMoveMessage completedMoveMessage = gson.fromJson(message, CompletedMoveMessage.class);
         logger.info("Received completed move message: " + completedMoveMessage.toString() + " from partition " + partition);
         if (completedMoveMessage.isValid()) {
-            messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(),
-                    "/queue/reply", new ServerSTOMPMessage(message, STOMPMessageType.MOVE_ACCEPTED));
-            messagingTemplate.convertAndSendToUser(completedMoveMessage.getOpponentUsername(),
-                    "/queue/reply", new ServerSTOMPMessage(message, STOMPMessageType.NEW_MOVE));
+            messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(), "/queue/reply",
+                    new DefaultSTOMPMessage(
+                            completedMoveMessage.getPlayedByUsername(),
+                            message,
+                            STOMPMessageType.MOVE_ACCEPTED,
+                            completedMoveMessage.getMoveMessage().getPlayID(),
+                            null));
+            messagingTemplate.convertAndSendToUser(completedMoveMessage.getOpponentUsername(), "/queue/reply",
+                    new DefaultSTOMPMessage(
+                            completedMoveMessage.getPlayedByUsername(),
+                            message,
+                            STOMPMessageType.NEW_MOVE,
+                            completedMoveMessage.getMoveMessage().getPlayID(),
+                            null));
         } else {
-            messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(),
-                    "/queue/reply", new ServerSTOMPMessage(message, STOMPMessageType.MOVE_DENIED));
+            messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(), "/queue/reply",
+                    new DefaultSTOMPMessage(
+                            completedMoveMessage.getPlayedByUsername(),
+                            message,
+                            STOMPMessageType.MOVE_DENIED,
+                            completedMoveMessage.getMoveMessage().getPlayID(),
+                            null));
+
         }
     }
 
     @KafkaListener(topics = errorsTopic, containerFactory = "kafkaListenerContainerFactory")
     public void listenForErrors(@Payload String message) {
         logger.info("Received error message: " + message);
-        messagingTemplate.convertAndSend("/topic/broadcast", new ServerSTOMPMessage(message, STOMPMessageType.ERROR));
+        messagingTemplate.convertAndSend("/topic/broadcast", new DefaultSTOMPMessage("SERVER", message, STOMPMessageType.ERROR, null, null));
     }
 }

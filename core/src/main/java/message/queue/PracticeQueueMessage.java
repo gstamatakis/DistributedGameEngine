@@ -1,8 +1,8 @@
 package message.queue;
 
-import model.PlayTypeEnum;
 import message.DefaultPlayMessage;
 import message.requests.RequestPracticeMessage;
+import model.PlayTypeEnum;
 
 public class PracticeQueueMessage extends DefaultPlayMessage {
     public PracticeQueueMessage(String username, RequestPracticeMessage requestMessage) {

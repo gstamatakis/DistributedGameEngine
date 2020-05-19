@@ -56,6 +56,10 @@ public class DefaultKafkaMessage implements Serializable {
         return this.playerMoveMessage != null;
     }
 
+    public void setPlayerMoveMessage(MoveMessage MoveMessage) {
+        this.playerMoveMessage = MoveMessage;
+    }
+
     public PracticeQueueMessage getPracticeQueueMessage() {
         return practiceQueueMessage;
     }
@@ -82,9 +86,5 @@ public class DefaultKafkaMessage implements Serializable {
 
     public MoveMessage getMoveMessage() {
         return playerMoveMessage;
-    }
-
-    public void setPlayerMoveMessage(MoveMessage MoveMessage) {
-        this.playerMoveMessage = MoveMessage;
     }
 }

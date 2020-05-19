@@ -20,9 +20,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import ui.service.PlayService;
-import websocket.ClientSTOMPMessage;
+import websocket.DefaultSTOMPMessage;
 import websocket.STOMPMessageType;
-import websocket.ServerSTOMPMessage;
 
 import java.security.Principal;
 import java.util.concurrent.ExecutionException;
@@ -56,39 +55,44 @@ public class WebSocketController {
 
     @MessageMapping("/echo")
     @SendToUser("/queue/reply")
-    public ServerSTOMPMessage echo(@Payload ClientSTOMPMessage clientSTOMPMessage, Principal principal) {
-        return new ServerSTOMPMessage(principal, clientSTOMPMessage.getPayload(), STOMPMessageType.NOTIFICATION);
+    public DefaultSTOMPMessage echo(@Payload DefaultSTOMPMessage clientSTOMPMessage, Principal principal) {
+        return new DefaultSTOMPMessage(principal, clientSTOMPMessage.getPayload(), STOMPMessageType.NOTIFICATION, null, clientSTOMPMessage.getID());
     }
 
     @MessageMapping("/broadcast")
     @SendToUser("/topic/broadcast")
-    public ServerSTOMPMessage broadcast(@Payload ClientSTOMPMessage clientSTOMPMessage, Principal principal) {
-        return new ServerSTOMPMessage(principal, clientSTOMPMessage.getPayload(), STOMPMessageType.NOTIFICATION);
+    public DefaultSTOMPMessage broadcast(@Payload DefaultSTOMPMessage clientSTOMPMessage, Principal principal) {
+        return new DefaultSTOMPMessage(principal, clientSTOMPMessage.getPayload(), STOMPMessageType.NOTIFICATION, null, clientSTOMPMessage.getID());
     }
 
     @MessageMapping("/move")
-    public ServerSTOMPMessage handleMoves(@Payload ClientSTOMPMessage clientSTOMPMessage, Principal principal)
+    @SendToUser("/queue/reply")
+    public DefaultSTOMPMessage handleMoves(@Payload DefaultSTOMPMessage clientSTOMPMessage, Principal principal)
             throws InterruptedException, ExecutionException, TimeoutException {
         logger.info(String.format("Received message %s from %s", clientSTOMPMessage, principal.getName()));
         String newMove = clientSTOMPMessage.getPayload();
         String playID = clientSTOMPMessage.getID();
+        if (playID == null) {
+            throw new IllegalStateException(String.format("Invalid playID={%s}", playID));
+        }
         playService.sendMoveToPlay(principal.getName(), newMove, playID);
-        return new ServerSTOMPMessage("Move sent.", STOMPMessageType.NOTIFICATION);
+        return new DefaultSTOMPMessage(principal, String.format("Move %s sent.", newMove), STOMPMessageType.NOTIFICATION, null, clientSTOMPMessage.getID());
     }
 
     @MessageMapping("/play")
-    public ServerSTOMPMessage retrieveBoard(@Payload ClientSTOMPMessage clientSTOMPMessage, Principal principal) {
+    @SendToUser("/queue/reply")
+    public DefaultSTOMPMessage retrieveBoard(@Payload DefaultSTOMPMessage clientSTOMPMessage, Principal principal) {
         logger.info(String.format("Received message %s from %s", clientSTOMPMessage, principal.getName()));
         ReadOnlyKeyValueStore<String, PlayMessage> store =
                 interactiveQueryService.getQueryableStore("play-moves-store", QueryableStoreTypes.keyValueStore());
         PlayMessage play = store.get(clientSTOMPMessage.getID());
-        return new ServerSTOMPMessage(gson.toJson(play), STOMPMessageType.FETCH_PLAY);
+        return new DefaultSTOMPMessage(principal, gson.toJson(play), STOMPMessageType.FETCH_PLAY, null, clientSTOMPMessage.getID());
     }
 
     @MessageExceptionHandler
     @SendToUser("/queue/errors")
-    public String handleException(Throwable exception) {
-        return exception.getMessage();
+    public DefaultSTOMPMessage handleException(Throwable exception) {
+        return new DefaultSTOMPMessage("SERVER", exception.getMessage(), STOMPMessageType.ERROR, null, null);
     }
 
 }

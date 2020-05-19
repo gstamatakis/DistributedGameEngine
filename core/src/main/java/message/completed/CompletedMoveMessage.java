@@ -9,7 +9,7 @@ public class CompletedMoveMessage {
     private MoveMessage moveMessage;
     private boolean playFinished;
 
-    public CompletedMoveMessage(boolean valid, String playedByUsername, String opponentUsername, MoveMessage moveMessage,boolean playFinished) {
+    public CompletedMoveMessage(boolean valid, String playedByUsername, String opponentUsername, MoveMessage moveMessage, boolean playFinished) {
         this.valid = valid;
         this.playedByUsername = playedByUsername;
         this.opponentUsername = opponentUsername;

@@ -1,8 +1,8 @@
 package message.requests;
 
+import message.DefaultPlayMessage;
 import model.GameTypeEnum;
 import model.PlayTypeEnum;
-import message.DefaultPlayMessage;
 
 import java.util.HashSet;
 import java.util.Set;

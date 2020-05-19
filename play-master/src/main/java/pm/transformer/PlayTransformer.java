@@ -1,5 +1,8 @@
 package pm.transformer;
 
+import game.ChessGameImpl;
+import game.AbstractGameType;
+import game.TicTacToeGameImpl;
 import message.completed.CompletedMoveMessage;
 import message.created.JoinedPlayMoveMessage;
 import message.created.MoveMessage;
@@ -36,13 +39,28 @@ public class PlayTransformer implements Transformer<String, JoinedPlayMoveMessag
         MoveMessage input_move = value.getMove();
         PlayMessage input_play = value.getPlay();
 
-        PlayMessage curGame = playStateKVStore.get(playID);
-        if (curGame == null) {
-            curGame = input_play;
+        PlayMessage curPlayMessage = playStateKVStore.get(playID);
+        if (curPlayMessage == null) {
+            curPlayMessage = input_play;
         }
 
-        CompletedMoveMessage output_move = curGame.getGameType().offerMove(input_move);
-        playStateKVStore.put(playID, curGame);
+        AbstractGameType curAbstractGameType = curPlayMessage.getAbstractGameType();
+        CompletedMoveMessage output_move;
+
+        switch (curAbstractGameType.getGameTypeEnum()) {
+            case TIC_TAC_TOE:
+                TicTacToeGameImpl specificTTT = (TicTacToeGameImpl) curAbstractGameType;
+                output_move = specificTTT.offerMove(input_move);
+                break;
+            case CHESS:
+                ChessGameImpl specificChess = (ChessGameImpl) curAbstractGameType;
+                output_move = specificChess.offerMove(input_move);
+                break;
+            default:
+                throw new IllegalStateException("Default case in PlayTransformer.transform()");
+        }
+
+        playStateKVStore.put(playID, curPlayMessage);
         return new KeyValue<>(key, output_move);
     }
 

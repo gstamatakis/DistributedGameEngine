@@ -13,9 +13,9 @@ import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.util.UriComponentsBuilder;
-import websocket.ClientSTOMPMessage;
 import websocket.MyStompSessionHandler;
-import websocket.ServerSTOMPMessage;
+import websocket.DefaultSTOMPMessage;
+import websocket.STOMPMessageType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -90,7 +90,7 @@ class MyStompSessionHandlerTest {
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
         StompSession stompSession = null;
         String token = login("admin", "admin");
-        ArrayBlockingQueue<ServerSTOMPMessage> queue = new ArrayBlockingQueue<>(10);
+        ArrayBlockingQueue<DefaultSTOMPMessage> queue = new ArrayBlockingQueue<>(10);
         try {
             WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
             webSocketHttpHeaders.add("Authorization", "Bearer " + token);
@@ -107,12 +107,12 @@ class MyStompSessionHandlerTest {
         for (int i = 0; i < 10; i++) {
             //Send something
             int seed = random.nextInt(100000);
-            ClientSTOMPMessage newInputMsg = new ClientSTOMPMessage(String.format("payload%06d", seed));
+            DefaultSTOMPMessage newInputMsg = new DefaultSTOMPMessage("", String.format("payload%06d", seed), STOMPMessageType.NOTIFICATION, null, null);
             stompSession.send("/app/echo", newInputMsg);
 
             //Get an echo response
             try {
-                ServerSTOMPMessage newOutputMsg = queue.poll(5, TimeUnit.SECONDS);
+                DefaultSTOMPMessage newOutputMsg = queue.poll(5, TimeUnit.SECONDS);
                 if (newOutputMsg == null) {
                     break;
                 }

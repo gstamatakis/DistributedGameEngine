@@ -16,9 +16,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
-import websocket.ClientSTOMPMessage;
+import websocket.DefaultSTOMPMessage;
 import websocket.MyStompSessionHandler;
-import websocket.ServerSTOMPMessage;
+import websocket.STOMPMessageType;
 
 import java.io.*;
 import java.util.*;
@@ -93,7 +93,7 @@ public class GameClient {
         String username = "";
         WebSocketStompClient stompClient;
         StompSession stompSession = null;
-        ArrayBlockingQueue<ServerSTOMPMessage> queue = new ArrayBlockingQueue<>(10);
+        ArrayBlockingQueue<DefaultSTOMPMessage> queue = new ArrayBlockingQueue<>(10);
 
         while (true) {
             try {
@@ -269,7 +269,7 @@ public class GameClient {
                         String playID = "";
 
                         while (!finished) {
-                            ServerSTOMPMessage srvMessage = queue.poll(1000, TimeUnit.MILLISECONDS);
+                            DefaultSTOMPMessage srvMessage = queue.poll(1000, TimeUnit.MILLISECONDS);
 
                             if (ctrlC) {
                                 ctrlC = false;
@@ -292,6 +292,7 @@ public class GameClient {
                                 case GAME_START:
                                     playID = srvMessage.getPayload();
                                     output.write(String.format("\nGame with id=[%s] started.", playID));
+                                    stompSession.send("/app/play", new DefaultSTOMPMessage("", null, STOMPMessageType.FETCH_PLAY, null, playID));
                                     break;
                                 case NOTIFICATION:
                                     output.write("\nNOTIFICATION: " + srvMessage.getPayload());
@@ -302,14 +303,12 @@ public class GameClient {
                                     output.flush();
                                 case NEED_TO_MOVE:
                                     output.write("\nEnter a new move: ");
-                                    output.flush();
                                     String newMove = scanner.next();
-                                    stompSession.send("/app/move", new ClientSTOMPMessage(newMove, playID));
+                                    stompSession.send("/app/move", new DefaultSTOMPMessage("", newMove, STOMPMessageType.NEW_MOVE, null, playID));
                                     break;
                                 case FETCH_PLAY:
                                     PlayMessage playMessage = gson.fromJson(srvMessage.getPayload(), PlayMessage.class);
                                     output.write("\nRetrieved play: " + playMessage.toString());
-                                    output.flush();
                                     break;
                                 case NEW_MOVE:
                                 case MOVE_ACCEPTED:
@@ -329,11 +328,13 @@ public class GameClient {
                                     stompSession.acknowledge(srvMessage.getAck(), true);
                                     throw new IllegalStateException("Default case at case6 switch statement!");
                             }
+                            output.write("\n");
                             output.flush();
 
                             //Acknowledge the message
                             stompSession.acknowledge(srvMessage.getAck(), true);
                         }
+
                         //Disconnect and continue
                         stompSession.disconnect();
                         output.write("\nDisconnected from server!");
@@ -394,6 +395,7 @@ public class GameClient {
                         throw new IllegalStateException("Invalid option");
                 }
             } catch (Exception e) {
+                output.flush();
                 output.write(e.getMessage());
                 output.flush();
             }

@@ -1,8 +1,8 @@
 package message.queue;
 
+import message.DefaultPlayMessage;
 import model.GameTypeEnum;
 import model.PlayTypeEnum;
-import message.DefaultPlayMessage;
 
 import java.util.Set;
 

@@ -2,32 +2,34 @@ package game;
 
 import message.completed.CompletedMoveMessage;
 import message.created.MoveMessage;
+import model.GameTypeEnum;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class ChessGame extends GenericGameType {
-    private boolean finished;
-    private MoveMessage lastMove;
+public class ChessGameImpl extends AbstractGameType {
 
-    public ChessGame(String playsFirst, String playsSecond) {
-        super(playsFirst, playsSecond);
-        this.finished = false;
+    public ChessGameImpl(String playsFirst, String playsSecond) {
+        super(playsFirst, playsSecond, GameTypeEnum.CHESS);
     }
 
     @Override
     public CompletedMoveMessage offerMove(MoveMessage message) {
         String playedBy = message.getUsername();
-        String opponent = super.getPlaysFirstUsername().equals(playedBy)
-                ? super.getPlaysSecondUsername()
-                : super.getPlaysFirstUsername();
-        boolean valid = true;
+        String opponent = getPlaysFirstUsername().equals(playedBy)
+                ? getPlaysSecondUsername()
+                : getPlaysFirstUsername();
+        boolean valid = isValidMove(message, getBoard());
+        if (valid) {
+            Map<Integer, MoveMessage> movesPerRound = getPlaysFirstUsername().equals(playedBy)
+                    ? getMovesPerRoundP1()
+                    : getMovesPerRoundP2();
+            movesPerRound.put(getCurrentRound(), message);
+            if (playedBy.equals(getPlaysFirstUsername())) {
+                this.currentRound++;
+            }
+        }
         return new CompletedMoveMessage(valid, playedBy, opponent, message, this.finished);
-    }
-
-    @Override
-    public boolean isFinished() {
-        return this.finished;
     }
 
     @Override
@@ -72,8 +74,8 @@ public class ChessGame extends GenericGameType {
         return true;
     }
 
-
-    public MoveMessage getLastMove() {
-        return lastMove;
+    @Override
+    public String emptyCell() {
+        return "_";
     }
 }

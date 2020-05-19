@@ -14,10 +14,10 @@ import java.util.Queue;
 @SuppressWarnings("NullableProblems")
 public class MyStompSessionHandler implements StompSessionHandler {
     private static final Logger logger = LoggerFactory.getLogger(MyStompSessionHandler.class);
+    private final Queue<DefaultSTOMPMessage> receivedMessageQueue;
     private List<String> subs;
-    private final Queue<ServerSTOMPMessage> receivedMessageQueue;
 
-    public MyStompSessionHandler(List<String> subs,Queue<ServerSTOMPMessage> queue) {
+    public MyStompSessionHandler(List<String> subs, Queue<DefaultSTOMPMessage> queue) {
         this.subs = subs;
         this.receivedMessageQueue = queue;
     }
@@ -31,22 +31,22 @@ public class MyStompSessionHandler implements StompSessionHandler {
 
     @Override
     public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
-        logger.error(exception.getMessage());
+        logger.error("handleException: " + exception.getMessage());
     }
 
     @Override
     public void handleTransportError(StompSession session, Throwable exception) {
-        logger.error(exception.getMessage());
+        logger.error("handleTransportError: " + exception.getMessage());
     }
 
     @Override
     public Type getPayloadType(StompHeaders headers) {
-        return ServerSTOMPMessage.class;
+        return DefaultSTOMPMessage.class;
     }
 
     @Override
     public void handleFrame(StompHeaders headers, Object payload) {
-        ServerSTOMPMessage msg = (ServerSTOMPMessage) payload;
+        DefaultSTOMPMessage msg = (DefaultSTOMPMessage) payload;
         msg.setAckID(headers.getAck());
         if (!receivedMessageQueue.offer(msg)) {
             logger.warn("Queue of received STOMP messages is full! Discarding messages!");

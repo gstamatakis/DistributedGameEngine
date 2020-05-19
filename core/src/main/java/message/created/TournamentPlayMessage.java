@@ -1,9 +1,9 @@
 package message.created;
 
-import model.PlayTypeEnum;
 import message.DefaultPlayMessage;
-import message.queue.JoinTournamentQueueMessage;
 import message.queue.CreateTournamentQueueMessage;
+import message.queue.JoinTournamentQueueMessage;
+import model.PlayTypeEnum;
 
 import java.util.ArrayList;
 import java.util.List;
