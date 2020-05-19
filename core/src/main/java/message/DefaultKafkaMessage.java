@@ -1,5 +1,7 @@
 package message;
 
+import message.completed.CompletedMoveMessage;
+import message.completed.CompletedPlayMessage;
 import message.created.MoveMessage;
 import message.queue.CreateTournamentQueueMessage;
 import message.queue.JoinTournamentQueueMessage;
@@ -12,12 +14,16 @@ public class DefaultKafkaMessage implements Serializable {
     private JoinTournamentQueueMessage joinTournamentQueueMessage;
     private CreateTournamentQueueMessage createTournamentQueueMessage;
     private MoveMessage playerMoveMessage;
+    private CompletedMoveMessage completedMoveMessage;
+    private CompletedPlayMessage completedPlayMessage;
 
     public DefaultKafkaMessage() {
         this.practiceQueueMessage = null;
         this.joinTournamentQueueMessage = null;
         this.createTournamentQueueMessage = null;
         this.playerMoveMessage = null;
+        this.completedMoveMessage = null;
+        this.completedMoveMessage = null;
     }
 
     public DefaultKafkaMessage(PracticeQueueMessage practiceQueueMessage) {
@@ -40,6 +46,16 @@ public class DefaultKafkaMessage implements Serializable {
         this.playerMoveMessage = playerMoveMessage;
     }
 
+    public DefaultKafkaMessage(CompletedMoveMessage completedMoveMessage) {
+        this();
+        this.completedMoveMessage = completedMoveMessage;
+    }
+
+    public DefaultKafkaMessage(CompletedPlayMessage completedPlayMessage) {
+        this();
+        this.completedPlayMessage = completedPlayMessage;
+    }
+
     public boolean isPracticeMessage() {
         return this.practiceQueueMessage != null;
     }
@@ -51,6 +67,19 @@ public class DefaultKafkaMessage implements Serializable {
     public boolean isCreateTournamentMessage() {
         return this.createTournamentQueueMessage != null;
     }
+
+    public boolean isPlayerMoveMessage() {
+        return this.playerMoveMessage != null;
+    }
+
+    public boolean isCompletedMoveMessage() {
+        return this.completedMoveMessage != null;
+    }
+
+    public boolean isCompletedPlayMessage() {
+        return this.completedPlayMessage != null;
+    }
+
 
     public boolean getPlayerMoveMessage() {
         return this.playerMoveMessage != null;
@@ -82,6 +111,14 @@ public class DefaultKafkaMessage implements Serializable {
 
     public void setCreateTournamentQueueMessage(CreateTournamentQueueMessage createTournamentQueueMessage) {
         this.createTournamentQueueMessage = createTournamentQueueMessage;
+    }
+
+    public CompletedMoveMessage getCompletedMoveMessage() {
+        return completedMoveMessage;
+    }
+
+    public CompletedPlayMessage getCompletedPlayMessage() {
+        return completedPlayMessage;
     }
 
     public MoveMessage getMoveMessage() {

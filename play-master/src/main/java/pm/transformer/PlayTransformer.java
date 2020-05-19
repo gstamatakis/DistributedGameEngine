@@ -1,67 +1,55 @@
 package pm.transformer;
 
-import game.ChessGameImpl;
 import game.AbstractGameType;
-import game.TicTacToeGameImpl;
+import message.DefaultKafkaMessage;
 import message.completed.CompletedMoveMessage;
+import message.completed.CompletedPlayMessage;
 import message.created.JoinedPlayMoveMessage;
 import message.created.MoveMessage;
 import message.created.PlayMessage;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.Transformer;
 import org.apache.kafka.streams.processor.ProcessorContext;
-import org.apache.kafka.streams.state.KeyValueStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("unchecked")
-public class PlayTransformer implements Transformer<String, JoinedPlayMoveMessage, KeyValue<String, CompletedMoveMessage>> {
+public class PlayTransformer implements Transformer<String, JoinedPlayMoveMessage, KeyValue<String, DefaultKafkaMessage>> {
     private static final Logger logger = LoggerFactory.getLogger(PlayTransformer.class);
 
-    private final String playStateStoreName;
-    private KeyValueStore<String, PlayMessage> playStateKVStore;
     private ProcessorContext ctx;
 
-    public PlayTransformer(String playStateStoreName) {
-        this.playStateStoreName = playStateStoreName;
+    public PlayTransformer() {
     }
 
     @Override
     public void init(ProcessorContext context) {
-        this.playStateKVStore = (KeyValueStore<String, PlayMessage>) context.getStateStore(playStateStoreName);
         this.ctx = context;
     }
 
     @Override
-    public KeyValue<String, CompletedMoveMessage> transform(String key, JoinedPlayMoveMessage value) {
+    public KeyValue<String, DefaultKafkaMessage> transform(String key, JoinedPlayMoveMessage value) {
         logger.info(key, value);
-        String playID = value.getPlay().getID();
+
         MoveMessage input_move = value.getMove();
         PlayMessage input_play = value.getPlay();
 
-        PlayMessage curPlayMessage = playStateKVStore.get(playID);
-        if (curPlayMessage == null) {
-            curPlayMessage = input_play;
+        AbstractGameType curGame = input_play.getAbstractGameType();
+        CompletedMoveMessage output_move = curGame.offerMove(input_move);
+
+        //Forward the new move
+        this.ctx.forward(key, new DefaultKafkaMessage(output_move));
+
+        //If play has finished send a message declaring the end of the play
+        if (curGame.getWinner() != null) {
+            CompletedPlayMessage completedPlayMessage = new CompletedPlayMessage(
+                    input_play.getID(), curGame.getWinner(), curGame.getLoser(),
+                    curGame.getCreatedBy(), input_play.getGameTypeEnum(), input_play.getPlayTypeEnum());
+
+            this.ctx.forward(key, new DefaultKafkaMessage(completedPlayMessage));
         }
 
-        AbstractGameType curAbstractGameType = curPlayMessage.getAbstractGameType();
-        CompletedMoveMessage output_move;
-
-        switch (curAbstractGameType.getGameTypeEnum()) {
-            case TIC_TAC_TOE:
-                TicTacToeGameImpl specificTTT = (TicTacToeGameImpl) curAbstractGameType;
-                output_move = specificTTT.offerMove(input_move);
-                break;
-            case CHESS:
-                ChessGameImpl specificChess = (ChessGameImpl) curAbstractGameType;
-                output_move = specificChess.offerMove(input_move);
-                break;
-            default:
-                throw new IllegalStateException("Default case in PlayTransformer.transform()");
-        }
-
-        playStateKVStore.put(playID, curPlayMessage);
-        return new KeyValue<>(key, output_move);
+        //Return nothing
+        return null;
     }
 
     @Override

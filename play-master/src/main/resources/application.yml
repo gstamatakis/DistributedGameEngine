@@ -20,7 +20,7 @@ spring:
   cloud.stream:
     bindings:
       processPlaysAndMoves-in-0:
-        destination: input-moves
+        destination: new-moves
         group: group1
         auto.offset.reset: latest
       processPlaysAndMoves-in-1:
@@ -28,7 +28,9 @@ spring:
         group: group1
         auto.offset.reset: latest
       processPlaysAndMoves-out-0:
-        destination: output-moves
+        destination: completed-moves
+      processPlaysAndMoves-out-1:
+        destination: completed-plays
     kafka:
       binder:
         brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096

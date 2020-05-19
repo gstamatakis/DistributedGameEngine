@@ -76,7 +76,7 @@ public class JoinTournamentTransformer implements Transformer<String, JoinTourna
                         tournament.progressTournament();
                         pairTournamentPlayersKVStore.put(tournament.getTournamentID(), tournament);
                     }
-                }else {
+                } else {
                     //Put the tournament message back into the store
                     pairTournamentPlayersKVStore.put(tournament.getTournamentID(), tournament);
                 }

@@ -36,6 +36,11 @@ public class KafkaTopicConfig {
     }
 
     @Bean
+    public NewTopic newMovesTopic() {
+        return new NewTopic("new-moves", 1, replicationFactor);
+    }
+
+    @Bean
     public NewTopic joinPlayTopic() {
         return new NewTopic("join-play", 1, replicationFactor);
     }
@@ -46,13 +51,8 @@ public class KafkaTopicConfig {
     }
 
     @Bean
-    public NewTopic inputMovesTopic() {
-        return new NewTopic("input-plays", 1, replicationFactor);
-    }
-
-    @Bean
-    public NewTopic outputMovesTopic() {
-        return new NewTopic("output-plays", 1, replicationFactor);
+    public NewTopic completedMovesTopic() {
+        return new NewTopic("completed-moves", 1, replicationFactor);
     }
 
     @Bean

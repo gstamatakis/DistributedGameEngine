@@ -9,12 +9,13 @@ import java.util.Map;
 
 public class ChessGameImpl extends AbstractGameType {
 
-    public ChessGameImpl(String playsFirst, String playsSecond) {
-        super(playsFirst, playsSecond, GameTypeEnum.CHESS);
+    public ChessGameImpl(String playsFirst, String playsSecond, String createdBy) {
+        super(playsFirst, playsSecond, GameTypeEnum.CHESS, createdBy);
     }
 
     @Override
     public CompletedMoveMessage offerMove(MoveMessage message) {
+        boolean finished = false;//TODO change
         String playedBy = message.getUsername();
         String opponent = getPlaysFirstUsername().equals(playedBy)
                 ? getPlaysSecondUsername()
@@ -29,7 +30,7 @@ public class ChessGameImpl extends AbstractGameType {
                 this.currentRound++;
             }
         }
-        return new CompletedMoveMessage(valid, playedBy, opponent, message, this.finished);
+        return new CompletedMoveMessage(valid, playedBy, opponent, message, finished);
     }
 
     @Override

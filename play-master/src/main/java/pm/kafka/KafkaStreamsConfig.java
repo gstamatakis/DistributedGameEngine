@@ -1,34 +1,24 @@
 package pm.kafka;
 
-import message.completed.CompletedMoveMessage;
+import message.DefaultKafkaMessage;
 import message.created.JoinedPlayMoveMessage;
 import message.created.MoveMessage;
 import message.created.PlayMessage;
-import serde.JoinedPlayMoveMessageSerde;
-import serde.MoveMessageSerde;
-import serde.PlayMessageSerde;
 import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.state.StoreBuilder;
-import org.apache.kafka.streams.state.Stores;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import pm.transformer.PlayTransformer;
+import serde.DefaultKafkaMessageSerde;
+import serde.JoinedPlayMoveMessageSerde;
+import serde.MoveMessageSerde;
+import serde.PlayMessageSerde;
 
 import java.util.function.BiFunction;
 
-@SuppressWarnings("rawtypes")
 @Component
 public class KafkaStreamsConfig {
-    private final String playStateStoreName = "play-moves-store";
-
-    //State stores
-    @Bean
-    private StoreBuilder playStateStore() {
-        return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(playStateStoreName), Serdes.String(), new PlayMessageSerde());
-    }
 
     //Serdes
     @Bean
@@ -46,15 +36,24 @@ public class KafkaStreamsConfig {
         return new JoinedPlayMoveMessageSerde();
     }
 
+    @Bean
+    public Serde<DefaultKafkaMessage> DefaultKafkaMessageSerde() {
+        return new DefaultKafkaMessageSerde();
+    }
+
     //Kafka streams topology
     @Bean
-    public BiFunction<KStream<String, MoveMessage>, KTable<String, PlayMessage>, KStream<String, CompletedMoveMessage>> processPlaysAndMoves() {
+    public BiFunction<KStream<String, MoveMessage>, KTable<String, PlayMessage>, KStream<String, DefaultKafkaMessage>[]> processPlaysAndMoves() {
         return (moveStream, playTable) -> {
             //Inner-Join the player moves with the available plays
-            //Update the play state based on incoming moves
-            return moveStream
+            KStream<String, DefaultKafkaMessage> processedMoves = moveStream
                     .join(playTable, JoinedPlayMoveMessage::new)
-                    .transform(() -> new PlayTransformer(playStateStoreName), playStateStoreName);
+                    .transform(PlayTransformer::new);
+
+            //Send to output topics separately
+            return processedMoves.branch(
+                    (id, msg) -> msg.isCompletedMoveMessage(),
+                    (id, msg) -> msg.isCompletedPlayMessage());
         };
     }
 }

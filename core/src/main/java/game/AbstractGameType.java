@@ -15,14 +15,15 @@ public abstract class AbstractGameType implements Serializable {
     protected Map<Integer, MoveMessage> movesPerRoundP1;
     protected Map<Integer, MoveMessage> movesPerRoundP2;
     protected int currentRound;
-    protected boolean finished;
     protected MoveMessage lastValidMove;
     protected GameTypeEnum gameTypeEnum;
+    protected String winner;
+    protected String createdBy;
 
     public AbstractGameType() {
     }
 
-    protected AbstractGameType(String playsFirstUsername, String playsSecondUsername, GameTypeEnum gameType) {
+    protected AbstractGameType(String playsFirstUsername, String playsSecondUsername, GameTypeEnum gameType, String createdBy) {
         this.board = initialBoard();
         this.playsFirstUsername = playsFirstUsername;
         this.playsSecondUsername = playsSecondUsername;
@@ -30,6 +31,8 @@ public abstract class AbstractGameType implements Serializable {
         this.movesPerRoundP2 = new HashMap<>();
         this.currentRound = 1;
         this.gameTypeEnum = gameType;
+        this.winner = null;
+        this.createdBy = createdBy;
     }
 
     //Need to override the following methods
@@ -40,14 +43,6 @@ public abstract class AbstractGameType implements Serializable {
     public abstract boolean isValidMove(MoveMessage message, Map<String, String> board);
 
     public abstract String emptyCell();
-
-    public boolean isFinished() {
-        return this.finished;
-    }
-
-    public void setFinished() {
-        this.finished = true;
-    }
 
     //Getters and setters
     public int getCurrentRound() {
@@ -81,4 +76,26 @@ public abstract class AbstractGameType implements Serializable {
     public GameTypeEnum getGameTypeEnum() {
         return gameTypeEnum;
     }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public String getWinner() {
+        return winner;
+    }
+
+    public String getLoser() {
+        if (this.winner == null) {
+            return null;
+        }
+        return this.winner.equals(getPlaysFirstUsername())
+                ? this.getPlaysSecondUsername()
+                : this.getPlaysFirstUsername();
+    }
+
+    public void setWinner(String winner) {
+        this.winner = winner;
+    }
+
 }

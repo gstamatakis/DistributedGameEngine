@@ -19,6 +19,7 @@ public class PlayMessage implements Serializable {
     private String createdAt;
     private int remainingRounds;
     private AbstractGameType abstractGameType;
+    private String createdBy;
 
     public PlayMessage() {
     }
@@ -31,6 +32,7 @@ public class PlayMessage implements Serializable {
         gameTypeEnum = msg1.getGameType();
         createdAt = String.valueOf(LocalDateTime.now());
         remainingRounds = 1;
+        this.createdBy = msg1.getCreatedBy();
         initGameType();
     }
 
@@ -42,10 +44,12 @@ public class PlayMessage implements Serializable {
         gameTypeEnum = message.getGameType();
         createdAt = String.valueOf(LocalDateTime.now());
         this.remainingRounds = remainingRounds;
+        createdBy = message.getCreatedBy();
         initGameType();
     }
 
-    public PlayMessage(String p1, String p2, String ID, PlayTypeEnum playTypeEnum, GameTypeEnum gameTypeEnum, String createdAt, int remainingRounds, AbstractGameType abstractGameType) {
+    public PlayMessage(String p1, String p2, String ID, PlayTypeEnum playTypeEnum, GameTypeEnum gameTypeEnum,
+                       String createdAt, int remainingRounds, AbstractGameType abstractGameType, String createdBy) {
         this.p1 = p1;
         this.p2 = p2;
         this.ID = ID;
@@ -54,15 +58,16 @@ public class PlayMessage implements Serializable {
         this.createdAt = createdAt;
         this.remainingRounds = remainingRounds;
         this.abstractGameType = abstractGameType;
+        this.createdBy = createdBy;
     }
 
     void initGameType() {
         switch (this.gameTypeEnum) {
             case TIC_TAC_TOE:
-                abstractGameType = new TicTacToeGameImpl(p1, p2);
+                abstractGameType = new TicTacToeGameImpl(p1, p2, createdBy);
                 break;
             case CHESS:
-                abstractGameType = new ChessGameImpl(p1, p2);
+                abstractGameType = new ChessGameImpl(p1, p2, createdBy);
                 break;
             default:
                 throw new IllegalStateException("Default case in PlayMessage 2nd constructor!");
@@ -121,5 +126,9 @@ public class PlayMessage implements Serializable {
 
     public AbstractGameType getAbstractGameType() {
         return abstractGameType;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
     }
 }

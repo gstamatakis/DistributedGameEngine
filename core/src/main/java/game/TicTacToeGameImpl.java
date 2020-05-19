@@ -10,14 +10,15 @@ import java.util.Map;
 public class TicTacToeGameImpl extends AbstractGameType {
     private String p1, p2;
 
-    public TicTacToeGameImpl(String playsFirst, String playsSecond) {
-        super(playsFirst, playsSecond, GameTypeEnum.TIC_TAC_TOE);
+    public TicTacToeGameImpl(String playsFirst, String playsSecond, String createdBy) {
+        super(playsFirst, playsSecond, GameTypeEnum.TIC_TAC_TOE, createdBy);
         this.p1 = playsFirst;
         this.p2 = playsSecond;
     }
 
     @Override
     public CompletedMoveMessage offerMove(MoveMessage message) {
+        boolean finished = false;   //TODO change
         String playedBy = message.getUsername();
         String opponent = getPlaysFirstUsername().equals(playedBy)
                 ? getPlaysSecondUsername()
@@ -32,7 +33,7 @@ public class TicTacToeGameImpl extends AbstractGameType {
                 this.currentRound++;
             }
         }
-        return new CompletedMoveMessage(valid, playedBy, opponent, message, this.finished);
+        return new CompletedMoveMessage(valid, playedBy, opponent, message, finished);
     }
 
     @Override

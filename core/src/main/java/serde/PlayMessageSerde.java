@@ -47,6 +47,7 @@ public class PlayMessageSerde implements Serde<PlayMessage>, Serializer<PlayMess
         jsonObject.addProperty("gameTypeEnum", data.getGameTypeEnum().toString());
         jsonObject.addProperty("createdAt", data.getCreatedAt());
         jsonObject.addProperty("remainingRounds", data.getRemainingRounds());
+        jsonObject.addProperty("createdBy", data.getCreatedBy());
         jsonObject.addProperty("state", gameSerializer.serializeGame(data.getAbstractGameType(), data.getGameTypeEnum()));
         return gson.toJson(jsonObject, JsonObject.class);
     }
@@ -60,9 +61,10 @@ public class PlayMessageSerde implements Serde<PlayMessage>, Serializer<PlayMess
         GameTypeEnum gameTypeEnum = GameTypeEnum.valueOf(jsonObject.get("gameTypeEnum").getAsString());
         String createdAt = jsonObject.get("createdAt").getAsString();
         int remainingRounds = jsonObject.get("remainingRounds").getAsInt();
+        String createdBy = jsonObject.get("createdBy").getAsString();
         String state = jsonObject.get("state").getAsString();
         AbstractGameType abstractGameType = gameSerializer.deserializeGame(state, gameTypeEnum);
-        return new PlayMessage(p1, p2, id, playTypeEnum, gameTypeEnum, createdAt, remainingRounds, abstractGameType);
+        return new PlayMessage(p1, p2, id, playTypeEnum, gameTypeEnum, createdAt, remainingRounds, abstractGameType, createdBy);
     }
 
     @Override

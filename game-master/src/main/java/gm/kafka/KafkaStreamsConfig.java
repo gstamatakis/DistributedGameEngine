@@ -4,11 +4,11 @@ import gm.transformer.CreateTournamentTransformer;
 import gm.transformer.JoinTournamentTransformer;
 import gm.transformer.PracticeQueueTransformer;
 import message.DefaultKafkaMessage;
+import message.completed.CompletedPlayMessage;
 import message.created.PlayMessage;
 import message.queue.CreateTournamentQueueMessage;
 import message.queue.JoinTournamentQueueMessage;
 import message.queue.PracticeQueueMessage;
-import serde.*;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
@@ -17,6 +17,7 @@ import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
+import serde.*;
 
 import java.util.function.Function;
 
@@ -27,6 +28,8 @@ public class KafkaStreamsConfig {
     private final String pairTournamentPlayersStore = "pair-tournament-players-store";
     private final String userToGameIDStore = "user-to-playID";
     private final String gameIDToGameStore = "playID-to-game";
+    private final String practiceScoreStore = "practice-score-store";
+    private final String tournamentScoreStore = "tournament-score-store";
 
     //State stores
     @Bean
@@ -47,6 +50,16 @@ public class KafkaStreamsConfig {
     @Bean
     public StoreBuilder gameIDToGameStore() {
         return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(gameIDToGameStore), Serdes.String(), new PlayMessageSerde());
+    }
+
+    @Bean
+    public StoreBuilder practiceScoreStore() {
+        return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(practiceScoreStore), Serdes.String(), new PracticePlaysScoreSerde());
+    }
+
+    @Bean
+    public StoreBuilder tournamentScoreStore() {
+        return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(tournamentScoreStore), Serdes.String(), new TournamentPlaysScoreSerde());
     }
 
     //Serdes
@@ -75,7 +88,12 @@ public class KafkaStreamsConfig {
         return new PlayMessageSerde();
     }
 
-    //Kafka streams topology
+
+    /**
+     * Kafka Streams topology for creating Tournament plays and pairing players for Practice plays.
+     *
+     * @return
+     */
     @Bean
     public Function<KStream<String, DefaultKafkaMessage>, KStream<String, PlayMessage>> processUsersJoinGame() {
         return stream -> {
@@ -112,6 +130,17 @@ public class KafkaStreamsConfig {
 
             //Merge everything into a single stream and output the result to the specified topic
             return practiceBranch.merge(tournamentBranch);
+        };
+    }
+
+    @Bean
+    public Function<KStream<String, DefaultKafkaMessage>, KStream<String, String>> processCompletedPlaysForScore() {
+        return stream -> {
+            //Map to completed plays objects
+            KStream<String, CompletedPlayMessage> completedPlays = stream.map((key, value) -> new KeyValue<>(key, value.getCompletedPlayMessage()));
+
+            //TODO transform input completed plays and save scores to the KV stores
+            return null;
         };
     }
 }

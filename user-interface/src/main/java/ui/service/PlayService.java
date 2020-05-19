@@ -24,8 +24,8 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import ui.model.PlayEntity;
 import ui.repository.PlayRepository;
-import websocket.STOMPMessageType;
 import websocket.DefaultSTOMPMessage;
+import websocket.STOMPMessageType;
 
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -37,9 +37,9 @@ public class PlayService {
     private static final Logger logger = LoggerFactory.getLogger(PlayService.class);
     private final String joinPlayTopic = "join-play";
     private final String newPlaysTopic = "new-plays";
+    private final String newMovesTopic = "new-moves";
     private final String completedPlaysTopic = "completed-plays";
-    private final String inputMovesTopic = "input-moves";
-    private final String outMovesTopic = "output-moves";
+    private final String completedMovesTopic = "completed-moves";
     private final String errorsTopic = "errors";
 
     private final Gson gson = new Gson();
@@ -99,7 +99,7 @@ public class PlayService {
     //Send new move to play
     public void sendMoveToPlay(String sentBy, String move, String playID) throws InterruptedException, ExecutionException, TimeoutException {
         kafkaJoinQueueTemplate
-                .send(inputMovesTopic, playID, new DefaultKafkaMessage(new MoveMessage(sentBy, move, playID)))
+                .send(newMovesTopic, playID, new DefaultKafkaMessage(new MoveMessage(sentBy, move, playID)))
                 .get(timeout, TimeUnit.SECONDS);
     }
 
@@ -150,7 +150,7 @@ public class PlayService {
     public void listenForFinishedPlays(@Payload String message,
                                        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
                                        @Header(KafkaHeaders.OFFSET) int offset) {
-        CompletedPlayMessage completedPlayMessage = gson.fromJson(message, CompletedPlayMessage.class);
+        CompletedPlayMessage completedPlayMessage = gson.fromJson(message, DefaultKafkaMessage.class).getCompletedPlayMessage();
         playRepository.save(new PlayEntity(completedPlayMessage));
         logger.info("Received completed play message: " + completedPlayMessage.toString() + " from partition " + partition);
 
@@ -172,11 +172,11 @@ public class PlayService {
 
     }
 
-    @KafkaListener(topics = outMovesTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
+    @KafkaListener(topics = completedMovesTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
     public void listenForFinishedMoves(@Payload String message,
                                        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
                                        @Header(KafkaHeaders.OFFSET) int offset) {
-        CompletedMoveMessage completedMoveMessage = gson.fromJson(message, CompletedMoveMessage.class);
+        CompletedMoveMessage completedMoveMessage = gson.fromJson(message, DefaultKafkaMessage.class).getCompletedMoveMessage();
         logger.info("Received completed move message: " + completedMoveMessage.toString() + " from partition " + partition);
         if (completedMoveMessage.isValid()) {
             messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(), "/queue/reply",
