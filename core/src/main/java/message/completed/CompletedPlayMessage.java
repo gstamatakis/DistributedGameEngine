@@ -32,6 +32,14 @@ public class CompletedPlayMessage {
                 '}';
     }
 
+    public long getScore(String username) {
+        if (username.equals(winnerPlayer)) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
     public String getPlayID() {
         return playID;
     }

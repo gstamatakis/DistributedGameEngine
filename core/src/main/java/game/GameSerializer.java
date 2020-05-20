@@ -8,7 +8,9 @@ public interface GameSerializer {
      *
      * @return A serialized object in a String format.
      */
-    String serializeGame(AbstractGameType abstractGameType, GameTypeEnum gameTypeEnum);
+    String serializeGame(AbstractGameState abstractGameState, GameTypeEnum gameTypeEnum);
 
-    AbstractGameType deserializeGame(String data, GameTypeEnum gameTypeEnum);
+    AbstractGameState deserializeGame(String data, GameTypeEnum gameTypeEnum);
+
+    String newGame(GameTypeEnum gameTypeEnum, Object... args);
 }

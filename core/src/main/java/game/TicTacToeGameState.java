@@ -7,10 +7,10 @@ import model.GameTypeEnum;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TicTacToeGameImpl extends AbstractGameType {
+public class TicTacToeGameState extends AbstractGameState {
     private String p1, p2;
 
-    public TicTacToeGameImpl(String playsFirst, String playsSecond, String createdBy) {
+    public TicTacToeGameState(String playsFirst, String playsSecond, String createdBy) {
         super(playsFirst, playsSecond, GameTypeEnum.TIC_TAC_TOE, createdBy);
         this.p1 = playsFirst;
         this.p2 = playsSecond;
@@ -84,7 +84,7 @@ public class TicTacToeGameImpl extends AbstractGameType {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        TicTacToeGameImpl that = (TicTacToeGameImpl) o;
+        TicTacToeGameState that = (TicTacToeGameState) o;
 
         if (p1 != null ? !p1.equals(that.p1) : that.p1 != null) return false;
         return p2 != null ? p2.equals(that.p2) : that.p2 == null;

@@ -4,7 +4,6 @@ import gm.transformer.CreateTournamentTransformer;
 import gm.transformer.JoinTournamentTransformer;
 import gm.transformer.PracticeQueueTransformer;
 import message.DefaultKafkaMessage;
-import message.completed.CompletedPlayMessage;
 import message.created.PlayMessage;
 import message.queue.CreateTournamentQueueMessage;
 import message.queue.JoinTournamentQueueMessage;
@@ -74,13 +73,13 @@ public class KafkaStreamsConfig {
     }
 
     @Bean
-    public Serde<JoinTournamentQueueMessage> JoinTournamentQueueMessageSerde() {
-        return new JoinTournamentQueueMessageSerde();
+    public Serde<CreateTournamentQueueMessage> CreateTournamentQueueMessageSerde() {
+        return new CreateTournamentQueueMessageSerde();
     }
 
     @Bean
-    public Serde<CreateTournamentQueueMessage> CreateTournamentQueueMessageSerde() {
-        return new CreateTournamentQueueMessageSerde();
+    public Serde<JoinTournamentQueueMessage> JoinTournamentQueueMessageSerde() {
+        return new JoinTournamentQueueMessageSerde();
     }
 
     @Bean
@@ -95,26 +94,26 @@ public class KafkaStreamsConfig {
      * @return
      */
     @Bean
-    public Function<KStream<String, DefaultKafkaMessage>, KStream<String, PlayMessage>> processUsersJoinGame() {
+    public Function<KStream<String, DefaultKafkaMessage>, KStream<String, DefaultKafkaMessage>> processUsersJoinGame() {
         return stream -> {
             //Branch to tournaments and non-tournaments
             KStream<String, DefaultKafkaMessage>[] forks = stream.branch(
-                    (id, msg) -> msg.isPracticeMessage(),
-                    (id, msg) -> msg.isJoinTournamentMessage(),
-                    (id, msg) -> msg.isCreateTournamentMessage());
+                    (id, msg) -> msg.isType(PracticeQueueMessage.class.getCanonicalName()),
+                    (id, msg) -> msg.isType(JoinTournamentQueueMessage.class.getCanonicalName()),
+                    (id, msg) -> msg.isType(CreateTournamentQueueMessage.class.getCanonicalName()));
 
             //Map to the original objects
             KStream<String, PracticeQueueMessage> practiceStream =
-                    forks[0].map((key, value) -> new KeyValue<>(key, value.getPracticeQueueMessage()));
+                    forks[0].map((key, value) -> new KeyValue<>(key, (PracticeQueueMessage) value.retrieve(PracticeQueueMessage.class.getCanonicalName())));
 
             KStream<String, JoinTournamentQueueMessage> joinTournamentStream =
-                    forks[1].map((key, value) -> new KeyValue<>(key, value.getJoinTournamentQueueMessage()));
+                    forks[1].map((key, value) -> new KeyValue<>(key, (JoinTournamentQueueMessage) value.retrieve(JoinTournamentQueueMessage.class.getCanonicalName())));
 
             KStream<String, CreateTournamentQueueMessage> createTournamentStream =
-                    forks[2].map((key, value) -> new KeyValue<>(key, value.getCreateTournamentQueueMessage()));
+                    forks[2].map((key, value) -> new KeyValue<>(key, (CreateTournamentQueueMessage) value.retrieve(CreateTournamentQueueMessage.class.getCanonicalName())));
 
             //Handle practice play pairs
-            KStream<String, PlayMessage> practiceBranch = practiceStream.transform(
+            KStream<String, DefaultKafkaMessage> practiceBranch = practiceStream.transform(
                     () -> new PracticeQueueTransformer(pairPracticePlayersStore, userToGameIDStore, gameIDToGameStore),
                     pairPracticePlayersStore, userToGameIDStore, gameIDToGameStore);
 
@@ -124,7 +123,7 @@ public class KafkaStreamsConfig {
                     pairTournamentPlayersStore, userToGameIDStore, gameIDToGameStore);
 
             //Handle the tournament pairs
-            KStream<String, PlayMessage> tournamentBranch = joinTournamentStream.transform(
+            KStream<String, DefaultKafkaMessage> tournamentBranch = joinTournamentStream.transform(
                     () -> new JoinTournamentTransformer(pairTournamentPlayersStore, userToGameIDStore, gameIDToGameStore),
                     pairTournamentPlayersStore, userToGameIDStore, gameIDToGameStore);
 
@@ -133,14 +132,14 @@ public class KafkaStreamsConfig {
         };
     }
 
-    @Bean
-    public Function<KStream<String, DefaultKafkaMessage>, KStream<String, String>> processCompletedPlaysForScore() {
-        return stream -> {
-            //Map to completed plays objects
-            KStream<String, CompletedPlayMessage> completedPlays = stream.map((key, value) -> new KeyValue<>(key, value.getCompletedPlayMessage()));
-
-            //TODO transform input completed plays and save scores to the KV stores
-            return null;
-        };
-    }
+//    @Bean
+//    public Function<KStream<String, DefaultKafkaMessage>, KStream<String, String>> processCompletedPlaysForScore() {
+//        return stream -> {
+//            //Map to completed plays objects
+//            KStream<String, CompletedPlayMessage> completedPlays = stream.map((key, value) -> new KeyValue<>(key, (CompletedPlayMessage) value.retrieve(CompletedPlayMessage.class.getCanonicalName())));
+//
+//            //TODO transform input completed plays and save scores to the KV stores
+//            return null;
+//        };
+//    }
 }

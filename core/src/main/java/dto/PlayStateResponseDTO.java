@@ -1,6 +1,6 @@
 package dto;
 
-import game.AbstractGameType;
+import game.AbstractGameState;
 import io.swagger.annotations.ApiModelProperty;
 import model.PlayTypeEnum;
 
@@ -17,7 +17,7 @@ public class PlayStateResponseDTO {
     @ApiModelProperty()
     private PlayTypeEnum playType;
     @ApiModelProperty()
-    private AbstractGameType abstractGameType;
+    private AbstractGameState abstractGameState;
     @ApiModelProperty()
     private LocalDateTime createdAt;
     @ApiModelProperty()
@@ -39,8 +39,8 @@ public class PlayStateResponseDTO {
         return playType;
     }
 
-    public AbstractGameType getAbstractGameType() {
-        return abstractGameType;
+    public AbstractGameState getAbstractGameState() {
+        return abstractGameState;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +19,9 @@ public class GMController {
 
     @Autowired
     ModelMapper modelMapper;
+
+    @Value(value = "${token.service}")
+    private String serviceToken;
 
     @ExceptionHandler({CustomException.class})
     public ResponseEntity<String> handleConflict(CustomException ex, WebRequest request) {

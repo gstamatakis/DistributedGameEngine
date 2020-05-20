@@ -1,5 +1,6 @@
 package gm.transformer;
 
+import message.DefaultKafkaMessage;
 import message.created.PlayMessage;
 import message.created.TournamentPlayMessage;
 import message.queue.JoinTournamentQueueMessage;
@@ -10,12 +11,13 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 @SuppressWarnings("unchecked")
-public class JoinTournamentTransformer implements Transformer<String, JoinTournamentQueueMessage, KeyValue<String, PlayMessage>> {
+public class JoinTournamentTransformer implements Transformer<String, JoinTournamentQueueMessage, KeyValue<String, DefaultKafkaMessage>> {
     private static final Logger logger = LoggerFactory.getLogger(JoinTournamentTransformer.class);
     private final String pairTournamentPlayersStore;
     private final String userToGameIDStore;
@@ -40,7 +42,7 @@ public class JoinTournamentTransformer implements Transformer<String, JoinTourna
     }
 
     @Override
-    public KeyValue<String, PlayMessage> transform(String key, JoinTournamentQueueMessage newPlayer) {
+    public KeyValue<String, DefaultKafkaMessage> transform(String key, JoinTournamentQueueMessage newPlayer) {
         TournamentPlayMessage tournament = pairTournamentPlayersKVStore.get(newPlayer.getTournamentID());
         if (tournament == null) {
             logger.error("Tried to join a non existing tournament: " + newPlayer.toString());
@@ -61,11 +63,11 @@ public class JoinTournamentTransformer implements Transformer<String, JoinTourna
                         }
                         String p1 = playerIter.next();
                         String p2 = playerIter.next();
-                        PlayMessage newPlay = new PlayMessage(tournament, p1, p2, rounds);
+                        PlayMessage newPlay = new PlayMessage(tournament, p1, p2, rounds, p1, p2, String.valueOf(LocalDateTime.now()));
                         userToGameKVStore.put(p1, newPlay);
                         userToGameKVStore.put(p2, newPlay);
                         gameIDToGameKVStore.put(newPlay.getID(), newPlay);
-                        this.ctx.forward(newPlay.getID(), newPlay);
+                        this.ctx.forward(newPlay.getID(), new DefaultKafkaMessage(newPlay, PlayMessage.class.getCanonicalName()));
                     }
 
                     //If the tournament is over just delete the tournament message

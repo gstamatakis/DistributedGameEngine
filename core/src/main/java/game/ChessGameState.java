@@ -7,9 +7,9 @@ import model.GameTypeEnum;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ChessGameImpl extends AbstractGameType {
+public class ChessGameState extends AbstractGameState {
 
-    public ChessGameImpl(String playsFirst, String playsSecond, String createdBy) {
+    public ChessGameState(String playsFirst, String playsSecond, String createdBy) {
         super(playsFirst, playsSecond, GameTypeEnum.CHESS, createdBy);
     }
 

@@ -26,7 +26,7 @@ spring:
       binder:
         brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
         replication-factor: 3
-      streams.binder.configuration.application.server: localhost:9092
+      streams.binder.configuration.application.server: localhost:18080
 
 secets:
   ui-token: token_ui
@@ -39,6 +39,8 @@ redis:
   pass:
   enc_key: dkdi38393kd
 
+playmaster.store.url: "http://localhost:8082"
+token.service: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzZXJ2aWNlIiwiYXV0aCI6W3siYXV0aG9yaXR5IjoiUk9MRV9TRVJWSUNFIn1dLCJpYXQiOjE1ODk5ODIxMzMsImV4cCI6MTYyMTA4NjEzM30.1IKgiFBeO5dfGI3Tdag0o5LC-V9JooIoC4RIA_zfe5A"
 
 server:
   port: 8080

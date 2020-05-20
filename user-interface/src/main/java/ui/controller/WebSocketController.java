@@ -3,14 +3,11 @@ package ui.controller;
 import com.google.gson.Gson;
 import exception.CustomException;
 import message.created.PlayMessage;
-import org.apache.kafka.streams.state.QueryableStoreTypes;
-import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.binder.kafka.streams.InteractiveQueryService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -18,12 +15,15 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.util.UriComponentsBuilder;
 import ui.service.PlayService;
 import websocket.DefaultSTOMPMessage;
 import websocket.STOMPMessageType;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -43,10 +43,15 @@ public class WebSocketController {
     @Autowired
     private PlayService playService;
 
-    @Autowired
-    private InteractiveQueryService interactiveQueryService;
+    @Value(value = "${playmaster.store.url}")
+    private String playMasterURL;
 
+    @Value(value = "${token.service}")
+    private String serviceToken;
+
+    //Local vars
     private final Gson gson = new Gson();
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @ExceptionHandler({CustomException.class})
     public ResponseEntity<String> handleConflict(CustomException ex, WebRequest request) {
@@ -81,18 +86,25 @@ public class WebSocketController {
 
     @MessageMapping("/play")
     @SendToUser("/queue/reply")
-    public DefaultSTOMPMessage retrieveBoard(@Payload DefaultSTOMPMessage clientSTOMPMessage, Principal principal) {
-        logger.info(String.format("Received message %s from %s", clientSTOMPMessage, principal.getName()));
-        ReadOnlyKeyValueStore<String, PlayMessage> store =
-                interactiveQueryService.getQueryableStore("play-moves-store", QueryableStoreTypes.keyValueStore());
-        PlayMessage play = store.get(clientSTOMPMessage.getID());
+    public DefaultSTOMPMessage retrievePlay(@Payload DefaultSTOMPMessage clientSTOMPMessage, Principal principal) {
+        logger.info(String.format("Received message in WebSocketController.retrievePlay %s from %s", clientSTOMPMessage, principal.getName()));
+
+        //Retrieve from PlayMaster service
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.ALL));
+        headers.setCacheControl(CacheControl.noCache());
+        headers.setBearerAuth(serviceToken);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(String.format(playMasterURL + "/play/%s", clientSTOMPMessage.getID()));
+        PlayMessage play = restTemplate.postForEntity(builder.toUriString(), headers, PlayMessage.class).getBody();
+
+        //Send it back to user
         return new DefaultSTOMPMessage(principal, gson.toJson(play), STOMPMessageType.FETCH_PLAY, null, clientSTOMPMessage.getID());
     }
 
     @MessageExceptionHandler
     @SendToUser("/queue/errors")
     public DefaultSTOMPMessage handleException(Throwable exception) {
-        return new DefaultSTOMPMessage("SERVER", exception.getMessage(), STOMPMessageType.ERROR, null, null);
+        return new DefaultSTOMPMessage("WebSocketController", exception.getMessage(), STOMPMessageType.ERROR, null, null);
     }
 
 }

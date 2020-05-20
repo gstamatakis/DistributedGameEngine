@@ -1,20 +1,23 @@
 package ui;
 
+import model.Role;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import model.Role;
-import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import ui.controller.WebSocketController;
 import ui.model.UserEntity;
 import ui.service.UserService;
 
 @SpringBootApplication
 @EnableWebSecurity
 public class UserInterfaceApplication implements CommandLineRunner {
+    private static final Logger logger = LoggerFactory.getLogger(UserInterfaceApplication.class);
 
     @Autowired
     UserService userService;
@@ -30,13 +33,21 @@ public class UserInterfaceApplication implements CommandLineRunner {
 
     @Override
     public void run(String... params) {
-        //Register 3 users with 3 different Roles
+        //Register different Roles
         UserEntity admin = new UserEntity();
         admin.setUsername("admin");
         admin.setPassword("admin");
         admin.setEmail("admin@email.com");
         admin.setRole(Role.ROLE_ADMIN);
         userService.signup(admin);
+
+        UserEntity service = new UserEntity();
+        service.setUsername("service");
+        service.setPassword("service");
+        service.setEmail("webmaster@email.com");
+        service.setRole(Role.ROLE_SERVICE);
+        String serviceToken = userService.signup(service);
+        logger.info("SERVICE TOKEN: " + serviceToken);
 
         UserEntity official = new UserEntity();
         official.setUsername("official");

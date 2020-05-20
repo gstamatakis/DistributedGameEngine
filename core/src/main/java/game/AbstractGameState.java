@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class AbstractGameType implements Serializable {
+public abstract class AbstractGameState implements Serializable {
     protected Map<String, String> board; //Rows,Columns,Piece
     protected String playsFirstUsername;
     protected String playsSecondUsername;
@@ -20,10 +20,10 @@ public abstract class AbstractGameType implements Serializable {
     protected String winner;
     protected String createdBy;
 
-    public AbstractGameType() {
+    public AbstractGameState() {
     }
 
-    protected AbstractGameType(String playsFirstUsername, String playsSecondUsername, GameTypeEnum gameType, String createdBy) {
+    protected AbstractGameState(String playsFirstUsername, String playsSecondUsername, GameTypeEnum gameType, String createdBy) {
         this.board = initialBoard();
         this.playsFirstUsername = playsFirstUsername;
         this.playsSecondUsername = playsSecondUsername;

@@ -201,6 +201,12 @@ public class GameClient {
                         break;
 
                     case 3:
+                        if (stompSession == null) {
+                            output.write("\nNeed to sign-in first.");
+                            output.flush();
+                            break;
+                        }
+
                         //Arguments
                         output.write("\nQueueing up for a practice play. Enter preferred game type: ");
                         output.flush();
@@ -221,6 +227,12 @@ public class GameClient {
                         break;
 
                     case 4:
+                        if (stompSession == null) {
+                            output.write("\nNeed to sign-in first.");
+                            output.flush();
+                            break;
+                        }
+
                         //Arguments
                         output.write("\nEnter the tournament ID to join a tournament: ");
                         String tournamentID = scanner.next();
@@ -238,6 +250,12 @@ public class GameClient {
                         break;
 
                     case 5:
+                        if (stompSession == null) {
+                            output.write("\nNeed to sign-in first.");
+                            output.flush();
+                            break;
+                        }
+
                         output.write("\nCreating a tournament play. Enter preferred game type,num of participants and tournament ID: ");
                         GameTypeEnum tournamentGameType = GameTypeEnum.valueOf(scanner.next());
                         int numOfParticipants = Integer.parseInt(scanner.next());
@@ -269,7 +287,7 @@ public class GameClient {
                         String playID = "";
 
                         while (!finished) {
-                            DefaultSTOMPMessage srvMessage = queue.poll(1000, TimeUnit.MILLISECONDS);
+                            DefaultSTOMPMessage srvMessage = queue.poll(100, TimeUnit.MILLISECONDS);
 
                             if (ctrlC) {
                                 ctrlC = false;
@@ -290,8 +308,8 @@ public class GameClient {
                             //Process incoming messages
                             switch (srvMessage.getMessageType()) {
                                 case GAME_START:
-                                    playID = srvMessage.getPayload();
-                                    output.write(String.format("\nGame with id=[%s] started.", playID));
+                                    playID = srvMessage.getID();
+                                    output.write(String.format("\nGame with id=[%s] started against [%s].", playID, srvMessage.getPayload()));
                                     stompSession.send("/app/play", new DefaultSTOMPMessage("", null, STOMPMessageType.FETCH_PLAY, null, playID));
                                     break;
                                 case NOTIFICATION:
@@ -300,15 +318,20 @@ public class GameClient {
                                 case MOVE_DENIED:
                                     CompletedMoveMessage deniedMoveMessage = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
                                     output.write("\nMove denied:  " + deniedMoveMessage.getMoveMessage());
-                                    output.flush();
+                                    break;
                                 case NEED_TO_MOVE:
-                                    output.write("\nEnter a new move: ");
+                                    output.write(String.format("\n%s ", srvMessage.getPayload()));
+                                    output.flush();
                                     String newMove = scanner.next();
                                     stompSession.send("/app/move", new DefaultSTOMPMessage("", newMove, STOMPMessageType.NEW_MOVE, null, playID));
                                     break;
                                 case FETCH_PLAY:
                                     PlayMessage playMessage = gson.fromJson(srvMessage.getPayload(), PlayMessage.class);
-                                    output.write("\nRetrieved play: " + playMessage.toString());
+                                    if (playMessage == null) {
+                                        output.write("\nRetrieved null play..");
+                                    } else {
+                                        output.write("\nRetrieved play: " + playMessage.toString());
+                                    }
                                     break;
                                 case NEW_MOVE:
                                 case MOVE_ACCEPTED:

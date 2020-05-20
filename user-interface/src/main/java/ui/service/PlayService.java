@@ -55,8 +55,9 @@ public class PlayService {
     private SimpMessageSendingOperations messagingTemplate;
 
     public void enqueuePractice(String username, RequestPracticeMessage reqMsg) throws InterruptedException, ExecutionException, TimeoutException {
+        PracticeQueueMessage newMsg = new PracticeQueueMessage(username, reqMsg);
         kafkaJoinQueueTemplate
-                .send(joinPlayTopic, username, new DefaultKafkaMessage(new PracticeQueueMessage(username, reqMsg)))
+                .send(joinPlayTopic, username, new DefaultKafkaMessage(newMsg, PracticeQueueMessage.class.getCanonicalName()))
                 .get(timeout, TimeUnit.SECONDS);
     }
 
@@ -85,21 +86,21 @@ public class PlayService {
 
         //Send the message
         kafkaJoinQueueTemplate
-                .send(joinPlayTopic, tournamentID, new DefaultKafkaMessage(message))
+                .send(joinPlayTopic, tournamentID, new DefaultKafkaMessage(message, CreateTournamentQueueMessage.class.getCanonicalName()))
                 .get(timeout, TimeUnit.SECONDS);
     }
 
     //Queue a user for a tournament
     public void joinTournament(String username, String tournamentID) throws InterruptedException, ExecutionException, TimeoutException {
         kafkaJoinQueueTemplate
-                .send(joinPlayTopic, tournamentID, new DefaultKafkaMessage(new JoinTournamentQueueMessage(username, tournamentID)))
+                .send(joinPlayTopic, tournamentID, new DefaultKafkaMessage(new JoinTournamentQueueMessage(username, tournamentID), JoinTournamentQueueMessage.class.getCanonicalName()))
                 .get(timeout, TimeUnit.SECONDS);
     }
 
     //Send new move to play
     public void sendMoveToPlay(String sentBy, String move, String playID) throws InterruptedException, ExecutionException, TimeoutException {
         kafkaJoinQueueTemplate
-                .send(newMovesTopic, playID, new DefaultKafkaMessage(new MoveMessage(sentBy, move, playID)))
+                .send(newMovesTopic, playID, new DefaultKafkaMessage(new MoveMessage(sentBy, move, playID), MoveMessage.class.getCanonicalName()))
                 .get(timeout, TimeUnit.SECONDS);
     }
 
@@ -107,7 +108,7 @@ public class PlayService {
     public void listenForNewPlays(@Payload String message,
                                   @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
                                   @Header(KafkaHeaders.OFFSET) int offset) {
-        PlayMessage newPlay = gson.fromJson(message, PlayMessage.class);
+        PlayMessage newPlay = (PlayMessage) gson.fromJson(message, DefaultKafkaMessage.class).retrieve(PlayMessage.class.getCanonicalName());
         String playID = newPlay.getID();
         logger.info("Received new play message: " + newPlay.toString() + " from partition " + partition);
 
@@ -115,34 +116,34 @@ public class PlayService {
         //P1
         messagingTemplate.convertAndSendToUser(newPlay.getP1(), "/queue/reply", new DefaultSTOMPMessage(
                 newPlay.getP1(),
-                String.format("You have been matched with player %s.", newPlay.getP2()),
+                newPlay.getP2(),
                 STOMPMessageType.GAME_START,
-                playID,
-                null));
+                null,
+                playID));
 
         messagingTemplate.convertAndSendToUser(newPlay.getP1(), "/queue/reply",
                 new DefaultSTOMPMessage(
                         newPlay.getP1(),
-                        String.format("You need to make a move %s.", newPlay.getP1()),
+                        String.format("You need to make a move %s: ", newPlay.getP1()),
                         STOMPMessageType.NEED_TO_MOVE,
-                        playID,
-                        null));
+                        null,
+                        playID));
 
         //P2
         messagingTemplate.convertAndSendToUser(newPlay.getP2(), "/queue/reply",
                 new DefaultSTOMPMessage(
                         newPlay.getP2(),
-                        String.format("You have been matched with player %s.", newPlay.getP1()),
+                        newPlay.getP1(),
                         STOMPMessageType.GAME_START,
-                        playID,
-                        null));
+                        null,
+                        playID));
 
         messagingTemplate.convertAndSendToUser(newPlay.getP2(), "/queue/reply", new DefaultSTOMPMessage(
                 newPlay.getP2(),
                 String.format("Waiting for %s to make a move.", newPlay.getP1()),
                 STOMPMessageType.NOTIFICATION,
-                playID,
-                null));
+                null,
+                playID));
 
     }
 
@@ -150,7 +151,7 @@ public class PlayService {
     public void listenForFinishedPlays(@Payload String message,
                                        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
                                        @Header(KafkaHeaders.OFFSET) int offset) {
-        CompletedPlayMessage completedPlayMessage = gson.fromJson(message, DefaultKafkaMessage.class).getCompletedPlayMessage();
+        CompletedPlayMessage completedPlayMessage = (CompletedPlayMessage) gson.fromJson(message, DefaultKafkaMessage.class).retrieve(CompletedPlayMessage.class.getCanonicalName());
         playRepository.save(new PlayEntity(completedPlayMessage));
         logger.info("Received completed play message: " + completedPlayMessage.toString() + " from partition " + partition);
 
@@ -159,16 +160,16 @@ public class PlayService {
                         completedPlayMessage.getWinnerPlayer(),
                         String.format("You *WON* against %s", completedPlayMessage.getLoserPlayer()),
                         STOMPMessageType.GAME_OVER,
-                        completedPlayMessage.getPlayID(),
-                        null));
+                        null,
+                        completedPlayMessage.getPlayID()));
 
         messagingTemplate.convertAndSendToUser(completedPlayMessage.getLoserPlayer(), "/queue/reply",
                 new DefaultSTOMPMessage(
                         completedPlayMessage.getLoserPlayer(),
                         String.format("You *LOST* against %s", completedPlayMessage.getWinnerPlayer()),
                         STOMPMessageType.GAME_OVER,
-                        completedPlayMessage.getPlayID(),
-                        null));
+                        null,
+                        completedPlayMessage.getPlayID()));
 
     }
 
@@ -176,7 +177,7 @@ public class PlayService {
     public void listenForFinishedMoves(@Payload String message,
                                        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
                                        @Header(KafkaHeaders.OFFSET) int offset) {
-        CompletedMoveMessage completedMoveMessage = gson.fromJson(message, DefaultKafkaMessage.class).getCompletedMoveMessage();
+        CompletedMoveMessage completedMoveMessage = (CompletedMoveMessage) gson.fromJson(message, DefaultKafkaMessage.class).retrieve(CompletedMoveMessage.class.getCanonicalName());
         logger.info("Received completed move message: " + completedMoveMessage.toString() + " from partition " + partition);
         if (completedMoveMessage.isValid()) {
             messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(), "/queue/reply",
@@ -184,23 +185,23 @@ public class PlayService {
                             completedMoveMessage.getPlayedByUsername(),
                             message,
                             STOMPMessageType.MOVE_ACCEPTED,
-                            completedMoveMessage.getMoveMessage().getPlayID(),
-                            null));
+                            null,
+                            completedMoveMessage.getMoveMessage().getPlayID()));
             messagingTemplate.convertAndSendToUser(completedMoveMessage.getOpponentUsername(), "/queue/reply",
                     new DefaultSTOMPMessage(
                             completedMoveMessage.getPlayedByUsername(),
                             message,
                             STOMPMessageType.NEW_MOVE,
-                            completedMoveMessage.getMoveMessage().getPlayID(),
-                            null));
+                            null,
+                            completedMoveMessage.getMoveMessage().getPlayID()));
         } else {
             messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(), "/queue/reply",
                     new DefaultSTOMPMessage(
                             completedMoveMessage.getPlayedByUsername(),
                             message,
                             STOMPMessageType.MOVE_DENIED,
-                            completedMoveMessage.getMoveMessage().getPlayID(),
-                            null));
+                            null,
+                            completedMoveMessage.getMoveMessage().getPlayID()));
 
         }
     }
@@ -208,6 +209,6 @@ public class PlayService {
     @KafkaListener(topics = errorsTopic, containerFactory = "kafkaListenerContainerFactory")
     public void listenForErrors(@Payload String message) {
         logger.info("Received error message: " + message);
-        messagingTemplate.convertAndSend("/topic/broadcast", new DefaultSTOMPMessage("SERVER", message, STOMPMessageType.ERROR, null, null));
+        messagingTemplate.convertAndSend("/topic/broadcast", new DefaultSTOMPMessage("PlayService", message, STOMPMessageType.ERROR, null, null));
     }
 }

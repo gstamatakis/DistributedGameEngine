@@ -40,7 +40,13 @@ Deploy just the Databases and Kafka (useful for testing)
 
     docker stack deploy -c auxiliary.yml dge
 
+
+Change Spring properties on runtime
+
+    java -jar myproject.jar --spring.config.name=myproject
     
+or through Java System properties (System.getProperties()).
+
 # Docker commands (run from PowerShell)
 
 Stop a deployed stack

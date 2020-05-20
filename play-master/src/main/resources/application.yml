@@ -11,6 +11,8 @@ secets:
   gm-token: token_gm
   pm-token: token_pm
 
+ui.service.url: localhost:8080
+token.service: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzZXJ2aWNlIiwiYXV0aCI6W3siYXV0aG9yaXR5IjoiUk9MRV9TRVJWSUNFIn1dLCJpYXQiOjE1ODk5ODIxMzMsImV4cCI6MTYyMTA4NjEzM30.1IKgiFBeO5dfGI3Tdag0o5LC-V9JooIoC4RIA_zfe5A"
 
 spring:
   application.name: PlayMasterApplication
@@ -32,6 +34,7 @@ spring:
       processPlaysAndMoves-out-1:
         destination: completed-plays
     kafka:
+      streams.binder.configuration.application.server: localhost:18082
       binder:
         brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
         replication-factor: 3

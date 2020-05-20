@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.Date;
 import java.util.stream.Collectors;
@@ -44,7 +45,13 @@ public class JwtTokenProvider {
         claims.put("auth", Stream.of(role).map(s -> new SimpleGrantedAuthority(s.getAuthority())).collect(Collectors.toList()));
 
         Date now = new Date();
-        Date validity = new Date(now.getTime() + validityInMilliseconds);
+        Date validity;
+
+        if (role == Role.ROLE_SERVICE) {
+            validity = new Date(now.getTime() + Duration.ofDays(360).toMillis());   //Service tokens should never expire
+        } else {
+            validity = new Date(now.getTime() + validityInMilliseconds);
+        }
 
         //Generate the token
         return Jwts.builder()
