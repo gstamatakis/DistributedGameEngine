@@ -44,6 +44,22 @@ public abstract class AbstractGameState implements Serializable {
 
     public abstract String emptyCell();
 
+    @Override
+    public String toString() {
+        return "AbstractGameState{" +
+                "board=" + board +
+                ", playsFirstUsername='" + playsFirstUsername + '\'' +
+                ", playsSecondUsername='" + playsSecondUsername + '\'' +
+                ", movesPerRoundP1=" + movesPerRoundP1 +
+                ", movesPerRoundP2=" + movesPerRoundP2 +
+                ", currentRound=" + currentRound +
+                ", lastValidMove=" + lastValidMove +
+                ", gameTypeEnum=" + gameTypeEnum +
+                ", winner='" + winner + '\'' +
+                ", createdBy='" + createdBy + '\'' +
+                '}';
+    }
+
     //Getters and setters
     public int getCurrentRound() {
         return currentRound;

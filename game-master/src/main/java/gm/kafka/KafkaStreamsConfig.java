@@ -131,15 +131,4 @@ public class KafkaStreamsConfig {
             return practiceBranch.merge(tournamentBranch);
         };
     }
-
-//    @Bean
-//    public Function<KStream<String, DefaultKafkaMessage>, KStream<String, String>> processCompletedPlaysForScore() {
-//        return stream -> {
-//            //Map to completed plays objects
-//            KStream<String, CompletedPlayMessage> completedPlays = stream.map((key, value) -> new KeyValue<>(key, (CompletedPlayMessage) value.retrieve(CompletedPlayMessage.class.getCanonicalName())));
-//
-//            //TODO transform input completed plays and save scores to the KV stores
-//            return null;
-//        };
-//    }
 }

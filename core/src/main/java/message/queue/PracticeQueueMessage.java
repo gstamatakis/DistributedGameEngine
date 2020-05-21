@@ -10,6 +10,11 @@ public class PracticeQueueMessage extends DefaultPlayMessage {
     }
 
     @Override
+    public String toString() {
+        return super.toString() + "PracticeQueueMessage{}";
+    }
+
+    @Override
     public PlayTypeEnum playType() {
         return PlayTypeEnum.PRACTICE;
     }

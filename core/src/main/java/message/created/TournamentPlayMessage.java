@@ -40,6 +40,16 @@ public class TournamentPlayMessage extends DefaultPlayMessage {
     }
 
     @Override
+    public String toString() {
+        return "TournamentPlayMessage{" +
+                "tournamentID='" + tournamentID + '\'' +
+                ", blacklist=" + blacklist +
+                ", playerUsernames=" + playerUsernames +
+                ", remainingSlots=" + remainingSlots +
+                '}';
+    }
+
+    @Override
     public PlayTypeEnum playType() {
         return PlayTypeEnum.TOURNAMENT;
     }

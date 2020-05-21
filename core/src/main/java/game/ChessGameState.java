@@ -8,9 +8,27 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ChessGameState extends AbstractGameState {
+    public ChessGameState() {
+    }
 
     public ChessGameState(String playsFirst, String playsSecond, String createdBy) {
         super(playsFirst, playsSecond, GameTypeEnum.CHESS, createdBy);
+    }
+
+    @Override
+    public String toString() {
+        return "ChessGameState{" +
+                "board=" + board +
+                ", playsFirstUsername='" + playsFirstUsername + '\'' +
+                ", playsSecondUsername='" + playsSecondUsername + '\'' +
+                ", movesPerRoundP1=" + movesPerRoundP1 +
+                ", movesPerRoundP2=" + movesPerRoundP2 +
+                ", currentRound=" + currentRound +
+                ", lastValidMove=" + lastValidMove +
+                ", gameTypeEnum=" + gameTypeEnum +
+                ", winner='" + winner + '\'' +
+                ", createdBy='" + createdBy + '\'' +
+                '}';
     }
 
     @Override
@@ -72,7 +90,7 @@ public class ChessGameState extends AbstractGameState {
 
     @Override
     public boolean isValidMove(MoveMessage message, Map<String, String> board) {
-        return true;
+        return false;
     }
 
     @Override

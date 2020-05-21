@@ -40,6 +40,11 @@ public class JwtTokenProvider {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
 
+    public Authentication getAuthentication(String token) {
+        UserDetails userDetails = myUserDetails.loadUserByUsername(getUsername(token));
+        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+    }
+
     public String createToken(String username, Role role) {
         Claims claims = Jwts.claims().setSubject(username);
         claims.put("auth", Stream.of(role).map(s -> new SimpleGrantedAuthority(s.getAuthority())).collect(Collectors.toList()));
@@ -47,11 +52,7 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date validity;
 
-        if (role == Role.ROLE_SERVICE) {
-            validity = new Date(now.getTime() + Duration.ofDays(360).toMillis());   //Service tokens should never expire
-        } else {
-            validity = new Date(now.getTime() + validityInMilliseconds);
-        }
+        validity = new Date(now.getTime() + validityInMilliseconds);
 
         //Generate the token
         return Jwts.builder()
@@ -60,11 +61,6 @@ public class JwtTokenProvider {
                 .setExpiration(validity)
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
-    }
-
-    public Authentication getAuthentication(String token) {
-        UserDetails userDetails = myUserDetails.loadUserByUsername(getUsername(token));
-        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
     public String getUsername(String token) {

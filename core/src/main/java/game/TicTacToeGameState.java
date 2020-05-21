@@ -10,10 +10,31 @@ import java.util.Map;
 public class TicTacToeGameState extends AbstractGameState {
     private String p1, p2;
 
+    public TicTacToeGameState() {
+    }
+
     public TicTacToeGameState(String playsFirst, String playsSecond, String createdBy) {
         super(playsFirst, playsSecond, GameTypeEnum.TIC_TAC_TOE, createdBy);
         this.p1 = playsFirst;
         this.p2 = playsSecond;
+    }
+
+    @Override
+    public String toString() {
+        return "TicTacToeGameState{" +
+                "p1='" + p1 + '\'' +
+                ", p2='" + p2 + '\'' +
+                ", board=" + board +
+                ", playsFirstUsername='" + playsFirstUsername + '\'' +
+                ", playsSecondUsername='" + playsSecondUsername + '\'' +
+                ", movesPerRoundP1=" + movesPerRoundP1 +
+                ", movesPerRoundP2=" + movesPerRoundP2 +
+                ", currentRound=" + currentRound +
+                ", lastValidMove=" + lastValidMove +
+                ", gameTypeEnum=" + gameTypeEnum +
+                ", winner='" + winner + '\'' +
+                ", createdBy='" + createdBy + '\'' +
+                '}';
     }
 
     @Override
@@ -53,6 +74,10 @@ public class TicTacToeGameState extends AbstractGameState {
     @Override
     public boolean isValidMove(MoveMessage message, Map<String, String> board) {
         String move = message.getMove();
+
+        if (move == null) {
+            return false;
+        }
 
         //Check if move is 1 digit
         if (move.length() != 1) {

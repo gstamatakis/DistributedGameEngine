@@ -183,6 +183,7 @@ public class GameClient {
                             WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
                             webSocketHttpHeaders.add("Authorization", "Bearer " + token);
                             StompHeaders stompHeaders = new StompHeaders();
+                            stompHeaders.add("Authentication", "Bearer " + token);
                             stompHeaders.setAck("client-individual");
 
                             //Subscribe to necessary topics
@@ -310,7 +311,7 @@ public class GameClient {
                                 case GAME_START:
                                     playID = srvMessage.getID();
                                     output.write(String.format("\nGame with id=[%s] started against [%s].", playID, srvMessage.getPayload()));
-                                    stompSession.send("/app/play", new DefaultSTOMPMessage("", null, STOMPMessageType.FETCH_PLAY, null, playID));
+                                    stompSession.send("/app/play", new DefaultSTOMPMessage("", token, STOMPMessageType.FETCH_PLAY, null, playID));
                                     break;
                                 case NOTIFICATION:
                                     output.write("\nNOTIFICATION: " + srvMessage.getPayload());

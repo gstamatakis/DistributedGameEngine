@@ -25,6 +25,15 @@ public class RequestJoinTournamentMessage extends DefaultPlayMessage {
     }
 
     @Override
+    public String toString() {
+        return super.toString() +  "RequestJoinTournamentMessage{" +
+                "tournamentID='" + tournamentID + '\'' +
+                ", usernameWhitelist=" + usernameWhitelist +
+                ", numOfParticipants=" + numOfParticipants +
+                '}';
+    }
+
+    @Override
     public PlayTypeEnum playType() {
         return PlayTypeEnum.TOURNAMENT;
     }

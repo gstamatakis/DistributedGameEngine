@@ -65,8 +65,8 @@ public class PracticeQueueTransformer implements Transformer<String, PracticeQue
                 gameIDToGameKVStore.put(newPlay.getID(), newPlay);
 
                 //Send the new play to the destination topic
+                logger.info(String.format("PracticeQueueTransformer forwarding [%s].", newPlay.toString()));
                 context.forward(newPlay.getID(), new DefaultKafkaMessage(newPlay, PlayMessage.class.getCanonicalName()));
-                logger.info("Matching players: " + newPlay);
             }
         });
     }
@@ -74,7 +74,7 @@ public class PracticeQueueTransformer implements Transformer<String, PracticeQue
     @Override
     public KeyValue<String, DefaultKafkaMessage> transform(String principal, PracticeQueueMessage newJoinMsg) {
         pairPracticePlayersKVStore.put(principal, newJoinMsg);
-        logger.debug("Enqueuing : " + principal + " | " + newJoinMsg.toString());
+        logger.info("PracticeQueueTransformer.transform: Enqueuing : " + principal + " | " + newJoinMsg.toString());
         return null;    //Null values are dropped from stream by default
     }
 

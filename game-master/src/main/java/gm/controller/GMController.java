@@ -20,9 +20,6 @@ public class GMController {
     @Autowired
     ModelMapper modelMapper;
 
-    @Value(value = "${token.service}")
-    private String serviceToken;
-
     @ExceptionHandler({CustomException.class})
     public ResponseEntity<String> handleConflict(CustomException ex, WebRequest request) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);

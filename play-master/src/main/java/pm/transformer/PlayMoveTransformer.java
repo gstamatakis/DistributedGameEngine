@@ -1,0 +1,63 @@
+package pm.transformer;
+
+import game.AbstractGameState;
+import message.DefaultKafkaMessage;
+import message.completed.CompletedMoveMessage;
+import message.completed.CompletedPlayMessage;
+import message.created.JoinedPlayMoveMessage;
+import message.created.MoveMessage;
+import message.created.PlayMessage;
+import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.kstream.Transformer;
+import org.apache.kafka.streams.processor.ProcessorContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class PlayMoveTransformer implements Transformer<String, JoinedPlayMoveMessage, KeyValue<String, DefaultKafkaMessage>> {
+    private static final Logger logger = LoggerFactory.getLogger(PlayMoveTransformer.class);
+    private ProcessorContext ctx;
+
+    @Override
+    public void init(ProcessorContext context) {
+        this.ctx = context;
+    }
+
+    @Override
+    public KeyValue<String, DefaultKafkaMessage> transform(String key, JoinedPlayMoveMessage value) {
+        logger.info(String.format("PlayTransformer received: %s", value.toString()));
+
+        //Extract the 2 joined objects
+        MoveMessage move = value.getMove();
+        PlayMessage play = value.getPlay();
+
+        //Retrieve state, modify state, save state
+        AbstractGameState curGameState = play.getGameState();
+        CompletedMoveMessage output_move = curGameState.offerMove(move);
+        play.setGameState(curGameState);
+
+        //Forward the new move
+        logger.info(String.format("PlayMoveTransformer forwarding [%s].", output_move.toString()));
+        this.ctx.forward(key, new DefaultKafkaMessage(output_move, CompletedMoveMessage.class.getCanonicalName()));
+
+        //If play has finished send a message declaring the end of the play
+        if (curGameState.getWinner() != null) {
+            CompletedPlayMessage completedPlayMessage = new CompletedPlayMessage(
+                    play.getID(), curGameState.getWinner(), curGameState.getLoser(),
+                    curGameState.getCreatedBy(), play.getGameTypeEnum(), play.getPlayTypeEnum()
+            );
+
+            //Send a completed play message
+            this.ctx.forward(key, new DefaultKafkaMessage(completedPlayMessage, CompletedPlayMessage.class.getCanonicalName()));
+        }else {
+            this.ctx.forward(key, new DefaultKafkaMessage(play, PlayMessage.class.getCanonicalName()));
+        }
+
+        //Return nothing by default
+        return null;
+    }
+
+    @Override
+    public void close() {
+
+    }
+}

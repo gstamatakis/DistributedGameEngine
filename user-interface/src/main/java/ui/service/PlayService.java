@@ -40,23 +40,22 @@ public class PlayService {
     private final String newMovesTopic = "new-moves";
     private final String completedPlaysTopic = "completed-plays";
     private final String completedMovesTopic = "completed-moves";
-    private final String errorsTopic = "errors";
 
     private final Gson gson = new Gson();
     private final long timeout = 5;
 
     @Autowired
-    private KafkaTemplate<String, DefaultKafkaMessage> kafkaJoinQueueTemplate;
-
-    @Autowired
-    private PlayRepository playRepository;
+    private KafkaTemplate<String, DefaultKafkaMessage> kafkaMessageTemplate;
 
     @Autowired
     private SimpMessageSendingOperations messagingTemplate;
 
+    @Autowired
+    private PlayRepository playRepository;
+
     public void enqueuePractice(String username, RequestPracticeMessage reqMsg) throws InterruptedException, ExecutionException, TimeoutException {
         PracticeQueueMessage newMsg = new PracticeQueueMessage(username, reqMsg);
-        kafkaJoinQueueTemplate
+        kafkaMessageTemplate
                 .send(joinPlayTopic, username, new DefaultKafkaMessage(newMsg, PracticeQueueMessage.class.getCanonicalName()))
                 .get(timeout, TimeUnit.SECONDS);
     }
@@ -85,21 +84,21 @@ public class PlayService {
         CreateTournamentQueueMessage message = new CreateTournamentQueueMessage(username, gameType, blacklist, numOfParticipants, tournamentID);
 
         //Send the message
-        kafkaJoinQueueTemplate
+        kafkaMessageTemplate
                 .send(joinPlayTopic, tournamentID, new DefaultKafkaMessage(message, CreateTournamentQueueMessage.class.getCanonicalName()))
                 .get(timeout, TimeUnit.SECONDS);
     }
 
     //Queue a user for a tournament
     public void joinTournament(String username, String tournamentID) throws InterruptedException, ExecutionException, TimeoutException {
-        kafkaJoinQueueTemplate
+        kafkaMessageTemplate
                 .send(joinPlayTopic, tournamentID, new DefaultKafkaMessage(new JoinTournamentQueueMessage(username, tournamentID), JoinTournamentQueueMessage.class.getCanonicalName()))
                 .get(timeout, TimeUnit.SECONDS);
     }
 
     //Send new move to play
     public void sendMoveToPlay(String sentBy, String move, String playID) throws InterruptedException, ExecutionException, TimeoutException {
-        kafkaJoinQueueTemplate
+        kafkaMessageTemplate
                 .send(newMovesTopic, playID, new DefaultKafkaMessage(new MoveMessage(sentBy, move, playID), MoveMessage.class.getCanonicalName()))
                 .get(timeout, TimeUnit.SECONDS);
     }
@@ -171,6 +170,18 @@ public class PlayService {
                         null,
                         completedPlayMessage.getPlayID()));
 
+        //Send a Tombstone message to finished plays in the new-plays topic to remove them
+        //Make sure necessary info like scores is kept safe
+        //Retry if something fails
+        for (int i = 0; i < 5; i++) {
+            try {
+                kafkaMessageTemplate
+                        .send(newPlaysTopic, completedPlayMessage.getPlayID(), null)
+                        .get(timeout, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                logger.error(e.getMessage());
+            }
+        }
     }
 
     @KafkaListener(topics = completedMovesTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
@@ -204,11 +215,5 @@ public class PlayService {
                             completedMoveMessage.getMoveMessage().getPlayID()));
 
         }
-    }
-
-    @KafkaListener(topics = errorsTopic, containerFactory = "kafkaListenerContainerFactory")
-    public void listenForErrors(@Payload String message) {
-        logger.info("Received error message: " + message);
-        messagingTemplate.convertAndSend("/topic/broadcast", new DefaultSTOMPMessage("PlayService", message, STOMPMessageType.ERROR, null, null));
     }
 }

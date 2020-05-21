@@ -67,6 +67,7 @@ public class JoinTournamentTransformer implements Transformer<String, JoinTourna
                         userToGameKVStore.put(p1, newPlay);
                         userToGameKVStore.put(p2, newPlay);
                         gameIDToGameKVStore.put(newPlay.getID(), newPlay);
+                        logger.info(String.format("JoinTournamentTransformer forwarding [%s].", newPlay.toString()));
                         this.ctx.forward(newPlay.getID(), new DefaultKafkaMessage(newPlay, PlayMessage.class.getCanonicalName()));
                     }
 

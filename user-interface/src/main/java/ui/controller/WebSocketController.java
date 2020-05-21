@@ -2,12 +2,14 @@ package ui.controller;
 
 import com.google.gson.Gson;
 import exception.CustomException;
-import message.created.PlayMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -46,9 +48,6 @@ public class WebSocketController {
     @Value(value = "${playmaster.store.url}")
     private String playMasterURL;
 
-    @Value(value = "${token.service}")
-    private String serviceToken;
-
     //Local vars
     private final Gson gson = new Gson();
     private final RestTemplate restTemplate = new RestTemplate();
@@ -80,6 +79,9 @@ public class WebSocketController {
         if (playID == null) {
             throw new IllegalStateException(String.format("Invalid playID={%s}", playID));
         }
+        if (newMove == null || newMove.isEmpty()) {
+            throw new IllegalStateException(String.format("Invalid move: [%s]", newMove));
+        }
         playService.sendMoveToPlay(principal.getName(), newMove, playID);
         return new DefaultSTOMPMessage(principal, String.format("Move %s sent.", newMove), STOMPMessageType.NOTIFICATION, null, clientSTOMPMessage.getID());
     }
@@ -92,13 +94,12 @@ public class WebSocketController {
         //Retrieve from PlayMaster service
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.ALL));
-        headers.setCacheControl(CacheControl.noCache());
-        headers.setBearerAuth(serviceToken);
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(String.format(playMasterURL + "/play/%s", clientSTOMPMessage.getID()));
-        PlayMessage play = restTemplate.postForEntity(builder.toUriString(), headers, PlayMessage.class).getBody();
+        String playJson = restTemplate.postForEntity(builder.toUriString(), headers, String.class).getBody();
+        logger.info(String.format("Received play: [%s]", playJson));
 
         //Send it back to user
-        return new DefaultSTOMPMessage(principal, gson.toJson(play), STOMPMessageType.FETCH_PLAY, null, clientSTOMPMessage.getID());
+        return new DefaultSTOMPMessage(principal, playJson, STOMPMessageType.FETCH_PLAY, null, clientSTOMPMessage.getID());
     }
 
     @MessageExceptionHandler

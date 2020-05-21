@@ -14,7 +14,7 @@ public class GameSerializerImpl implements GameSerializer {
             case TIC_TAC_TOE:
                 return gson.toJson(((TicTacToeGameState) abstractGameState), TicTacToeGameState.class);
             default:
-                throw new IllegalStateException("Default case in PlayMessage.serialize");
+                throw new IllegalStateException("Default case in GameSerializerImpl.serialize");
         }
     }
 
@@ -26,7 +26,7 @@ public class GameSerializerImpl implements GameSerializer {
             case TIC_TAC_TOE:
                 return gson.fromJson(data, TicTacToeGameState.class);
             default:
-                throw new IllegalStateException("Default case in PlayMessage.serialize");
+                throw new IllegalStateException("Default case in GameSerializerImpl.serialize");
         }
     }
 
@@ -46,7 +46,7 @@ public class GameSerializerImpl implements GameSerializer {
                 ChessGameState newGame = new ChessGameState(p1, p2, createdBy);
                 return gson.toJson(newGame, ChessGameState.class);
             default:
-                throw new IllegalStateException("Default case in PlayMessage 2nd constructor!");
+                throw new IllegalStateException("Default case in GameSerializerImpl.newGame");
         }
     }
 }

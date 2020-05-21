@@ -17,6 +17,17 @@ public class CompletedMoveMessage {
         this.playFinished = playFinished;
     }
 
+    @Override
+    public String toString() {
+        return "CompletedMoveMessage{" +
+                "valid=" + valid +
+                ", playedByUsername='" + playedByUsername + '\'' +
+                ", opponentUsername='" + opponentUsername + '\'' +
+                ", moveMessage=" + moveMessage +
+                ", playFinished=" + playFinished +
+                '}';
+    }
+
     public boolean isValid() {
         return valid;
     }

@@ -13,5 +13,10 @@ public class RequestPracticeMessage extends DefaultPlayMessage {
     public PlayTypeEnum playType() {
         return PlayTypeEnum.PRACTICE;
     }
+
+    @Override
+    public String toString() {
+        return super.toString() +  "RequestPracticeMessage{}";
+    }
 }
 

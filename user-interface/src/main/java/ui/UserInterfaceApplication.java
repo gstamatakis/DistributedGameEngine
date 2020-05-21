@@ -41,14 +41,6 @@ public class UserInterfaceApplication implements CommandLineRunner {
         admin.setRole(Role.ROLE_ADMIN);
         userService.signup(admin);
 
-        UserEntity service = new UserEntity();
-        service.setUsername("service");
-        service.setPassword("service");
-        service.setEmail("webmaster@email.com");
-        service.setRole(Role.ROLE_SERVICE);
-        String serviceToken = userService.signup(service);
-        logger.info("SERVICE TOKEN: " + serviceToken);
-
         UserEntity official = new UserEntity();
         official.setUsername("official");
         official.setPassword("official");

@@ -11,6 +11,14 @@ public class TournamentPlayScore {
         this.playerScores = playerScores;
     }
 
+    @Override
+    public String toString() {
+        return "TournamentPlayScore{" +
+                "tournamentID='" + tournamentID + '\'' +
+                ", playerScores=" + playerScores +
+                '}';
+    }
+
     public String getTournamentID() {
         return tournamentID;
     }

@@ -16,6 +16,15 @@ public abstract class DefaultPlayMessage implements Serializable, PlayTypeMessag
         this.createdAt = LocalDateTime.now();
     }
 
+    @Override
+    public String toString() {
+        return "DefaultPlayMessage{" +
+                "gameType=" + gameType +
+                ", createdBy='" + createdBy + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
+    }
+
     public GameTypeEnum getGameType() {
         return gameType;
     }

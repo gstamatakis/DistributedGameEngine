@@ -6,13 +6,6 @@ security:
     token:
       secret-key: secret-key
 
-secets:
-  ui-token: token_ui
-  gm-token: token_gm
-  pm-token: token_pm
-
-token.service: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzZXJ2aWNlIiwiYXV0aCI6W3siYXV0aG9yaXR5IjoiUk9MRV9TRVJWSUNFIn1dLCJpYXQiOjE1ODk5ODIxMzMsImV4cCI6MTYyMTA4NjEzM30.1IKgiFBeO5dfGI3Tdag0o5LC-V9JooIoC4RIA_zfe5A"
-
 spring:
   application.name: GameMasterApplication
   devtools:

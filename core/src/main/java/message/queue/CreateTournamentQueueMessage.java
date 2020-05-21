@@ -19,6 +19,15 @@ public class CreateTournamentQueueMessage extends DefaultPlayMessage {
     }
 
     @Override
+    public String toString() {
+        return super.toString() + "CreateTournamentQueueMessage{" +
+                "tournamentID='" + tournamentID + '\'' +
+                ", usernameBlackList=" + usernameBlackList +
+                ", numOfParticipants=" + numOfParticipants +
+                '}';
+    }
+
+    @Override
     public PlayTypeEnum playType() {
         return PlayTypeEnum.TOURNAMENT;
     }

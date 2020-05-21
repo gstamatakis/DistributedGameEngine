@@ -19,7 +19,7 @@ public class RequestCreateTournamentMessage {
 
     @Override
     public String toString() {
-        return "CreateTournamentMessage{" +
+        return super.toString() +  "CreateTournamentMessage{" +
                 "tournamentGameType=" + tournamentGameType +
                 ", blackList=" + blackList +
                 ", numOfParticipants=" + numOfParticipants +

@@ -1,13 +1,17 @@
 package message;
 
 import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 
 public class DefaultKafkaMessage implements Serializable {
-    private final transient Gson gson = new Gson();
+    private static final Gson gson = new Gson();
+    private static final Logger logger = LoggerFactory.getLogger(DefaultKafkaMessage.class);
+
     private String payload;
-    private String label;
+    private final String label;
 
     public DefaultKafkaMessage() {
         this.payload = "";
@@ -26,9 +30,9 @@ public class DefaultKafkaMessage implements Serializable {
 
     public Object retrieve(String canonicalName) {
         try {
-            return this.gson.fromJson(this.payload, Class.forName(canonicalName));
+            return gson.fromJson(this.payload, Class.forName(canonicalName));
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
             return null;
         }
     }

@@ -85,16 +85,4 @@ public class QueueController {
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
 
-
-    @GetMapping("/play/state/{playID}")
-    @PreAuthorize("hasRole('ROLE_CLIENT')")
-    public PlayStateResponseDTO getStateOfPlay(@ApiParam("playID") @PathVariable String playID) {
-        final ReadOnlyKeyValueStore<String, PlayMessage> songStore =
-                interactiveQueryService.getQueryableStore("plays", QueryableStoreTypes.keyValueStore());
-        final PlayMessage state = songStore.get(playID);
-        if (state == null) {
-            throw new IllegalArgumentException("...");
-        }
-        return modelMapper.map(state, PlayStateResponseDTO.class);
-    }
 }

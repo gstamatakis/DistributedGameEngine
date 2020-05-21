@@ -26,6 +26,16 @@ public class PracticePlaysScore {
         return this.totalScore;
     }
 
+    @Override
+    public String toString() {
+        return "PracticePlaysScore{" +
+                "player='" + player + '\'' +
+                ", scorePerPlayID=" + scorePerPlayID +
+                ", opponentPerPlayID=" + opponentPerPlayID +
+                ", totalScore=" + totalScore +
+                '}';
+    }
+
     public String getPlayer() {
         return player;
     }
