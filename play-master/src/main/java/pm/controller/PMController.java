@@ -21,7 +21,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.Collections;
 
 @RestController
@@ -29,6 +28,7 @@ import java.util.Collections;
 public class PMController {
     private static final Logger logger = LoggerFactory.getLogger(PMController.class);
     private static final Gson gson = new Gson();
+    private final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36";
 
     @Autowired
     private InteractiveQueryService interactiveQueryService;
@@ -37,20 +37,24 @@ public class PMController {
     private final String playStateStoreName = "play-state-store";
 
     @ExceptionHandler(CustomException.class)
-    public void handleCustomException(HttpServletResponse res, CustomException ex) throws IOException {
+    public void handleCustomException(HttpServletResponse res, CustomException ex) throws Exception {
+        logger.error(ex.getMessage());
         res.sendError(ex.getHttpStatus().value(), ex.getMessage());
     }
 
     @GetMapping(value = "/ping/{value}")
     @ApiResponses(value = @ApiResponse(code = 400, message = "Something went wrong"))
     public String ping(@PathVariable String value) {
-        return value;
+        return String.format("Payload [%s]", value);
     }
 
 
-    @PostMapping(value = "/play/{playID}")
-    @ApiResponses(value = @ApiResponse(code = 400, message = "Something went wrong"))
-    public String retrievePlay(@PathVariable String playID) {
+    @PostMapping(value = "/play")
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Something went wrong"),
+            @ApiResponse(code = 500, message = "Null keys aren't allowed!")})
+    public PlayMessage retrievePlay(@RequestHeader(value = "Authorization") String token,   //Request prefixes are for web
+                                    @RequestBody String playID) {
         //Host of the key
         HostInfo hostInfo = interactiveQueryService.getHostInfo(playStateStoreName, playID, new StringSerializer());
 
@@ -66,12 +70,13 @@ public class PMController {
             HttpHeaders headers = new HttpHeaders();
             headers.setAccept(Collections.singletonList(MediaType.ALL));
             headers.setCacheControl(CacheControl.noCache());
+            headers.setBearerAuth(token.split(" ")[1]);
             UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(String.format("http://%s:%d/play/%s", hostInfo.host(), hostInfo.port(), playID));
             play = restTemplate.postForEntity(builder.toUriString(), headers, PlayMessage.class).getBody();
         }
 
         logger.info(String.format("Retrieved Play [%s] from [%s].", play, hostInfo.toString()));
-        return gson.toJson(play);
+        return play;
     }
 
 }

@@ -32,8 +32,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         // Entry points
         http.authorizeRequests()
-                .antMatchers("/ping/*").permitAll()
-                .antMatchers("/play/*").permitAll()
+                .antMatchers("/ping").permitAll()
                 .anyRequest().authenticated();
 
         // If a user try to access a resource without having enough permissions
@@ -51,12 +50,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/swagger-ui.html")
                 .antMatchers("/configuration/**")
                 .antMatchers("/webjars/**")
-                .antMatchers("/public")
-
-                // Un-secure H2 Database (for testing purposes, H2 console shouldn't be unprotected in production)
-                .and()
-                .ignoring()
-                .antMatchers("/h2-console/**/**");
+                .antMatchers("/public");
     }
 
     @Bean

@@ -18,7 +18,7 @@ public class UserHandshakeHandler extends DefaultHandshakeHandler {
     @Override
     protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler, Map<String, Object> attributes) {
         String name = (String) attributes.get(ATTR_PRINCIPAL);
-        String token = request.getHeaders().get("Authentication").toString();
+        String token = request.getHeaders().get("Authorization").toString();
         log.info("Assigned username " + name + " of token: " + token);
         return () -> name;
     }

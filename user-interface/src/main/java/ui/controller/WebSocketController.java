@@ -2,14 +2,16 @@ package ui.controller;
 
 import com.google.gson.Gson;
 import exception.CustomException;
+import message.created.PlayMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -19,13 +21,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.util.UriComponentsBuilder;
 import ui.service.PlayService;
 import websocket.DefaultSTOMPMessage;
 import websocket.STOMPMessageType;
 
 import java.security.Principal;
-import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -38,6 +38,7 @@ import java.util.concurrent.TimeoutException;
 @Controller
 public class WebSocketController {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketController.class);
+    private final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36";
 
     @Autowired
     private SimpMessageSendingOperations messagingTemplate;
@@ -88,23 +89,28 @@ public class WebSocketController {
 
     @MessageMapping("/play")
     @SendToUser("/queue/reply")
-    public DefaultSTOMPMessage retrievePlay(@Payload DefaultSTOMPMessage clientSTOMPMessage, Principal principal) {
-        logger.info(String.format("Received message in WebSocketController.retrievePlay %s from %s", clientSTOMPMessage, principal.getName()));
+    public DefaultSTOMPMessage retrievePlay(@Header(value = "Authorization") String token,  //Header and Payload are for STOMP
+                                            @Payload String playID,
+                                            Principal principal) {
+        logger.info(String.format("Received message in WebSocketController.retrievePlay from %s", principal.getName()));
+
+        //Message setup
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(playID, headers);
 
         //Retrieve from PlayMaster service
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Collections.singletonList(MediaType.ALL));
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(String.format(playMasterURL + "/play/%s", clientSTOMPMessage.getID()));
-        String playJson = restTemplate.postForEntity(builder.toUriString(), headers, String.class).getBody();
-        logger.info(String.format("Received play: [%s]", playJson));
+        PlayMessage play = restTemplate.postForEntity(playMasterURL + "/play", entity, PlayMessage.class).getBody();
+        logger.info(String.format("Received play: [%s]", play));
 
         //Send it back to user
-        return new DefaultSTOMPMessage(principal, playJson, STOMPMessageType.FETCH_PLAY, null, clientSTOMPMessage.getID());
+        return new DefaultSTOMPMessage(principal, play == null ? "<empty>" : play.toString(), STOMPMessageType.FETCH_PLAY, null, playID);
     }
 
     @MessageExceptionHandler
     @SendToUser("/queue/errors")
     public DefaultSTOMPMessage handleException(Throwable exception) {
+        logger.error(exception.getMessage());
         return new DefaultSTOMPMessage("WebSocketController", exception.getMessage(), STOMPMessageType.ERROR, null, null);
     }
 

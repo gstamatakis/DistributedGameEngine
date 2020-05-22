@@ -4,4 +4,5 @@ user00000 pass00000 user00000@gmail.com ROLE_CLIENT
 user00000 pass00000
 3
 TIC_TAC_TOE
+6
 10
