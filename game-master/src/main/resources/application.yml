@@ -18,7 +18,7 @@ spring:
         group: group1
         auto.offset.reset: latest
       processUsersJoinGame-out-0:
-        destination: new-plays
+        destination: new-plays,ongoing-plays
     kafka:
       streams.binder.configuration.application.server: localhost:18081
       binder:

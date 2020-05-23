@@ -1,11 +1,7 @@
 package ui.service;
 
-import com.google.gson.Gson;
 import message.DefaultKafkaMessage;
-import message.completed.CompletedMoveMessage;
-import message.completed.CompletedPlayMessage;
 import message.created.MoveMessage;
-import message.created.PlayMessage;
 import message.queue.CreateTournamentQueueMessage;
 import message.queue.JoinTournamentQueueMessage;
 import message.queue.PracticeQueueMessage;
@@ -15,17 +11,10 @@ import model.GameTypeEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import ui.model.PlayEntity;
 import ui.repository.PlayRepository;
-import websocket.DefaultSTOMPMessage;
-import websocket.STOMPMessageType;
 
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -36,19 +25,11 @@ import java.util.concurrent.TimeoutException;
 public class PlayService {
     private static final Logger logger = LoggerFactory.getLogger(PlayService.class);
     private final String joinPlayTopic = "join-play";
-    private final String newPlaysTopic = "new-plays";
     private final String newMovesTopic = "new-moves";
-    private final String completedPlaysTopic = "completed-plays";
-    private final String completedMovesTopic = "completed-moves";
-
-    private final Gson gson = new Gson();
     private final long timeout = 5;
 
     @Autowired
     private KafkaTemplate<String, DefaultKafkaMessage> kafkaMessageTemplate;
-
-    @Autowired
-    private SimpMessageSendingOperations messagingTemplate;
 
     @Autowired
     private PlayRepository playRepository;
@@ -106,121 +87,5 @@ public class PlayService {
         kafkaMessageTemplate
                 .send(newMovesTopic, playID, new DefaultKafkaMessage(newMsg, MoveMessage.class.getCanonicalName()))
                 .get(timeout, TimeUnit.SECONDS);
-    }
-
-    @KafkaListener(topics = newPlaysTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
-    public void listenForNewPlays(@Payload String message,
-                                  @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
-        PlayMessage newPlay = (PlayMessage) gson.fromJson(message, DefaultKafkaMessage.class).retrieve(PlayMessage.class.getCanonicalName());
-        String playID = newPlay.getID();
-        logger.info("Received new play message: " + newPlay.toString() + " from partition " + partition);
-
-        //Alert the 2 players that their game has started
-        //P1
-        messagingTemplate.convertAndSendToUser(newPlay.getP1(), "/queue/reply", new DefaultSTOMPMessage(
-                newPlay.getP1(),
-                newPlay.getP2(),
-                STOMPMessageType.GAME_START,
-                null,
-                playID));
-
-        messagingTemplate.convertAndSendToUser(newPlay.getP1(), "/queue/reply",
-                new DefaultSTOMPMessage(
-                        newPlay.getP1(),
-                        String.format("You need to make a move %s: ", newPlay.getP1()),
-                        STOMPMessageType.NEED_TO_MOVE,
-                        null,
-                        playID));
-
-        //P2
-        messagingTemplate.convertAndSendToUser(newPlay.getP2(), "/queue/reply",
-                new DefaultSTOMPMessage(
-                        newPlay.getP2(),
-                        newPlay.getP1(),
-                        STOMPMessageType.GAME_START,
-                        null,
-                        playID));
-
-        messagingTemplate.convertAndSendToUser(newPlay.getP2(), "/queue/reply", new DefaultSTOMPMessage(
-                newPlay.getP2(),
-                String.format("Waiting for %s to make a move.", newPlay.getP1()),
-                STOMPMessageType.NOTIFICATION,
-                null,
-                playID));
-
-    }
-
-    @KafkaListener(topics = completedPlaysTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
-    public void listenForFinishedPlays(@Payload String message,
-                                       @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
-        CompletedPlayMessage completedPlayMessage = (CompletedPlayMessage) gson.fromJson(message, DefaultKafkaMessage.class).retrieve(CompletedPlayMessage.class.getCanonicalName());
-        playRepository.save(new PlayEntity(completedPlayMessage));
-        logger.info("Received completed play message: " + completedPlayMessage.toString() + " from partition " + partition);
-
-        messagingTemplate.convertAndSendToUser(completedPlayMessage.getWinnerPlayer(), "/queue/reply",
-                new DefaultSTOMPMessage(
-                        completedPlayMessage.getWinnerPlayer(),
-                        String.format("You *WON* against %s", completedPlayMessage.getLoserPlayer()),
-                        STOMPMessageType.GAME_OVER,
-                        null,
-                        completedPlayMessage.getPlayID()));
-
-        messagingTemplate.convertAndSendToUser(completedPlayMessage.getLoserPlayer(), "/queue/reply",
-                new DefaultSTOMPMessage(
-                        completedPlayMessage.getLoserPlayer(),
-                        String.format("You *LOST* against %s", completedPlayMessage.getWinnerPlayer()),
-                        STOMPMessageType.GAME_OVER,
-                        null,
-                        completedPlayMessage.getPlayID()));
-
-        //Send a Tombstone message to finished plays in the new-plays topic to remove them
-        //Make sure necessary info like scores is kept safe
-        //Retry if something fails
-        for (int i = 0; i < 5; i++) {
-            try {
-                kafkaMessageTemplate
-                        .send(newPlaysTopic, completedPlayMessage.getPlayID(), null)
-                        .get(timeout, TimeUnit.SECONDS);
-                break;
-            } catch (Exception e) {
-                logger.error(e.getMessage());
-            }
-        }
-    }
-
-    @KafkaListener(topics = completedMovesTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
-    public void listenForFinishedMoves(@Payload String message,
-                                       @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
-        CompletedMoveMessage completedMoveMessage = (CompletedMoveMessage) gson.fromJson(message, DefaultKafkaMessage.class).retrieve(CompletedMoveMessage.class.getCanonicalName());
-        logger.info("Received completed move message: " + completedMoveMessage.toString() + " from partition " + partition);
-        if (completedMoveMessage.isValid()) {
-            messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(), "/queue/reply",
-                    new DefaultSTOMPMessage(
-                            completedMoveMessage.getPlayedByUsername(),
-                            message,
-                            STOMPMessageType.MOVE_ACCEPTED,
-                            null,
-                            completedMoveMessage.getMoveMessage().getPlayID()));
-            messagingTemplate.convertAndSendToUser(completedMoveMessage.getOpponentUsername(), "/queue/reply",
-                    new DefaultSTOMPMessage(
-                            completedMoveMessage.getPlayedByUsername(),
-                            message,
-                            STOMPMessageType.NEW_MOVE,
-                            null,
-                            completedMoveMessage.getMoveMessage().getPlayID()));
-        } else {
-            if (completedMoveMessage.getPlayedByUsername() == null) {
-                logger.error(String.format("Invalid move message can't be sent back due to null username [%s]", completedMoveMessage.toString()));
-                return;
-            }
-            messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(), "/queue/reply",
-                    new DefaultSTOMPMessage(
-                            completedMoveMessage.getPlayedByUsername(),
-                            message,
-                            STOMPMessageType.MOVE_DENIED,
-                            null,
-                            completedMoveMessage.getMoveMessage().getPlayID()));
-
-        }
     }
 }

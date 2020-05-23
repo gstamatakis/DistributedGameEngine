@@ -21,14 +21,12 @@ import serde.*;
 import java.util.function.Function;
 
 @Component
-@SuppressWarnings({"rawtypes", "unchecked"})
-public class KafkaStreamsConfig {
+@SuppressWarnings("rawtypes")
+public class ProcessUserInputConfig {
     private final String pairPracticePlayersStore = "pair-practice-players-store";
     private final String pairTournamentPlayersStore = "pair-tournament-players-store";
     private final String userToGameIDStore = "user-to-playID";
     private final String gameIDToGameStore = "playID-to-game";
-    private final String practiceScoreStore = "practice-score-store";
-    private final String tournamentScoreStore = "tournament-score-store";
 
     //State stores
     @Bean
@@ -49,42 +47,6 @@ public class KafkaStreamsConfig {
     @Bean
     public StoreBuilder gameIDToGameStore() {
         return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(gameIDToGameStore), Serdes.String(), new PlayMessageSerde());
-    }
-
-    @Bean
-    public StoreBuilder practiceScoreStore() {
-        return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(practiceScoreStore), Serdes.String(), new PracticePlaysScoreSerde());
-    }
-
-    @Bean
-    public StoreBuilder tournamentScoreStore() {
-        return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(tournamentScoreStore), Serdes.String(), new TournamentPlaysScoreSerde());
-    }
-
-    //Serdes
-    @Bean
-    public Serde<DefaultKafkaMessage> DefaultPlayMessageSerde() {
-        return new DefaultKafkaMessageSerde();
-    }
-
-    @Bean
-    public Serde<PracticeQueueMessage> PracticeQueueMessageSerde() {
-        return new PracticeQueueMessageSerde();
-    }
-
-    @Bean
-    public Serde<CreateTournamentQueueMessage> CreateTournamentQueueMessageSerde() {
-        return new CreateTournamentQueueMessageSerde();
-    }
-
-    @Bean
-    public Serde<JoinTournamentQueueMessage> JoinTournamentQueueMessageSerde() {
-        return new JoinTournamentQueueMessageSerde();
-    }
-
-    @Bean
-    public Serde<PlayMessage> PlayMessageSerde() {
-        return new PlayMessageSerde();
     }
 
 

@@ -18,7 +18,7 @@ spring:
         group: group1
         auto.offset.reset: latest
       processPlaysAndMoves-in-1:
-        destination: new-plays
+        destination: ongoing-plays
         group: group1
         auto.offset.reset: latest
       processPlaysAndMoves-out-0:
@@ -28,7 +28,7 @@ spring:
       processPlaysAndMoves-out-2:
         destination: completed-plays
       processStatePlay-in-0:
-        destination: new-plays
+        destination: ongoing-plays
         group: group2
         auto.offset.reset: latest
     function.definition: processPlaysAndMoves,processStatePlay

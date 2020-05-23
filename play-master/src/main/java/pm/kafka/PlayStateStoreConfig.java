@@ -3,7 +3,6 @@ package pm.kafka;
 import message.DefaultKafkaMessage;
 import message.created.PlayMessage;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;

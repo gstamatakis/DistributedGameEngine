@@ -29,12 +29,17 @@ public class KafkaTopicConfig {
         return new KafkaAdmin(configs);
     }
 
-    //String name, int numPartitions, short replicationFactor
+    /**
+     * New plays created by the UI module are initially sent here (NOT the on-going plays).
+     */
     @Bean
     public NewTopic newPlaysTopic() {
         return new NewTopic("new-plays", 1, replicationFactor);
     }
 
+    /**
+     * New player moves should be sent here.
+     */
     @Bean
     public NewTopic newMovesTopic() {
         return new NewTopic("new-moves", 1, replicationFactor);
@@ -43,6 +48,11 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic joinPlayTopic() {
         return new NewTopic("join-play", 1, replicationFactor);
+    }
+
+    @Bean
+    public NewTopic ongoingPlaysTopic() {
+        return new NewTopic("ongoing-plays", 1, replicationFactor);
     }
 
     @Bean
