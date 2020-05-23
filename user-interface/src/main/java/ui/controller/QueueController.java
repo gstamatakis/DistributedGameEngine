@@ -1,13 +1,9 @@
 package ui.controller;
 
-import dto.PlayStateResponseDTO;
 import exception.CustomException;
 import io.swagger.annotations.*;
-import message.created.PlayMessage;
 import message.requests.RequestCreateTournamentMessage;
 import message.requests.RequestPracticeMessage;
-import org.apache.kafka.streams.state.QueryableStoreTypes;
-import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.kafka.streams.InteractiveQueryService;
@@ -20,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 import ui.service.PlayService;
 
-import javax.xml.ws.Response;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 

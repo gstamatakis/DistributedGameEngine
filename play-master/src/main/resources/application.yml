@@ -21,15 +21,15 @@ spring:
         destination: new-plays
         group: group1
         auto.offset.reset: latest
+      processPlaysAndMoves-out-0:
+        destination: new-plays
       processPlaysAndMoves-out-1:
-        destination: new-moves
-      processPlaysAndMoves-out-2:
         destination: completed-moves
-      processPlaysAndMoves-out-3:
+      processPlaysAndMoves-out-2:
         destination: completed-plays
       processStatePlay-in-0:
         destination: new-plays
-        group: group1
+        group: group2
         auto.offset.reset: latest
     function.definition: processPlaysAndMoves,processStatePlay
     kafka:

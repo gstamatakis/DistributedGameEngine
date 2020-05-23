@@ -39,7 +39,7 @@ public class TicTacToeGameState extends AbstractGameState {
 
     @Override
     public CompletedMoveMessage offerMove(MoveMessage message) {
-        boolean finished = false;   //TODO change
+        boolean finished = false;
         String playedBy = message.getUsername();
         String opponent = getPlaysFirstUsername().equals(playedBy)
                 ? getPlaysSecondUsername()

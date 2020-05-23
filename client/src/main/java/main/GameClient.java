@@ -7,7 +7,10 @@ import message.requests.RequestCreateTournamentMessage;
 import model.GameTypeEnum;
 import org.apache.commons.cli.*;
 import org.springframework.http.HttpEntity;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.util.LinkedMultiValueMap;
@@ -422,7 +425,7 @@ public class GameClient {
                         throw new IllegalStateException("Invalid option");
                 }
             } catch (Exception e) {
-                output.write("Error: " + e.getMessage());
+                output.write("\n\nError: " + e.getMessage());
                 output.flush();
             }
         }

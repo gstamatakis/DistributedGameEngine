@@ -53,8 +53,8 @@ public class PMController {
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Something went wrong"),
             @ApiResponse(code = 500, message = "Null keys aren't allowed!")})
-    public PlayMessage retrievePlay(@RequestHeader(value = "Authorization") String token,   //Request prefixes are for web
-                                    @RequestBody String playID) {
+    public String retrievePlay(@RequestHeader(value = "Authorization") String token,   //Request prefixes are for web
+                               @RequestBody String playID) {
         //Host of the key
         HostInfo hostInfo = interactiveQueryService.getHostInfo(playStateStoreName, playID, new StringSerializer());
 
@@ -76,7 +76,7 @@ public class PMController {
         }
 
         logger.info(String.format("Retrieved Play [%s] from [%s].", play, hostInfo.toString()));
-        return play;
+        return gson.toJson(play);
     }
 
 }

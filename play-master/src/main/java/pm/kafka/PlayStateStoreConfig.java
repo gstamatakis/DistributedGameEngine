@@ -28,12 +28,9 @@ public class PlayStateStoreConfig {
     @Bean
     public Consumer<KStream<String, DefaultKafkaMessage>> processStatePlay() {
         return stream -> stream
-                .map((key, value) -> {
-                    PlayMessage mappedVal = value == null
-                            ? null
-                            : (PlayMessage) value.retrieve(PlayMessage.class.getCanonicalName());
-                    return KeyValue.pair(key, mappedVal);
-                })
+                .mapValues(value -> value == null
+                        ? null
+                        : (PlayMessage) value.retrieve(PlayMessage.class.getCanonicalName()))
                 .transform(() -> new PlayTransformer(playStateStoreName), playStateStoreName);
     }
 }

@@ -82,6 +82,7 @@ public class PlayService {
 
         //Message
         CreateTournamentQueueMessage message = new CreateTournamentQueueMessage(username, gameType, blacklist, numOfParticipants, tournamentID);
+        logger.info(String.format("Enqueuing practice join [%s]", message));
 
         //Send the message
         kafkaMessageTemplate
@@ -91,22 +92,25 @@ public class PlayService {
 
     //Queue a user for a tournament
     public void joinTournament(String username, String tournamentID) throws InterruptedException, ExecutionException, TimeoutException {
+        JoinTournamentQueueMessage newMsg = new JoinTournamentQueueMessage(username, tournamentID);
+        logger.info(String.format("Enqueuing tournament join [%s]", newMsg));
         kafkaMessageTemplate
-                .send(joinPlayTopic, tournamentID, new DefaultKafkaMessage(new JoinTournamentQueueMessage(username, tournamentID), JoinTournamentQueueMessage.class.getCanonicalName()))
+                .send(joinPlayTopic, tournamentID, new DefaultKafkaMessage(newMsg, JoinTournamentQueueMessage.class.getCanonicalName()))
                 .get(timeout, TimeUnit.SECONDS);
     }
 
     //Send new move to play
     public void sendMoveToPlay(String sentBy, String move, String playID) throws InterruptedException, ExecutionException, TimeoutException {
+        MoveMessage newMsg = new MoveMessage(sentBy, move, playID);
+        logger.info(String.format("Enqueuing move [%s]", newMsg));
         kafkaMessageTemplate
-                .send(newMovesTopic, playID, new DefaultKafkaMessage(new MoveMessage(sentBy, move, playID), MoveMessage.class.getCanonicalName()))
+                .send(newMovesTopic, playID, new DefaultKafkaMessage(newMsg, MoveMessage.class.getCanonicalName()))
                 .get(timeout, TimeUnit.SECONDS);
     }
 
     @KafkaListener(topics = newPlaysTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
     public void listenForNewPlays(@Payload String message,
-                                  @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
-                                  @Header(KafkaHeaders.OFFSET) int offset) {
+                                  @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
         PlayMessage newPlay = (PlayMessage) gson.fromJson(message, DefaultKafkaMessage.class).retrieve(PlayMessage.class.getCanonicalName());
         String playID = newPlay.getID();
         logger.info("Received new play message: " + newPlay.toString() + " from partition " + partition);
@@ -148,8 +152,7 @@ public class PlayService {
 
     @KafkaListener(topics = completedPlaysTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
     public void listenForFinishedPlays(@Payload String message,
-                                       @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
-                                       @Header(KafkaHeaders.OFFSET) int offset) {
+                                       @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
         CompletedPlayMessage completedPlayMessage = (CompletedPlayMessage) gson.fromJson(message, DefaultKafkaMessage.class).retrieve(CompletedPlayMessage.class.getCanonicalName());
         playRepository.save(new PlayEntity(completedPlayMessage));
         logger.info("Received completed play message: " + completedPlayMessage.toString() + " from partition " + partition);
@@ -178,6 +181,7 @@ public class PlayService {
                 kafkaMessageTemplate
                         .send(newPlaysTopic, completedPlayMessage.getPlayID(), null)
                         .get(timeout, TimeUnit.SECONDS);
+                break;
             } catch (Exception e) {
                 logger.error(e.getMessage());
             }
@@ -186,8 +190,7 @@ public class PlayService {
 
     @KafkaListener(topics = completedMovesTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
     public void listenForFinishedMoves(@Payload String message,
-                                       @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
-                                       @Header(KafkaHeaders.OFFSET) int offset) {
+                                       @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
         CompletedMoveMessage completedMoveMessage = (CompletedMoveMessage) gson.fromJson(message, DefaultKafkaMessage.class).retrieve(CompletedMoveMessage.class.getCanonicalName());
         logger.info("Received completed move message: " + completedMoveMessage.toString() + " from partition " + partition);
         if (completedMoveMessage.isValid()) {
@@ -206,6 +209,10 @@ public class PlayService {
                             null,
                             completedMoveMessage.getMoveMessage().getPlayID()));
         } else {
+            if (completedMoveMessage.getPlayedByUsername() == null) {
+                logger.error(String.format("Invalid move message can't be sent back due to null username [%s]", completedMoveMessage.toString()));
+                return;
+            }
             messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(), "/queue/reply",
                     new DefaultSTOMPMessage(
                             completedMoveMessage.getPlayedByUsername(),

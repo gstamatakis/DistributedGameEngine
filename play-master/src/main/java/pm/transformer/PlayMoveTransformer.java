@@ -24,7 +24,7 @@ public class PlayMoveTransformer implements Transformer<String, JoinedPlayMoveMe
 
     @Override
     public KeyValue<String, DefaultKafkaMessage> transform(String key, JoinedPlayMoveMessage value) {
-        logger.info(String.format("PlayTransformer received: %s", value.toString()));
+        logger.info(String.format("transform() received: %s", value.toString()));
 
         //Extract the 2 joined objects
         MoveMessage move = value.getMove();
@@ -36,7 +36,7 @@ public class PlayMoveTransformer implements Transformer<String, JoinedPlayMoveMe
         play.setGameState(curGameState);
 
         //Forward the new move
-        logger.info(String.format("PlayMoveTransformer forwarding [%s].", output_move.toString()));
+        logger.info(String.format("transform() forwarding output move [%s].", output_move.toString()));
         this.ctx.forward(key, new DefaultKafkaMessage(output_move, CompletedMoveMessage.class.getCanonicalName()));
 
         //If play has finished send a message declaring the end of the play
@@ -47,8 +47,10 @@ public class PlayMoveTransformer implements Transformer<String, JoinedPlayMoveMe
             );
 
             //Send a completed play message
+            logger.info(String.format("transform() forwarding completed play [%s].", completedPlayMessage.toString()));
             this.ctx.forward(key, new DefaultKafkaMessage(completedPlayMessage, CompletedPlayMessage.class.getCanonicalName()));
-        }else {
+        } else {
+            logger.info(String.format("transform() forwarding ongoing play [%s].", play.toString()));
             this.ctx.forward(key, new DefaultKafkaMessage(play, PlayMessage.class.getCanonicalName()));
         }
 

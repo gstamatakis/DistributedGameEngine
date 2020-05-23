@@ -1,6 +1,5 @@
 package message.created;
 
-import message.DefaultKafkaMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,10 +8,9 @@ public class JoinedPlayMoveMessage {
     private final MoveMessage move;
     private final PlayMessage play;
 
-    public JoinedPlayMoveMessage(DefaultKafkaMessage move, DefaultKafkaMessage play) {
-        this.move = (MoveMessage) move.retrieve(MoveMessage.class.getCanonicalName());
-        this.play = (PlayMessage) play.retrieve(PlayMessage.class.getCanonicalName());
-        logger.info(String.format("Joining [%s] and [%s].", move, play));
+    public JoinedPlayMoveMessage(MoveMessage move, PlayMessage play) {
+        this.move = move;
+        this.play = play;
     }
 
     @Override

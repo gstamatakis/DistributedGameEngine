@@ -2,7 +2,6 @@ package ui.controller;
 
 import com.google.gson.Gson;
 import exception.CustomException;
-import message.created.PlayMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,7 +91,7 @@ public class WebSocketController {
     public DefaultSTOMPMessage retrievePlay(@Header(value = "Authorization") String token,  //Header and Payload are for STOMP
                                             @Payload String playID,
                                             Principal principal) {
-        logger.info(String.format("Received message in WebSocketController.retrievePlay from %s", principal.getName()));
+        logger.info(String.format("Received message in retrievePlay from %s [%s].", principal.getName(), playID));
 
         //Message setup
         HttpHeaders headers = new HttpHeaders();
@@ -100,11 +99,10 @@ public class WebSocketController {
         HttpEntity<String> entity = new HttpEntity<>(playID, headers);
 
         //Retrieve from PlayMaster service
-        PlayMessage play = restTemplate.postForEntity(playMasterURL + "/play", entity, PlayMessage.class).getBody();
-        logger.info(String.format("Received play: [%s]", play));
+        String playJson = restTemplate.postForEntity(playMasterURL + "/play", entity, String.class).getBody();
 
         //Send it back to user
-        return new DefaultSTOMPMessage(principal, play == null ? "<empty>" : play.toString(), STOMPMessageType.FETCH_PLAY, null, playID);
+        return new DefaultSTOMPMessage(principal, playJson == null ? "<empty>" : playJson, STOMPMessageType.FETCH_PLAY, null, playID);
     }
 
     @MessageExceptionHandler
