@@ -40,11 +40,10 @@ public class PlayMoveTransformer implements Transformer<String, JoinedPlayMoveMe
         this.ctx.forward(key, new DefaultKafkaMessage(output_move, CompletedMoveMessage.class.getCanonicalName()));
 
         //If play has finished send a message declaring the end of the play
-        if (curGameState.getWinner() != null) {
+        if (curGameState.isFinished()) {
             CompletedPlayMessage completedPlayMessage = new CompletedPlayMessage(
-                    play.getID(), curGameState.getWinner(), curGameState.getLoser(),
-                    curGameState.getCreatedBy(), play.getGameTypeEnum(), play.getPlayTypeEnum()
-            );
+                    play.getID(), curGameState.getPlaysFirstUsername(), curGameState.getPlaysSecondUsername(),
+                    curGameState.getWinner(), curGameState.getCreatedBy(), play.getGameTypeEnum(), play.getPlayTypeEnum());
 
             //Send a completed play message
             logger.info(String.format("transform() forwarding completed play [%s].", completedPlayMessage.toString()));

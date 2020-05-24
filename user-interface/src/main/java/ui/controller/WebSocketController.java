@@ -37,10 +37,6 @@ import java.util.concurrent.TimeoutException;
 @Controller
 public class WebSocketController {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketController.class);
-    private final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36";
-
-    @Autowired
-    private SimpMessageSendingOperations messagingTemplate;
 
     @Autowired
     private PlayService playService;
@@ -49,7 +45,6 @@ public class WebSocketController {
     private String playMasterURL;
 
     //Local vars
-    private final Gson gson = new Gson();
     private final RestTemplate restTemplate = new RestTemplate();
 
     @ExceptionHandler({CustomException.class})

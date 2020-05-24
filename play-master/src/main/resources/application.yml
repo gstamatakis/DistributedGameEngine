@@ -22,7 +22,7 @@ spring:
         group: group1
         auto.offset.reset: latest
       processPlaysAndMoves-out-0:
-        destination: new-plays
+        destination: ongoing-plays
       processPlaysAndMoves-out-1:
         destination: completed-moves
       processPlaysAndMoves-out-2:

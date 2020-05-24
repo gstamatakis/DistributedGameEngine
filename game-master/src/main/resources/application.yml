@@ -19,6 +19,11 @@ spring:
         auto.offset.reset: latest
       processUsersJoinGame-out-0:
         destination: new-plays,ongoing-plays
+      processUserScores-in-0:
+        destination: completed-plays
+        group: group1
+        auto.offset.reset: latest
+    function.definition: processUsersJoinGame,processUserScores
     kafka:
       streams.binder.configuration.application.server: localhost:18081
       binder:
@@ -29,7 +34,9 @@ spring:
       streams.binder:
         functions:
           processUsersJoinGame:
-            applicationId: app_game_master
+            applicationId: app_processUsersJoinGame
+          processUserScores:
+            applicationId: app_processUserScores
         brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
         deserialization-exception-handler: logandfail
         stateStoreRetry:

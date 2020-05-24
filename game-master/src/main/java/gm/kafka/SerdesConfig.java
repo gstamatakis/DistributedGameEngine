@@ -5,7 +5,7 @@ import message.created.PlayMessage;
 import message.queue.CreateTournamentQueueMessage;
 import message.queue.JoinTournamentQueueMessage;
 import message.queue.PracticeQueueMessage;
-import message.score.PracticePlaysScore;
+import message.score.PlayScore;
 import message.score.TournamentPlayScore;
 import org.apache.kafka.common.serialization.Serde;
 import org.springframework.context.annotation.Bean;
@@ -38,8 +38,8 @@ public class SerdesConfig {
     }
 
     @Bean
-    public Serde<PracticePlaysScore> PracticePlaysScoreSerde() {
-        return new PracticePlaysScoreSerde();
+    public Serde<PlayScore> PracticePlaysScoreSerde() {
+        return new PlayScoreSerde();
     }
 
     @Bean

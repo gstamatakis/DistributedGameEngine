@@ -51,6 +51,7 @@ UserController:
   delete: Deletes specific user by username
   search: Returns specific user by username
   me: Returns current user's data
+  score: Returns the score of the given user
 
 QueueController:
   practice: Queue up for a practice play.

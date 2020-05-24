@@ -38,8 +38,8 @@ public class PlayEntity {
 
     public PlayEntity(CompletedPlayMessage finishedPlay) {
         this.playID = finishedPlay.getPlayID();
-        this.winnerPlayer = finishedPlay.getWinnerPlayer();
-        this.loserPlayer = finishedPlay.getLoserPlayer();
+        this.winnerPlayer = finishedPlay.getP1();
+        this.loserPlayer = finishedPlay.getP2();
         this.createdBy = finishedPlay.getCreatedBy();
         this.gameType = finishedPlay.getGameType();
         this.playType = finishedPlay.getPlayType();

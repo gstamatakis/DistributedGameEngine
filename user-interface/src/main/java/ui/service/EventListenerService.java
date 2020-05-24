@@ -104,18 +104,18 @@ public class EventListenerService {
         playRepository.save(new PlayEntity(completedPlayMessage));
         logger.info("Received completed play message: " + completedPlayMessage.toString() + " from partition " + partition);
 
-        messagingTemplate.convertAndSendToUser(completedPlayMessage.getWinnerPlayer(), "/queue/reply",
+        messagingTemplate.convertAndSendToUser(completedPlayMessage.getP1(), "/queue/reply",
                 new DefaultSTOMPMessage(
-                        completedPlayMessage.getWinnerPlayer(),
-                        String.format("You *WON* against %s", completedPlayMessage.getLoserPlayer()),
+                        completedPlayMessage.getP1(),
+                        String.format("You *WON* against %s", completedPlayMessage.getP2()),
                         STOMPMessageType.GAME_OVER,
                         null,
                         completedPlayMessage.getPlayID()));
 
-        messagingTemplate.convertAndSendToUser(completedPlayMessage.getLoserPlayer(), "/queue/reply",
+        messagingTemplate.convertAndSendToUser(completedPlayMessage.getP2(), "/queue/reply",
                 new DefaultSTOMPMessage(
-                        completedPlayMessage.getLoserPlayer(),
-                        String.format("You *LOST* against %s", completedPlayMessage.getWinnerPlayer()),
+                        completedPlayMessage.getP2(),
+                        String.format("You *LOST* against %s", completedPlayMessage.getP1()),
                         STOMPMessageType.GAME_OVER,
                         null,
                         completedPlayMessage.getPlayID()));

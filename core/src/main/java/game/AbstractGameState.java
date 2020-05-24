@@ -17,8 +17,9 @@ public abstract class AbstractGameState implements Serializable {
     protected int currentRound;
     protected MoveMessage lastValidMove;
     protected GameTypeEnum gameTypeEnum;
-    protected String winner;
+    protected int winner;
     protected String createdBy;
+    protected boolean finished;
 
     public AbstractGameState() {
     }
@@ -31,7 +32,8 @@ public abstract class AbstractGameState implements Serializable {
         this.movesPerRoundP2 = new HashMap<>();
         this.currentRound = 1;
         this.gameTypeEnum = gameType;
-        this.winner = null;
+        this.winner = 0;    //TIE
+        this.finished = false;
         this.createdBy = createdBy;
     }
 
@@ -97,21 +99,15 @@ public abstract class AbstractGameState implements Serializable {
         return createdBy;
     }
 
-    public String getWinner() {
+    public int getWinner() {
         return winner;
     }
 
-    public String getLoser() {
-        if (this.winner == null) {
-            return null;
-        }
-        return this.winner.equals(getPlaysFirstUsername())
-                ? this.getPlaysSecondUsername()
-                : this.getPlaysFirstUsername();
+    public boolean isFinished() {
+        return finished;
     }
 
-    public void setWinner(String winner) {
+    public void setWinner(int winner) {
         this.winner = winner;
     }
-
 }
