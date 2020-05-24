@@ -2,10 +2,10 @@ package main;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import model.GameTypeEnum;
 import message.PlayTypeMessage;
 import message.requests.RequestCreateTournamentMessage;
 import message.requests.RequestPracticeMessage;
+import model.GameTypeEnum;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -80,7 +80,23 @@ public class RESTClient {
         return restTemplate.exchange(practiceURL, HttpMethod.POST, entity, String.class);
     }
 
-    public HttpEntity<String> search(String searchUrl, String usernameToSearch, String token) {
+    public HttpEntity<String> searchStats(String searchUrl, String playType, String usernameToSearch, String token) {
+        //Headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.ALL));
+        headers.setCacheControl(CacheControl.noCache());
+        headers.add("user-agent", USER_AGENT);
+        headers.setBearerAuth(token);
+        headers.add("PlayType", playType);
+
+        //Entity = Headers + Arguments
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        //Response = executed entity
+        return restTemplate.exchange(searchUrl + "/" + usernameToSearch, HttpMethod.POST, entity, String.class);
+    }
+
+    public HttpEntity<String> searchUser(String searchUrl, String usernameToSearch, String token) {
         //Headers
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.ALL));

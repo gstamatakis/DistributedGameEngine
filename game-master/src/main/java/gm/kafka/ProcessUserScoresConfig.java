@@ -3,14 +3,12 @@ package gm.kafka;
 
 import message.DefaultKafkaMessage;
 import message.completed.CompletedPlayMessage;
-import message.score.PlayScore;
+import message.completed.UserScore;
 import model.PlayTypeEnum;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
-import org.apache.kafka.streams.kstream.Transformer;
-import org.apache.kafka.streams.processor.ProcessorContext;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
 import org.springframework.context.annotation.Bean;
@@ -65,26 +63,26 @@ public class ProcessUserScoresConfig {
 
             //Update scores for each play type
             practicePlays
-                    .flatMap((KeyValueMapper<String, CompletedPlayMessage, Iterable<KeyValue<String, PlayScore>>>) (key, value) -> {
-                        List<KeyValue<String, PlayScore>> result = new ArrayList<>();
-                        result.add(KeyValue.pair(value.getP1(), new PlayScore(value.getP1(), value)));
-                        result.add(KeyValue.pair(value.getP2(), new PlayScore(value.getP2(), value)));
+                    .flatMap((KeyValueMapper<String, CompletedPlayMessage, Iterable<KeyValue<String, UserScore>>>) (key, value) -> {
+                        List<KeyValue<String, UserScore>> result = new ArrayList<>();
+                        result.add(KeyValue.pair(value.getP1(), new UserScore(value.getP1(), value)));
+                        result.add(KeyValue.pair(value.getP2(), new UserScore(value.getP2(), value)));
                         return result;
                     })
                     .groupByKey()
-                    .reduce(PlayScore::merge)
+                    .reduce(UserScore::merge)
                     .toStream()
                     .to(practiceScoreStore);
 
             tournamentPlays
-                    .flatMap((KeyValueMapper<String, CompletedPlayMessage, Iterable<KeyValue<String, PlayScore>>>) (key, value) -> {
-                        List<KeyValue<String, PlayScore>> result = new ArrayList<>();
-                        result.add(KeyValue.pair(value.getP1(), new PlayScore(value.getP1(), value)));
-                        result.add(KeyValue.pair(value.getP2(), new PlayScore(value.getP2(), value)));
+                    .flatMap((KeyValueMapper<String, CompletedPlayMessage, Iterable<KeyValue<String, UserScore>>>) (key, value) -> {
+                        List<KeyValue<String, UserScore>> result = new ArrayList<>();
+                        result.add(KeyValue.pair(value.getP1(), new UserScore(value.getP1(), value)));
+                        result.add(KeyValue.pair(value.getP2(), new UserScore(value.getP2(), value)));
                         return result;
                     })
                     .groupByKey()
-                    .reduce(PlayScore::merge)
+                    .reduce(UserScore::merge)
                     .toStream()
                     .to(tournamentScoreStore);
         };

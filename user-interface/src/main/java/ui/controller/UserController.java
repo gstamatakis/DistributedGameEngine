@@ -1,10 +1,12 @@
 package ui.controller;
 
-import dto.ScoreResponseDTO;
+import com.google.gson.Gson;
 import dto.UserDataDTO;
 import dto.UserResponseDTO;
 import exception.CustomException;
 import io.swagger.annotations.*;
+import message.completed.UserScore;
+import model.PlayTypeEnum;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +22,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.WebRequest;
 import ui.model.UserEntity;
 import ui.service.UserService;
-import websocket.DefaultSTOMPMessage;
-import websocket.STOMPMessageType;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
@@ -32,6 +32,7 @@ import java.security.Principal;
 public class UserController {
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
     private final RestTemplate restTemplate = new RestTemplate();
+    private final Gson gson = new Gson();
 
     @Autowired
     private UserService userService;
@@ -95,19 +96,32 @@ public class UserController {
         return modelMapper.map(userService.search(username), UserResponseDTO.class);
     }
 
-    @GetMapping(value = "/score/{username}")
+    @PostMapping(value = "/score/{username}")
     @PreAuthorize("hasRole('ROLE_CLIENT')")
-    @ApiOperation(value = "${UserController.score}", response = ScoreResponseDTO.class)
+    @ApiOperation(value = "${UserController.score}", response = String.class)
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Something went wrong"),
             @ApiResponse(code = 403, message = "Access denied"),
             @ApiResponse(code = 404, message = "The user doesn't exist"),
             @ApiResponse(code = 500, message = "Expired or invalid JWT token")})
-    public ScoreResponseDTO retrieveScore(@ApiParam("Username") @PathVariable String username,
-                                         @RequestHeader(value = "Authorization") String token,
-                                         Principal principal) {
+    public String retrieveScore(@RequestHeader(value = "PlayType") String playType,
+                                @RequestHeader(value = "Authorization") String token,
+                                @PathVariable String username,
+                                Principal principal) {
 
         logger.info(String.format("Received message in retrieveScore from %s [%s].", principal.getName(), username));
+        PlayTypeEnum playTypeEnum = PlayTypeEnum.valueOf(playType);
+        String destURL;
+        switch (playTypeEnum) {
+            case PRACTICE:
+                destURL = playMasterURL + "/score/practice/";
+                break;
+            case TOURNAMENT:
+                destURL = playMasterURL + "/score/tournament/";
+                break;
+            default:
+                throw new IllegalStateException(String.format("Invalid play type supplied [%s]", playType));
+        }
 
         //Message setup
         HttpHeaders headers = new HttpHeaders();
@@ -115,11 +129,12 @@ public class UserController {
         HttpEntity<String> entity = new HttpEntity<>(username, headers);
 
         //Retrieve from PlayMaster service
-        String playJson = restTemplate.postForEntity(playMasterURL + "/score", entity, String.class).getBody();
+        String scoreJson = restTemplate.postForEntity(destURL, entity, String.class).getBody();
+        UserScore userScore = gson.fromJson(scoreJson, UserScore.class);
+        logger.info(String.format("Received score in retrieveScore from %s [%s].", username, userScore.toString()));
 
         //Send it back to user
-        return new DefaultSTOMPMessage(principal, playJson == null ? "<empty>" : playJson, STOMPMessageType.FETCH_PLAY, null, playID);
-        return modelMapper.map(userService.search(username), UserResponseDTO.class);
+        return userScore.getScoreString(playTypeEnum, principal.getName().equals(username));
     }
 
     @GetMapping(value = "/me")

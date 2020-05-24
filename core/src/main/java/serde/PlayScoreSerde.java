@@ -1,34 +1,34 @@
 package serde;
 
 import com.google.gson.Gson;
-import message.score.PlayScore;
+import message.completed.UserScore;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serializer;
 
 import java.util.Map;
 
-public class PlayScoreSerde implements Serde<PlayScore>, Serializer<PlayScore>, Deserializer<PlayScore> {
+public class PlayScoreSerde implements Serde<UserScore>, Serializer<UserScore>, Deserializer<UserScore> {
     private final Gson gson = new Gson();
 
     @Override
-    public Serializer<PlayScore> serializer() {
+    public Serializer<UserScore> serializer() {
         return (topic, data) -> gson.toJson(data).getBytes();
     }
 
     @Override
-    public Deserializer<PlayScore> deserializer() {
-        return ((topic, data) -> gson.fromJson(new String(data), PlayScore.class));
+    public Deserializer<UserScore> deserializer() {
+        return ((topic, data) -> gson.fromJson(new String(data), UserScore.class));
     }
 
     @Override
-    public byte[] serialize(String topic, PlayScore data) {
+    public byte[] serialize(String topic, UserScore data) {
         return gson.toJson(data).getBytes();
     }
 
     @Override
-    public PlayScore deserialize(String topic, byte[] data) {
-        return gson.fromJson(new String(data), PlayScore.class);
+    public UserScore deserialize(String topic, byte[] data) {
+        return gson.fromJson(new String(data), UserScore.class);
     }
 
     @Override

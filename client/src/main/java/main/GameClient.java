@@ -5,12 +5,10 @@ import message.completed.CompletedMoveMessage;
 import message.created.PlayMessage;
 import message.requests.RequestCreateTournamentMessage;
 import model.GameTypeEnum;
+import model.PlayTypeEnum;
 import org.apache.commons.cli.*;
 import org.springframework.http.HttpEntity;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.util.LinkedMultiValueMap;
@@ -32,10 +30,11 @@ public class GameClient {
     private static final String SIGN_IN_URL = "http://localhost:8080/users/signin";
     private static final String SIGNUP_URL = "http://localhost:8080/users/signup";
     private static final String PRACTICE_URL = "http://localhost:8080/queue/practice";
+    private static final String SCORE_URL = "http://localhost:8080/user/score";
     private static final String TOURNAMENT_CREATE_URL = "http://localhost:8080/queue/tournament/create";
     private static final String TOURNAMENT_JOIN_URL = "http://localhost:8080/queue/tournament/join";
     private static final String SEARCH_URL = "http://localhost:8080/users/";
-    private static final String SELF_SEARCH_URL = "http://localhost:8080/users/whpami";
+    private static final String SELF_SEARCH_URL = "http://localhost:8080/users/whoami";
     private static final String STOMP_CONNECT_URL = "ws://localhost:8080/play";
 
     private static final Gson gson = new Gson();
@@ -84,8 +83,8 @@ public class GameClient {
         options.put(5, "Create a Tournament (OFFICIAL ONLY)");
         options.put(6, "(Re)Join game");
         options.put(7, "Spectate Game");
-        options.put(8, "Search user (ADMIN ONLY)"); //OK
-        options.put(9, "My stats");
+        options.put(8, "User Stats");
+        options.put(9, "Search user (ADMIN ONLY)");
         options.put(10, "Exit"); //OK
 
         //REST client
@@ -373,6 +372,30 @@ public class GameClient {
 
                     case 8:
                         //Arguments
+                        output.write("\nEnter username to search for.\nAnswer: ");
+                        output.flush();
+                        String usernameForStats = scanner.next();
+                        output.write("\nEnter play type to search for.\nAnswer: ");
+                        output.flush();
+                        String gameTypeForSearch = PlayTypeEnum.valueOf(scanner.next()).name();
+
+                        HttpEntity<String> scoreSearchResponse;
+                        try {
+                            scoreSearchResponse = client.searchStats(SCORE_URL, gameTypeForSearch, username, token);
+                        } catch (Exception e) {
+                            output.write("\n" + e.getMessage());
+                            output.flush();
+                            return -1;
+                        }
+
+                        //Token
+                        String selfSearchResult = scoreSearchResponse.getBody();
+                        output.write(String.format("\nResult for %s,%s: [%s]", usernameForStats, gameTypeForSearch, selfSearchResult));
+                        output.flush();
+                        break;
+
+                    case 9:
+                        //Arguments
                         output.write("\nSearch username: ");
                         output.flush();
                         String usernameToSearch = scanner.next();
@@ -381,7 +404,7 @@ public class GameClient {
 
                         HttpEntity<String> searchResponse;
                         try {
-                            searchResponse = client.search(SEARCH_URL, usernameToSearch, token);
+                            searchResponse = client.searchUser(SEARCH_URL, usernameToSearch, token);
                         } catch (Exception e) {
                             output.write("\n" + e.getMessage());
                             output.flush();
@@ -391,26 +414,6 @@ public class GameClient {
                         //Token
                         String searchResult = searchResponse.getBody();
                         output.write("\nResult: " + searchResult);
-                        output.flush();
-                        break;
-
-                    case 9:
-                        //Arguments
-                        output.write("\nSearching for my stats (" + username + ").");
-                        output.flush();
-
-                        HttpEntity<String> selfSearchResponse;
-                        try {
-                            selfSearchResponse = client.search(SELF_SEARCH_URL, username, token);
-                        } catch (Exception e) {
-                            output.write("\n" + e.getMessage());
-                            output.flush();
-                            return -1;
-                        }
-
-                        //Token
-                        String selfSearchResult = selfSearchResponse.getBody();
-                        output.write("\nResult: " + selfSearchResult);
                         output.flush();
                         break;
 

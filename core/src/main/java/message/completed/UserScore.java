@@ -1,11 +1,12 @@
-package message.score;
+package message.completed;
 
-import message.completed.CompletedPlayMessage;
+import model.PlayTypeEnum;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PlayScore {
+public class UserScore implements Serializable {
     private String playerUsername;
     private long playCount;
     private long winCount;
@@ -15,10 +16,10 @@ public class PlayScore {
     private Map<String, String> opponentPerPlayID;
     private long totalScore;
 
-    public PlayScore() {
+    public UserScore() {
     }
 
-    public PlayScore(String playerUsername) {
+    public UserScore(String playerUsername) {
         this.playerUsername = playerUsername;
         this.scorePerPlayID = new HashMap<>();
         this.opponentPerPlayID = new HashMap<>();
@@ -29,7 +30,7 @@ public class PlayScore {
         this.tieCount = 0;
     }
 
-    public PlayScore(String username, CompletedPlayMessage play) {
+    public UserScore(String username, CompletedPlayMessage play) {
         this(username);
         this.scorePerPlayID.put(play.getPlayID(), play.getScore(username));
         this.opponentPerPlayID.put(play.getPlayID(), play.getOpponent(username));
@@ -43,11 +44,11 @@ public class PlayScore {
         this.totalScore += winCount;
     }
 
-    public PlayScore merge(PlayScore other) {
+    public UserScore merge(UserScore other) {
         if (!this.playerUsername.equals(other.getPlayerUsername())) {
             throw new IllegalStateException("Attempting to merge PlayScore objects with different usernames.");
         }
-        PlayScore merged = new PlayScore(this.playerUsername);
+        UserScore merged = new UserScore(this.playerUsername);
         merged.winCount = this.winCount + other.winCount;
         merged.playCount = this.playCount + other.playCount;
         merged.loseCount = this.loseCount + other.loseCount;
@@ -102,5 +103,16 @@ public class PlayScore {
 
     public long getTieCount() {
         return tieCount;
+    }
+
+    public String getScoreString(PlayTypeEnum playTypeEnum, boolean forSelf) {
+        if (forSelf) {
+            return toString();
+        }
+        if (playTypeEnum == PlayTypeEnum.PRACTICE) {
+            return this.playerUsername + " " + this.totalScore;
+        } else {
+            return this.playerUsername + " " + this.opponentPerPlayID.toString() + " " + this.scorePerPlayID.toString();
+        }
     }
 }

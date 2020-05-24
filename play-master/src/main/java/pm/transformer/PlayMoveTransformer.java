@@ -48,6 +48,7 @@ public class PlayMoveTransformer implements Transformer<String, JoinedPlayMoveMe
             //Send a completed play message
             logger.info(String.format("transform() forwarding completed play [%s].", completedPlayMessage.toString()));
             this.ctx.forward(key, new DefaultKafkaMessage(completedPlayMessage, CompletedPlayMessage.class.getCanonicalName()));
+            //TODO send tombstone to ongoing plays
         } else {
             logger.info(String.format("transform() forwarding ongoing play [%s].", play.toString()));
             this.ctx.forward(key, new DefaultKafkaMessage(play, PlayMessage.class.getCanonicalName()));
