@@ -65,6 +65,7 @@ public class PMController {
             final ReadOnlyKeyValueStore<String, PlayMessage> store =
                     interactiveQueryService.getQueryableStore(playStateStoreName, QueryableStoreTypes.keyValueStore());
             play = store.get(playID);
+            logger.info(String.format("Retrieved local Play [%s] from [%s].", play == null ? null : play.toString(), hostInfo.toString()));
         } else {
             //Retrieve from remote state store
             HttpHeaders headers = new HttpHeaders();
@@ -73,9 +74,9 @@ public class PMController {
             headers.setBearerAuth(token.split(" ")[1]);
             UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(String.format("http://%s:%d/play/%s", hostInfo.host(), hostInfo.port(), playID));
             play = restTemplate.postForEntity(builder.toUriString(), headers, PlayMessage.class).getBody();
+            logger.info(String.format("Retrieved remote Play [%s] from [%s].", play == null ? null : play.toString(), hostInfo.toString()));
         }
 
-        logger.info(String.format("Retrieved Play [%s] from [%s].", play, hostInfo.toString()));
         return gson.toJson(play);
     }
 

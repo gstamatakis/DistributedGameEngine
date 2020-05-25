@@ -4,9 +4,9 @@ import exception.CustomException;
 import io.swagger.annotations.*;
 import message.requests.RequestCreateTournamentMessage;
 import message.requests.RequestPracticeMessage;
-import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.binder.kafka.streams.InteractiveQueryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,15 +23,10 @@ import java.util.concurrent.TimeoutException;
 @RequestMapping("/queue")
 @Api(tags = "queue")
 public class QueueController {
+    private static final Logger logger = LoggerFactory.getLogger(QueueController.class);
 
     @Autowired
     private PlayService playService;
-
-    @Autowired
-    private InteractiveQueryService interactiveQueryService;
-
-    @Autowired
-    private ModelMapper modelMapper;
 
     @ExceptionHandler({CustomException.class})
     public ResponseEntity<String> handleConflict(CustomException ex, WebRequest request) {
@@ -48,6 +43,7 @@ public class QueueController {
                                            @AuthenticationPrincipal UserDetails userDetails)
             throws InterruptedException, ExecutionException, TimeoutException {
 
+        logger.info(String.format("User [%s] request to join a practice play.", userDetails.toString()));
         playService.enqueuePractice(userDetails.getUsername(), msg);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
@@ -62,6 +58,7 @@ public class QueueController {
                                                    @ApiParam("Create tournament msg") @RequestBody RequestCreateTournamentMessage msg)
             throws InterruptedException, ExecutionException, TimeoutException {
 
+        logger.info(String.format("User [%s] request to create a tournament play with ID=[%s].", userDetails.toString(), msg.getTournamentID()));
         playService.createTournament(userDetails.getUsername(), msg);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
@@ -76,6 +73,7 @@ public class QueueController {
                                                  @ApiParam("Join tournament msg") @RequestBody String tournamentID)
             throws InterruptedException, ExecutionException, TimeoutException {
 
+        logger.info(String.format("User [%s] request to join a tournament play with ID=[%s].", userDetails.toString(), tournamentID));
         playService.joinTournament(userDetails.getUsername(), tournamentID);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }

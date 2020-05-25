@@ -1,8 +1,5 @@
 package main;
 
-import com.google.gson.Gson;
-import message.completed.CompletedMoveMessage;
-import message.created.PlayMessage;
 import message.requests.RequestCreateTournamentMessage;
 import model.GameTypeEnum;
 import model.PlayTypeEnum;
@@ -34,10 +31,8 @@ public class GameClient {
     private static final String TOURNAMENT_CREATE_URL = "http://localhost:8080/queue/tournament/create";
     private static final String TOURNAMENT_JOIN_URL = "http://localhost:8080/queue/tournament/join";
     private static final String SEARCH_URL = "http://localhost:8080/users/";
-    private static final String SELF_SEARCH_URL = "http://localhost:8080/users/whoami";
     private static final String STOMP_CONNECT_URL = "ws://localhost:8080/play";
 
-    private static final Gson gson = new Gson();
     private static boolean ctrlC = false;
 
     public static void main(String[] args) throws Exception {
@@ -66,7 +61,7 @@ public class GameClient {
         }
 
         //Handle Ctrl+C
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> ctrlC = true));
+//        Runtime.getRuntime().addShutdownHook(new Thread(() -> ctrlC = true));
 
         //Execute the main loop
         int result = handleInputs(scanner, output);
@@ -193,7 +188,7 @@ public class GameClient {
                             subs.add("/user/queue/reply");
                             subs.add("/user/queue/errors");
                             subs.add("/topic/broadcast");
-                            stompSession = stompClient.connect(STOMP_CONNECT_URL, webSocketHttpHeaders, stompHeaders, new MyStompSessionHandler(subs, queue)).get();
+                            stompSession = stompClient.connect(STOMP_CONNECT_URL, webSocketHttpHeaders, stompHeaders, new MyStompSessionHandler(subs, queue, output)).get();
                             output.write("\nOpened session with server..\n\n");
                             output.flush();
                         } catch (Exception e) {
@@ -290,7 +285,9 @@ public class GameClient {
                         String playID = "";
 
                         while (!finished) {
-                            DefaultSTOMPMessage srvMessage = queue.poll(100, TimeUnit.MILLISECONDS);
+                            output.write("\nWaiting for server...");
+                            output.flush();
+                            DefaultSTOMPMessage srvMessage = queue.poll(5000, TimeUnit.MILLISECONDS);
 
                             if (ctrlC) {
                                 ctrlC = false;
@@ -301,11 +298,9 @@ public class GameClient {
                                 }
                                 break;
                             }
+
                             if (srvMessage == null) {
                                 continue;
-                            } else {
-                                output.write("\nRECEIVED MESSAGE: " + srvMessage.toString());
-                                output.flush();
                             }
 
                             //Process incoming messages
@@ -318,45 +313,20 @@ public class GameClient {
                                     stompHeaders.setDestination("/app/play");
                                     stompSession.send(stompHeaders, playID);
                                     break;
-                                case NOTIFICATION:
-                                    output.write("\nNOTIFICATION: " + srvMessage.getPayload());
-                                    break;
-                                case MOVE_DENIED:
-                                    CompletedMoveMessage deniedMoveMessage = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
-                                    output.write("\nMove denied:  " + deniedMoveMessage.getMoveMessage());
-                                    break;
                                 case NEED_TO_MOVE:
                                     output.write(String.format("\n%s ", srvMessage.getPayload()));
                                     output.flush();
                                     String newMove = scanner.next();
                                     stompSession.send("/app/move", new DefaultSTOMPMessage("", newMove, STOMPMessageType.NEW_MOVE, null, playID));
                                     break;
-                                case FETCH_PLAY:
-                                    PlayMessage playMessage = gson.fromJson(srvMessage.getPayload(), PlayMessage.class);
-                                    if (playMessage == null) {
-                                        output.write("\nRetrieved null play..");
-                                    } else {
-                                        output.write("\nRetrieved play: " + playMessage.toString());
-                                    }
-                                    break;
-                                case NEW_MOVE:
-                                case MOVE_ACCEPTED:
-                                    CompletedMoveMessage successfulMoveMessage = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
-                                    output.write("\nNew move:  " + successfulMoveMessage.getMoveMessage());
-                                    break;
-                                case ERROR:
-                                    output.write("\nERROR: " + srvMessage.getPayload());
-                                    break;
                                 case GAME_OVER:
                                     output.write("\nGame result: " + srvMessage.getPayload());
                                     finished = true;
                                     break;
-                                case KEEP_ALIVE:
-                                    break;
                                 default:
-                                    stompSession.acknowledge(srvMessage.getAck(), true);
-                                    throw new IllegalStateException("Default case at case6 switch statement!");
+                                    //Non-interactive messages are handled in the session handler
                             }
+
                             output.write("\n");
                             output.flush();
 

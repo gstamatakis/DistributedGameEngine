@@ -11,6 +11,8 @@ import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import serde.PlayScoreSerde;
@@ -34,6 +36,7 @@ Tournament scores: The scores of each individual play are available to all
 players.
  */
 public class ProcessUserScoresConfig {
+    private static final Logger logger = LoggerFactory.getLogger(ProcessUserScoresConfig.class);
     private final String practiceScoreStore = "practice-score-store";
     private final String tournamentScoreStore = "tournament-score-store";
 
@@ -50,6 +53,8 @@ public class ProcessUserScoresConfig {
     @Bean
     public Consumer<KStream<String, DefaultKafkaMessage>> processUserScores() {
         return completedPlaysStream -> {
+            completedPlaysStream.foreach((key, value) -> logger.info(String.format("Consumed [%s,%s]", key, value.toString())));
+
             //Map to plays messages
             KStream<String, CompletedPlayMessage> plays = completedPlaysStream.mapValues(value -> (CompletedPlayMessage) value.retrieve(CompletedPlayMessage.class.getCanonicalName()));
 
@@ -71,6 +76,10 @@ public class ProcessUserScoresConfig {
                     })
                     .groupByKey()
                     .reduce(UserScore::merge)
+                    .mapValues(value -> {
+                        logger.info(String.format("PracticeScoresStore: [%s]", value.toString()));
+                        return value;
+                    })
                     .toStream()
                     .to(practiceScoreStore);
 
@@ -83,6 +92,10 @@ public class ProcessUserScoresConfig {
                     })
                     .groupByKey()
                     .reduce(UserScore::merge)
+                    .mapValues(value -> {
+                        logger.info(String.format("TournamentScoresStore: [%s]", value.toString()));
+                        return value;
+                    })
                     .toStream()
                     .to(tournamentScoreStore);
         };

@@ -1,6 +1,8 @@
 package ui.service;
 
 import exception.CustomException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 
 @Service
 public class UserService {
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -32,7 +35,9 @@ public class UserService {
     public String signin(String username, String password) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
-            return jwtTokenProvider.createToken(username, userRepository.findByUsername(username).getRole());
+            String token = jwtTokenProvider.createToken(username, userRepository.findByUsername(username).getRole());
+            logger.info(String.format("User [%s] is signed up with token=[%s]", username, token));
+            return token;
         } catch (AuthenticationException e) {
             throw new CustomException("Invalid username/password supplied", HttpStatus.UNPROCESSABLE_ENTITY);
         }
@@ -45,7 +50,9 @@ public class UserService {
             }
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             userRepository.save(user);
-            return jwtTokenProvider.createToken(user.getUsername(), user.getRole());
+            String token = jwtTokenProvider.createToken(user.getUsername(), user.getRole());
+            logger.info(String.format("User [%s] is signed in with token=[%s]", user.toString(), token));
+            return token;
         } else {
             throw new CustomException("Username is already in use", HttpStatus.UNPROCESSABLE_ENTITY);
         }
@@ -53,6 +60,7 @@ public class UserService {
 
     public void delete(String username) {
         userRepository.deleteByUsername(username);
+        logger.info(String.format("User [%s] was deleted successfully.", username));
     }
 
     public UserEntity search(String username) {
@@ -60,14 +68,19 @@ public class UserService {
         if (user == null) {
             throw new CustomException("The user doesn't exist", HttpStatus.NOT_FOUND);
         }
+        logger.info(String.format("User [%s] was retrieved successfully.", user.toString()));
         return user;
     }
 
     public UserEntity whoami(HttpServletRequest req) {
-        return userRepository.findByUsername(jwtTokenProvider.getUsername(jwtTokenProvider.resolveToken(req)));
+        UserEntity userEntity = userRepository.findByUsername(jwtTokenProvider.getUsername(jwtTokenProvider.resolveToken(req)));
+        logger.info(String.format("User entity [%s] retrieved successfully.", userEntity));
+        return userEntity;
     }
 
     public String refresh(String username) {
-        return jwtTokenProvider.createToken(username, userRepository.findByUsername(username).getRole());
+        String token = jwtTokenProvider.createToken(username, userRepository.findByUsername(username).getRole());
+        logger.info(String.format("User [%s] refreshed their token successfully to [%s].", username, token));
+        return token;
     }
 }

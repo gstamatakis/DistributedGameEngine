@@ -4,25 +4,29 @@ import gm.transformer.CreateTournamentTransformer;
 import gm.transformer.JoinTournamentTransformer;
 import gm.transformer.PracticeQueueTransformer;
 import message.DefaultKafkaMessage;
-import message.created.PlayMessage;
 import message.queue.CreateTournamentQueueMessage;
 import message.queue.JoinTournamentQueueMessage;
 import message.queue.PracticeQueueMessage;
-import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
-import serde.*;
+import serde.PlayMessageSerde;
+import serde.PracticeQueueMessageSerde;
+import serde.TournamentPlayMessageSerde;
 
 import java.util.function.Function;
 
 @Component
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class ProcessUserInputConfig {
+    private static final Logger logger = LoggerFactory.getLogger(ProcessUserInputConfig.class);
+
     private final String pairPracticePlayersStore = "pair-practice-players-store";
     private final String pairTournamentPlayersStore = "pair-tournament-players-store";
     private final String userToGameIDStore = "user-to-playID";
@@ -56,8 +60,10 @@ public class ProcessUserInputConfig {
      * @return
      */
     @Bean
-    public Function<KStream<String, DefaultKafkaMessage>, KStream<String, DefaultKafkaMessage>> processUsersJoinGame() {
+    public Function<KStream<String, DefaultKafkaMessage>, KStream<String, DefaultKafkaMessage>[]> processUsersJoinGame() {
         return stream -> {
+            stream.foreach((key, value) -> logger.info(String.format("Consumed [%s,%s]", key, value == null ? null : value.toString())));
+
             //Branch to tournaments and non-tournaments
             KStream<String, DefaultKafkaMessage>[] forks = stream.branch(
                     (id, msg) -> msg.isType(PracticeQueueMessage.class.getCanonicalName()),
@@ -90,7 +96,16 @@ public class ProcessUserInputConfig {
                     pairTournamentPlayersStore, userToGameIDStore, gameIDToGameStore);
 
             //Merge everything into a single stream and output the result to the specified topic
-            return practiceBranch.merge(tournamentBranch);
+            KStream<String, DefaultKafkaMessage> mergedStreams = practiceBranch.merge(tournamentBranch);
+
+            //Duplicate the stream so it can be forwarded to both new and ongoing plays
+
+
+            //Log the output
+            duplicated[0].foreach((key, value) -> logger.info(String.format("Producing to new-plays [%s,%s]", key, value == null ? null : value.toString())));
+            duplicated[1].foreach((key, value) -> logger.info(String.format("Producing to ongoing-plays [%s,%s]", key, value == null ? null : value.toString())));
+
+            return duplicated;
         };
     }
 }

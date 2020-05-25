@@ -31,7 +31,7 @@ spring:
         destination: ongoing-plays
         group: group2
         auto.offset.reset: latest
-    function.definition: processPlaysAndMoves,processStatePlay
+    function.definition: processPlaysAndMoves;processStatePlay
     kafka:
       streams.binder.configuration.application.server: localhost:18082
       binder:

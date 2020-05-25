@@ -7,15 +7,20 @@ import message.requests.RequestCreateTournamentMessage;
 import message.requests.RequestPracticeMessage;
 import model.GameTypeEnum;
 import org.springframework.http.*;
+import org.springframework.http.client.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class RESTClient {
+    //Used to emulate requests from an actual browser
     private final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36";
 
     private RestTemplate restTemplate;
@@ -23,6 +28,10 @@ public class RESTClient {
 
     public RESTClient() {
         this.restTemplate = new RestTemplate();
+//        List<ClientHttpRequestInterceptor> ris = new ArrayList<>();
+//        ris.add(new LoggingRequestInterceptor());
+//        restTemplate.setInterceptors(ris);
+
         this.objectMapper = new ObjectMapper();
     }
 
@@ -137,5 +146,19 @@ public class RESTClient {
 
         //Response = executed entity
         return restTemplate.exchange(tournamentJoinUrl, HttpMethod.POST, entity, String.class);
+    }
+
+    private class LoggingRequestInterceptor implements ClientHttpRequestInterceptor {
+
+        @Override
+        public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
+            ClientHttpResponse response = execution.execute(request, body);
+            log(request, body, response);
+            return response;
+        }
+
+        private void log(HttpRequest request, byte[] body, ClientHttpResponse response) throws IOException {
+            //do the logging
+        }
     }
 }

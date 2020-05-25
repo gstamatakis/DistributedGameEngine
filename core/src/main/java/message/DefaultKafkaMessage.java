@@ -19,13 +19,13 @@ public class DefaultKafkaMessage implements Serializable {
     }
 
     public DefaultKafkaMessage(Object payload, String canonicalClassName) {
-        this.label = canonicalClassName;
         try {
             this.payload = gson.toJson(payload, Class.forName(canonicalClassName));
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            this.payload = null;
+            logger.error(e.getMessage());
+            throw new IllegalStateException(e);
         }
+        this.label = canonicalClassName;
     }
 
     public Object retrieve(String canonicalName) {
@@ -39,5 +39,13 @@ public class DefaultKafkaMessage implements Serializable {
 
     public boolean isType(String canonicalName) {
         return this.label.equals(canonicalName);
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultKafkaMessage{" +
+                "payload='" + payload + '\'' +
+                ", label='" + label + '\'' +
+                '}';
     }
 }

@@ -18,12 +18,14 @@ spring:
         group: group1
         auto.offset.reset: latest
       processUsersJoinGame-out-0:
-        destination: new-plays,ongoing-plays
+        destination: new-plays
+      processUsersJoinGame-out-1:
+        destination: ongoing-plays
       processUserScores-in-0:
         destination: completed-plays
         group: group1
         auto.offset.reset: latest
-    function.definition: processUsersJoinGame,processUserScores
+    function.definition: processUsersJoinGame;processUserScores
     kafka:
       streams.binder.configuration.application.server: localhost:18081
       binder:
@@ -45,5 +47,5 @@ spring:
         configuration:
           #application.server: localhost:9094
           default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-          default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+          default.value.serde: serde.DefaultKafkaMessageSerde
           commit.interval.ms: 1000

@@ -17,6 +17,7 @@ import pm.transformer.PlayMoveTransformer;
 
 import java.util.function.BiFunction;
 
+@SuppressWarnings("unchecked")
 @Component
 public class PlayMoveConfig {
     private static final Logger logger = LoggerFactory.getLogger(PlayMoveConfig.class);
@@ -24,6 +25,11 @@ public class PlayMoveConfig {
     @Bean
     public BiFunction<KStream<String, DefaultKafkaMessage>, KTable<String, DefaultKafkaMessage>, KStream<String, DefaultKafkaMessage>[]> processPlaysAndMoves() {
         return (moveStream, playTable) -> {
+            //Log incoming stream
+            moveStream.foreach((k, v) -> {
+                logger.info(String.format("Consumed: [%s,%s]", k, v != null ? v.toString() : null));
+            });
+
             //Inner-Join the player moves with the available plays
             KStream<String, DefaultKafkaMessage> processedMoves = moveStream
                     .leftJoin(playTable, new PlayMoveJoiner())
@@ -32,9 +38,9 @@ public class PlayMoveConfig {
 
             //Send to output topics separately
             return processedMoves.branch(
-                    (id, msg) -> msg.isType(PlayMessage.class.getCanonicalName()),  //On-going plays -> Back to onGOING-plays
-                    (id, msg) -> msg.isType(CompletedMoveMessage.class.getCanonicalName()), //Finished plays -> Send to completed-plays
-                    (id, msg) -> msg.isType(CompletedPlayMessage.class.getCanonicalName()));//Processed moves -> Send to completed-moves
+                    (id, msg) -> msg.isType(PlayMessage.class.getCanonicalName()),  //Ongoing plays -> Back to ongoing-plays
+                    (id, msg) -> msg.isType(CompletedMoveMessage.class.getCanonicalName()), //Finished plays -> Send to completed-moves
+                    (id, msg) -> msg.isType(CompletedPlayMessage.class.getCanonicalName()));//Processed moves -> Send to completed-plays
         };
     }
 

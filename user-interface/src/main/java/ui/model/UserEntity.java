@@ -20,6 +20,17 @@ public class UserEntity {
     @Size(min = 8, message = "Minimum password length: 8 characters")
     private String password;
 
+    @Override
+    public String toString() {
+        return "UserEntity{" +
+                "role=" + role +
+                ", id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+    }
+
     public Integer getId() {
         return id;
     }
