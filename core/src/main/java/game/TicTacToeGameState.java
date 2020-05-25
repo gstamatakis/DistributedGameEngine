@@ -30,7 +30,7 @@ public class TicTacToeGameState extends AbstractGameState {
                 ", movesPerRoundP1=" + movesPerRoundP1 +
                 ", movesPerRoundP2=" + movesPerRoundP2 +
                 ", currentRound=" + currentRound +
-                ", lastValidMove=" + lastValidMove +
+                ", lastValidMove=" + lastValidMoveMessage +
                 ", gameTypeEnum=" + gameTypeEnum +
                 ", winner='" + winner + '\'' +
                 ", createdBy='" + createdBy + '\'' +
@@ -39,7 +39,7 @@ public class TicTacToeGameState extends AbstractGameState {
 
     @Override
     public CompletedMoveMessage offerMove(MoveMessage message) {
-        boolean finished = false;
+        String move = message.getMove();
         String playedBy = message.getUsername();
         String opponent = getPlaysFirstUsername().equals(playedBy)
                 ? getPlaysSecondUsername()
@@ -50,11 +50,59 @@ public class TicTacToeGameState extends AbstractGameState {
                     ? getMovesPerRoundP1()
                     : getMovesPerRoundP2();
             movesPerRound.put(getCurrentRound(), message);
+            getBoard().put(move, playedBy);
+            checkForVictor();
+            this.lastValidMoveMessage = message;
             if (playedBy.equals(getPlaysFirstUsername())) {
                 this.currentRound++;
             }
         }
         return new CompletedMoveMessage(valid, playedBy, opponent, message, finished);
+    }
+
+    private void checkForVictor() {
+
+        //Check horizontally
+        if (!board.get("1").equals(emptyCell()) && board.get("1").equals(board.get("2")) && board.get("1").equals(board.get("3"))) {
+            this.winner = board.get("1").equals(p1) ? -1 : 1;
+            this.finished = true;
+        }
+        if (!board.get("4").equals(emptyCell()) && board.get("4").equals(board.get("5")) && board.get("4").equals(board.get("6"))) {
+            this.winner = board.get("4").equals(p1) ? -1 : 1;
+            this.finished = true;
+        }
+        if (!board.get("7").equals(emptyCell()) && board.get("7").equals(board.get("8")) && board.get("7").equals(board.get("9"))) {
+            this.winner = board.get("7").equals(p1) ? -1 : 1;
+            this.finished = true;
+        }
+
+        //Check vertically
+        if (!board.get("1").equals(emptyCell()) && board.get("1").equals(board.get("4")) && board.get("1").equals(board.get("7"))) {
+            this.winner = board.get("1").equals(p1) ? -1 : 1;
+            this.finished = true;
+        }
+        if (!board.get("2").equals(emptyCell()) && board.get("2").equals(board.get("5")) && board.get("2").equals(board.get("8"))) {
+            this.winner = board.get("2").equals(p1) ? -1 : 1;
+            this.finished = true;
+        }
+        if (!board.get("3").equals(emptyCell()) && board.get("3").equals(board.get("6")) && board.get("3").equals(board.get("9"))) {
+            this.winner = board.get("3").equals(p1) ? -1 : 1;
+            this.finished = true;
+        }
+
+        //Check diagonally
+        if (!board.get("1").equals(emptyCell()) && board.get("1").equals(board.get("5")) && board.get("1").equals(board.get("9"))) {
+            this.winner = board.get("1").equals(p1) ? -1 : 1;
+            this.finished = true;
+        }
+        if (!board.get("3").equals(emptyCell()) && board.get("3").equals(board.get("5")) && board.get("3").equals(board.get("7"))) {
+            this.winner = board.get("3").equals(p1) ? -1 : 1;
+            this.finished = true;
+        }
+    }
+
+    private boolean cellIsMine(int cell, String username) {
+        return this.board.get(String.valueOf(cell)).equals(username);
     }
 
     @Override
@@ -65,7 +113,7 @@ public class TicTacToeGameState extends AbstractGameState {
     @Override
     public Map<String, String> initialBoard() {
         HashMap<String, String> newBoard = new HashMap<>(9);
-        for (int i = 0; i < 9; i++) {
+        for (int i = 1; i <= 9; i++) {
             newBoard.put(String.valueOf(i), emptyCell());
         }
         return newBoard;

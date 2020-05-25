@@ -66,17 +66,18 @@ public class WebSocketController {
     @SendToUser("/queue/reply")
     public DefaultSTOMPMessage handleMoves(@Payload DefaultSTOMPMessage clientSTOMPMessage, Principal principal)
             throws InterruptedException, ExecutionException, TimeoutException {
-        logger.info(String.format("Received message %s from %s", clientSTOMPMessage, principal.getName()));
+        logger.info(String.format("handleMoves: Received message [%s] from [%s]", clientSTOMPMessage, principal.getName()));
         String newMove = clientSTOMPMessage.getPayload();
         String playID = clientSTOMPMessage.getID();
-        if (playID == null) {
-            throw new IllegalStateException(String.format("Invalid playID={%s}", playID));
+        if (playID == null || playID.isEmpty()) {
+            throw new IllegalStateException(String.format("Invalid playID=[%s]", playID));
         }
         if (newMove == null || newMove.isEmpty()) {
             throw new IllegalStateException(String.format("Invalid move: [%s]", newMove));
         }
         playService.sendMoveToPlay(principal.getName(), newMove, playID);
-        return new DefaultSTOMPMessage(principal, String.format("Move %s sent.", newMove), STOMPMessageType.NOTIFICATION, null, clientSTOMPMessage.getID());
+        logger.info(String.format("handleMoves: Move [%s] sent to playID=[%s].", newMove, playID));
+        return new DefaultSTOMPMessage(principal, String.format("Move [%s] submitted successfully.", newMove), STOMPMessageType.NOTIFICATION, null, playID);
     }
 
     @MessageMapping("/play")
@@ -84,7 +85,7 @@ public class WebSocketController {
     public DefaultSTOMPMessage retrievePlay(@Header(value = "Authorization") String token,  //Header and Payload are for STOMP
                                             @Payload String playID,
                                             Principal principal) {
-        logger.info(String.format("Attempting to retrieved play for [%s] on playID=[%s].", principal.getName(), playID));
+        logger.info(String.format("retrievePlay: Attempting to retrieved play for [%s] on playID=[%s].", principal.getName(), playID));
 
         //Message setup
         HttpHeaders headers = new HttpHeaders();
@@ -93,7 +94,7 @@ public class WebSocketController {
 
         //Retrieve from PlayMaster service
         String playJson = restTemplate.postForEntity(playMasterURL + "/play", entity, String.class).getBody();
-        logger.info(String.format("Retrieved play [%s] for [%s] on playID=[%s].", playJson, principal.getName(), playID));
+        logger.info(String.format("retrievePlay: Retrieved play [%s] for [%s] on playID=[%s].", playJson, principal.getName(), playID));
 
         //Send it back to user
         return new DefaultSTOMPMessage(principal, playJson == null ? "<empty>" : playJson, STOMPMessageType.FETCH_PLAY, null, playID);

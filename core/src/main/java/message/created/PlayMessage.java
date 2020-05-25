@@ -21,7 +21,7 @@ public class PlayMessage implements Serializable {
     private String createdAt;
     private int remainingRounds;
     private String gameState;
-    private String createdBy;
+    private String lastPlayedBy;
 
     public PlayMessage() {
     }
@@ -35,7 +35,7 @@ public class PlayMessage implements Serializable {
         this.createdAt = String.valueOf(LocalDateTime.now());
         this.remainingRounds = 1;
         this.gameState = gameSerializer.newGame(gameTypeEnum, gameStateArgs);
-        this.createdBy = msg1.getCreatedBy();
+        this.lastPlayedBy = msg1.getCreatedBy();
     }
 
     public PlayMessage(TournamentPlayMessage message, String msg1, String msg2, int remainingRounds, Object... gameStateArgs) {
@@ -47,11 +47,19 @@ public class PlayMessage implements Serializable {
         this.createdAt = String.valueOf(LocalDateTime.now());
         this.remainingRounds = remainingRounds;
         this.gameState = gameSerializer.newGame(gameTypeEnum, gameStateArgs);
-        this.createdBy = message.getCreatedBy();
+        this.lastPlayedBy = message.getCreatedBy();
     }
 
     private String generateID(PracticeQueueMessage msg1, PracticeQueueMessage msg2) {
         return System.nanoTime() + "_" + msg1.getCreatedBy().hashCode();
+    }
+
+    public String getNeedsToWait() {
+        return this.lastPlayedBy;
+    }
+
+    public String getNeedsToMove() {
+        return getLastPlayedBy().equals(this.p1) ? this.p2 : this.p1;
     }
 
     public AbstractGameState getGameState() {
@@ -73,7 +81,7 @@ public class PlayMessage implements Serializable {
                 ", createdAt='" + createdAt + '\'' +
                 ", remainingRounds=" + remainingRounds +
                 ", gameState='" + getGameState().toString() + '\'' +
-                ", createdBy='" + createdBy + '\'' +
+                ", createdBy='" + lastPlayedBy + '\'' +
                 '}';
     }
 
@@ -113,7 +121,11 @@ public class PlayMessage implements Serializable {
         return gameSerializer;
     }
 
-    public String getCreatedBy() {
-        return createdBy;
+    public String getLastPlayedBy() {
+        return lastPlayedBy;
+    }
+
+    public void setLastPlayedBy(String username) {
+        this.lastPlayedBy = username;
     }
 }

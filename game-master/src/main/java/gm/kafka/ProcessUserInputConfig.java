@@ -31,6 +31,7 @@ public class ProcessUserInputConfig {
     private final String pairTournamentPlayersStore = "pair-tournament-players-store";
     private final String userToGameIDStore = "user-to-playID";
     private final String gameIDToGameStore = "playID-to-game";
+    private final String newPlaysTopic = "new-plays";
 
     //State stores
     @Bean
@@ -60,9 +61,9 @@ public class ProcessUserInputConfig {
      * @return
      */
     @Bean
-    public Function<KStream<String, DefaultKafkaMessage>, KStream<String, DefaultKafkaMessage>[]> processUsersJoinGame() {
+    public Function<KStream<String, DefaultKafkaMessage>, KStream<String, DefaultKafkaMessage>> processUsersJoinGame() {
         return stream -> {
-            stream.foreach((key, value) -> logger.info(String.format("Consumed [%s,%s]", key, value == null ? null : value.toString())));
+            stream.foreach((key, value) -> logger.info(String.format("processUsersJoinGame: Consumed [%s,%s]", key, value == null ? null : value.toString())));
 
             //Branch to tournaments and non-tournaments
             KStream<String, DefaultKafkaMessage>[] forks = stream.branch(
@@ -99,13 +100,13 @@ public class ProcessUserInputConfig {
             KStream<String, DefaultKafkaMessage> mergedStreams = practiceBranch.merge(tournamentBranch);
 
             //Duplicate the stream so it can be forwarded to both new and ongoing plays
+            KStream<String, DefaultKafkaMessage> s1 = mergedStreams.filter((key, value) -> true);
+            KStream<String, DefaultKafkaMessage> s2 = mergedStreams.filter((key, value) -> true);
+            s1.foreach((key, value) -> logger.info(String.format("processUsersJoinGame: Producing to new-plays [%s,%s]", key, value == null ? null : value.toString())));
+            s2.foreach((key, value) -> logger.info(String.format("processUsersJoinGame: Producing to ongoing-plays [%s,%s]", key, value == null ? null : value.toString())));
 
-
-            //Log the output
-            duplicated[0].foreach((key, value) -> logger.info(String.format("Producing to new-plays [%s,%s]", key, value == null ? null : value.toString())));
-            duplicated[1].foreach((key, value) -> logger.info(String.format("Producing to ongoing-plays [%s,%s]", key, value == null ? null : value.toString())));
-
-            return duplicated;
+            s1.to(newPlaysTopic);
+            return s2;
         };
     }
 }

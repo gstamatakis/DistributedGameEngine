@@ -1,5 +1,8 @@
 package main;
 
+import com.google.gson.Gson;
+import message.completed.CompletedMoveMessage;
+import message.created.PlayMessage;
 import message.requests.RequestCreateTournamentMessage;
 import model.GameTypeEnum;
 import model.PlayTypeEnum;
@@ -34,6 +37,7 @@ public class GameClient {
     private static final String STOMP_CONNECT_URL = "ws://localhost:8080/play";
 
     private static boolean ctrlC = false;
+    private static final Gson gson = new Gson();
 
     public static void main(String[] args) throws Exception {
 
@@ -282,12 +286,9 @@ public class GameClient {
 
 
                         boolean finished = false;
-                        String playID = "";
 
                         while (!finished) {
-                            output.write("\nWaiting for server...");
-                            output.flush();
-                            DefaultSTOMPMessage srvMessage = queue.poll(5000, TimeUnit.MILLISECONDS);
+                            DefaultSTOMPMessage srvMessage = queue.poll(1000, TimeUnit.MILLISECONDS);
 
                             if (ctrlC) {
                                 ctrlC = false;
@@ -305,26 +306,57 @@ public class GameClient {
 
                             //Process incoming messages
                             switch (srvMessage.getMessageType()) {
+                                case NOTIFICATION:
+                                    output.write("\nNOTIFICATION: " + srvMessage.getPayload());
+                                    break;
+                                case FETCH_PLAY:
+                                    PlayMessage playMessage = gson.fromJson(srvMessage.getPayload(), PlayMessage.class);
+                                    if (playMessage == null) {
+                                        output.write("\nRetrieved null play..");
+                                    } else {
+                                        output.write("\nRetrieved play: " + playMessage.getGameState().getPrintableBoard());
+                                    }
+                                    break;
+                                case MOVE_ACCEPTED:
+                                    CompletedMoveMessage successfulMoveMessage2 = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
+                                    output.write("\nNew valid move: " + successfulMoveMessage2.getMoveMessage());
+                                    break;
+                                case MOVE_DENIED:
+                                    CompletedMoveMessage deniedMoveMessage = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
+                                    output.write("\nMove denied: " + deniedMoveMessage.getMoveMessage());
+                                    break;
+                                case ERROR:
+                                    output.write("\nERROR: " + srvMessage.getPayload());
+                                    break;
+                                case KEEP_ALIVE:
+                                    break;
                                 case GAME_START:
-                                    playID = srvMessage.getID();
-                                    output.write(String.format("\nGame with id=[%s] started against [%s].", playID, srvMessage.getPayload()));
+                                    String gameStartPlayID = srvMessage.getID();
+                                    output.write(String.format("\nGame with id=[%s] started against [%s].", gameStartPlayID, srvMessage.getPayload()));
                                     StompHeaders stompHeaders = new StompHeaders();
                                     stompHeaders.add("Authorization", token);
                                     stompHeaders.setDestination("/app/play");
-                                    stompSession.send(stompHeaders, playID);
+                                    stompSession.send(stompHeaders, gameStartPlayID);
                                     break;
                                 case NEED_TO_MOVE:
-                                    output.write(String.format("\n%s ", srvMessage.getPayload()));
+                                    String newMovePlayID = srvMessage.getID();
+                                    output.write(String.format("\n%s \nAnswer: ", srvMessage.getPayload()));
                                     output.flush();
+                                    if (!scanner.hasNext()) {
+                                        try {
+                                            Thread.sleep(1000);
+                                        } catch (Exception ignored) {
+                                        }
+                                    }
                                     String newMove = scanner.next();
-                                    stompSession.send("/app/move", new DefaultSTOMPMessage("", newMove, STOMPMessageType.NEW_MOVE, null, playID));
+                                    stompSession.send("/app/move", new DefaultSTOMPMessage("", newMove, STOMPMessageType.NEW_MOVE, null, newMovePlayID));
                                     break;
                                 case GAME_OVER:
                                     output.write("\nGame result: " + srvMessage.getPayload());
                                     finished = true;
                                     break;
                                 default:
-                                    //Non-interactive messages are handled in the session handler
+                                    throw new IOException(String.format("Server shouldn't be sending these kind of messages: [%s]", srvMessage.toString()));
                             }
 
                             output.write("\n");

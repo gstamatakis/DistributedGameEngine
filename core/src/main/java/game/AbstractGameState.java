@@ -15,7 +15,7 @@ public abstract class AbstractGameState implements Serializable {
     protected Map<Integer, MoveMessage> movesPerRoundP1;
     protected Map<Integer, MoveMessage> movesPerRoundP2;
     protected int currentRound;
-    protected MoveMessage lastValidMove;
+    protected MoveMessage lastValidMoveMessage;
     protected GameTypeEnum gameTypeEnum;
     protected int winner;
     protected String createdBy;
@@ -46,6 +46,10 @@ public abstract class AbstractGameState implements Serializable {
 
     public abstract String emptyCell();
 
+    public String getPrintableBoard() {
+        return this.board.toString();
+    }
+
     @Override
     public String toString() {
         return "AbstractGameState{" +
@@ -55,7 +59,7 @@ public abstract class AbstractGameState implements Serializable {
                 ", movesPerRoundP1=" + movesPerRoundP1 +
                 ", movesPerRoundP2=" + movesPerRoundP2 +
                 ", currentRound=" + currentRound +
-                ", lastValidMove=" + lastValidMove +
+                ", lastValidMove=" + lastValidMoveMessage +
                 ", gameTypeEnum=" + gameTypeEnum +
                 ", winner='" + winner + '\'' +
                 ", createdBy='" + createdBy + '\'' +
@@ -87,8 +91,8 @@ public abstract class AbstractGameState implements Serializable {
         return playsSecondUsername;
     }
 
-    public MoveMessage getLastValidMove() {
-        return lastValidMove;
+    public MoveMessage getLastValidMoveMessage() {
+        return lastValidMoveMessage;
     }
 
     public GameTypeEnum getGameTypeEnum() {

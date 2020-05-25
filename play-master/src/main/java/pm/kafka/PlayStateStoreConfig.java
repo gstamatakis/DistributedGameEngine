@@ -3,7 +3,6 @@ package pm.kafka;
 import message.DefaultKafkaMessage;
 import message.created.PlayMessage;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
@@ -31,7 +30,7 @@ public class PlayStateStoreConfig {
     @Bean
     public Consumer<KStream<String, DefaultKafkaMessage>> processStatePlay() {
         return stream -> {
-            stream.foreach((key, value) -> logger.info(String.format("Consumed [%s,%s]", key, value.toString())));
+            stream.foreach((key, value) -> logger.info(String.format("processStatePlay: Consumed [%s,%s]", key, value == null ? null : value.toString())));
 
             stream
                     .mapValues(value -> value == null

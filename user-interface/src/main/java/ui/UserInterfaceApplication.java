@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import ui.model.UserEntity;
+import ui.service.EventListenerService;
 import ui.service.UserService;
 
 @SpringBootApplication
@@ -20,6 +21,9 @@ public class UserInterfaceApplication implements CommandLineRunner {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    EventListenerService eventListenerService;
 
     public static void main(String[] args) {
         SpringApplication.run(UserInterfaceApplication.class, args);

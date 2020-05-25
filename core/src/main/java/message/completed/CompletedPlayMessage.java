@@ -35,6 +35,10 @@ public class CompletedPlayMessage {
                 '}';
     }
 
+    public boolean isTie() {
+        return this.getWinner().isEmpty();
+    }
+
     public String getWinner() {
         if (winner == -1) {
             return p1;

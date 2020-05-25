@@ -24,7 +24,7 @@ public class ChessGameState extends AbstractGameState {
                 ", movesPerRoundP1=" + movesPerRoundP1 +
                 ", movesPerRoundP2=" + movesPerRoundP2 +
                 ", currentRound=" + currentRound +
-                ", lastValidMove=" + lastValidMove +
+                ", lastValidMove=" + lastValidMoveMessage +
                 ", gameTypeEnum=" + gameTypeEnum +
                 ", winner='" + winner + '\'' +
                 ", createdBy='" + createdBy + '\'' +

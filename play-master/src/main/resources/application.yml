@@ -12,6 +12,7 @@ spring:
     livereload:
       port: 12346
   cloud.stream:
+    function.definition: processPlaysAndMoves;processStatePlay
     bindings:
       processPlaysAndMoves-in-0:
         destination: new-moves
@@ -31,7 +32,6 @@ spring:
         destination: ongoing-plays
         group: group2
         auto.offset.reset: latest
-    function.definition: processPlaysAndMoves;processStatePlay
     kafka:
       streams.binder.configuration.application.server: localhost:18082
       binder:

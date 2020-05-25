@@ -1,6 +1,7 @@
 package gm.kafka;
 
 
+import gm.transformer.ScoreToStoreTransformer;
 import message.DefaultKafkaMessage;
 import message.completed.CompletedPlayMessage;
 import message.completed.UserScore;
@@ -24,7 +25,7 @@ import java.util.function.Consumer;
 @Component
 @SuppressWarnings({"rawtypes", "unchecked"})
 /*
-The score of a practice play is recorded seperately from the score obtained in
+The score of a practice play is recorded separately from the score obtained in
 tournament plays. The number of plays each user participated in, the number
 of wins, ties and losses, and the total score of each play are kept.
 That is, for each user there are three scores:
@@ -34,6 +35,8 @@ played). A player can only see the total score of other players.
 
 Tournament scores: The scores of each individual play are available to all
 players.
+
+Everything is kept in a persistent state store, available for interactive queries.
  */
 public class ProcessUserScoresConfig {
     private static final Logger logger = LoggerFactory.getLogger(ProcessUserScoresConfig.class);
@@ -53,7 +56,7 @@ public class ProcessUserScoresConfig {
     @Bean
     public Consumer<KStream<String, DefaultKafkaMessage>> processUserScores() {
         return completedPlaysStream -> {
-            completedPlaysStream.foreach((key, value) -> logger.info(String.format("Consumed [%s,%s]", key, value.toString())));
+            completedPlaysStream.foreach((key, value) -> logger.info(String.format("processUserScores: Consumed [%s,%s]", key, value == null ? null : value.toString())));
 
             //Map to plays messages
             KStream<String, CompletedPlayMessage> plays = completedPlaysStream.mapValues(value -> (CompletedPlayMessage) value.retrieve(CompletedPlayMessage.class.getCanonicalName()));
@@ -68,36 +71,46 @@ public class ProcessUserScoresConfig {
 
             //Update scores for each play type
             practicePlays
-                    .flatMap((KeyValueMapper<String, CompletedPlayMessage, Iterable<KeyValue<String, UserScore>>>) (key, value) -> {
-                        List<KeyValue<String, UserScore>> result = new ArrayList<>();
-                        result.add(KeyValue.pair(value.getP1(), new UserScore(value.getP1(), value)));
-                        result.add(KeyValue.pair(value.getP2(), new UserScore(value.getP2(), value)));
+                    .flatMap((KeyValueMapper<String, CompletedPlayMessage, Iterable<KeyValue<String, DefaultKafkaMessage>>>) (key, value) -> {
+                        List<KeyValue<String, DefaultKafkaMessage>> result = new ArrayList<>();
+                        result.add(KeyValue.pair(value.getP1(), new DefaultKafkaMessage(new UserScore(value.getP1(), value), UserScore.class.getCanonicalName())));
+                        result.add(KeyValue.pair(value.getP2(), new DefaultKafkaMessage(new UserScore(value.getP2(), value), UserScore.class.getCanonicalName())));
                         return result;
                     })
                     .groupByKey()
-                    .reduce(UserScore::merge)
+                    .reduce((value1, value2) -> {
+                        UserScore userScore1 = (UserScore) value1.retrieve(UserScore.class.getCanonicalName());
+                        UserScore userScore2 = (UserScore) value2.retrieve(UserScore.class.getCanonicalName());
+                        UserScore merged = userScore1.merge(userScore2);
+                        return new DefaultKafkaMessage(merged, UserScore.class.getCanonicalName());
+                    })
                     .mapValues(value -> {
-                        logger.info(String.format("PracticeScoresStore: [%s]", value.toString()));
+                        logger.info(String.format("processUserScores: PracticeScoresStore: [%s]", value));
                         return value;
                     })
                     .toStream()
-                    .to(practiceScoreStore);
+                    .transform(() -> new ScoreToStoreTransformer(practiceScoreStore), practiceScoreStore);
 
             tournamentPlays
-                    .flatMap((KeyValueMapper<String, CompletedPlayMessage, Iterable<KeyValue<String, UserScore>>>) (key, value) -> {
-                        List<KeyValue<String, UserScore>> result = new ArrayList<>();
-                        result.add(KeyValue.pair(value.getP1(), new UserScore(value.getP1(), value)));
-                        result.add(KeyValue.pair(value.getP2(), new UserScore(value.getP2(), value)));
+                    .flatMap((KeyValueMapper<String, CompletedPlayMessage, Iterable<KeyValue<String, DefaultKafkaMessage>>>) (key, value) -> {
+                        List<KeyValue<String, DefaultKafkaMessage>> result = new ArrayList<>();
+                        result.add(KeyValue.pair(value.getP1(), new DefaultKafkaMessage(new UserScore(value.getP1(), value), UserScore.class.getCanonicalName())));
+                        result.add(KeyValue.pair(value.getP2(), new DefaultKafkaMessage(new UserScore(value.getP2(), value), UserScore.class.getCanonicalName())));
                         return result;
                     })
                     .groupByKey()
-                    .reduce(UserScore::merge)
+                    .reduce((value1, value2) -> {
+                        UserScore userScore1 = (UserScore) value1.retrieve(UserScore.class.getCanonicalName());
+                        UserScore userScore2 = (UserScore) value2.retrieve(UserScore.class.getCanonicalName());
+                        UserScore merged = userScore1.merge(userScore2);
+                        return new DefaultKafkaMessage(merged, UserScore.class.getCanonicalName());
+                    })
                     .mapValues(value -> {
-                        logger.info(String.format("TournamentScoresStore: [%s]", value.toString()));
+                        logger.info(String.format("processUserScores: TournamentScoresStore: [%s]", value.toString()));
                         return value;
                     })
                     .toStream()
-                    .to(tournamentScoreStore);
+                    .transform(() -> new ScoreToStoreTransformer(tournamentScoreStore), tournamentScoreStore);
         };
     }
 }

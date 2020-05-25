@@ -39,7 +39,7 @@ public class DefaultSTOMPMessage implements Serializable {
                 "principal='" + principal + '\'' +
                 ", payload='" + payload + '\'' +
                 ", time='" + time + '\'' +
-                ", messageType=" + messageType.toString() +
+                ", messageType=" + messageType.name() +
                 ", ack='" + ack + '\'' +
                 ", ID='" + ID + '\'' +
                 '}';
