@@ -4,9 +4,9 @@ import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.net.URL;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -40,8 +40,27 @@ class GameClientTest {
     }
 
     @Test
+    @Order(0)
+    public void concurrent_2_practice_players_test() throws ExecutionException, InterruptedException {
+        //Submit user actions
+        List<Future<String>> futures = new ArrayList<>();
+        for (File file : Arrays.asList(clientActionFiles).subList(0, 2)) {
+            UserActionTask callable = new UserActionTask(file, false);
+            Future<String> future = executorService.submit(callable);
+            futures.add(future);
+        }
+        logger.info("Invoked all actions.");
+
+        //Wait for futures to complete
+        for (Future<String> future : futures) {
+            String res = future.get();
+            Assertions.assertEquals("CALLABLE_OK", res);
+        }
+        logger.info("Completed the processing of all Futures.");
+    }
+
+    @Test
     @Order(1)
-    @Disabled
     public void concurrent_practice_players_test() throws ExecutionException, InterruptedException {
         //Submit user actions
         List<Future<String>> futures = new ArrayList<>();
@@ -61,7 +80,7 @@ class GameClientTest {
     }
 
     @Test
-    @Order(1)
+    @Order(2)
     public void concurrent_tournament_players_test() throws ExecutionException, InterruptedException {
         //Submit the actions of the Official(s)
         List<Future<String>> officialsActions = new ArrayList<>();

@@ -58,7 +58,7 @@ public class GMController {
         return "Sent " + value;
     }
 
-    @GetMapping(value = "/score/{playType}")
+    @PostMapping(value = "/score/{playType}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_CLIENT')")
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Something went wrong"),

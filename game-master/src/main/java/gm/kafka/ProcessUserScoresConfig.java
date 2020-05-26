@@ -77,18 +77,10 @@ public class ProcessUserScoresConfig {
                         result.add(KeyValue.pair(value.getP2(), new DefaultKafkaMessage(new UserScore(value.getP2(), value), UserScore.class.getCanonicalName())));
                         return result;
                     })
-                    .groupByKey()
-                    .reduce((value1, value2) -> {
-                        UserScore userScore1 = (UserScore) value1.retrieve(UserScore.class.getCanonicalName());
-                        UserScore userScore2 = (UserScore) value2.retrieve(UserScore.class.getCanonicalName());
-                        UserScore merged = userScore1.merge(userScore2);
-                        return new DefaultKafkaMessage(merged, UserScore.class.getCanonicalName());
-                    })
                     .mapValues(value -> {
                         logger.info(String.format("processUserScores: PracticeScoresStore: [%s]", value));
                         return value;
                     })
-                    .toStream()
                     .transform(() -> new ScoreToStoreTransformer(practiceScoreStore), practiceScoreStore);
 
             tournamentPlays
@@ -98,18 +90,10 @@ public class ProcessUserScoresConfig {
                         result.add(KeyValue.pair(value.getP2(), new DefaultKafkaMessage(new UserScore(value.getP2(), value), UserScore.class.getCanonicalName())));
                         return result;
                     })
-                    .groupByKey()
-                    .reduce((value1, value2) -> {
-                        UserScore userScore1 = (UserScore) value1.retrieve(UserScore.class.getCanonicalName());
-                        UserScore userScore2 = (UserScore) value2.retrieve(UserScore.class.getCanonicalName());
-                        UserScore merged = userScore1.merge(userScore2);
-                        return new DefaultKafkaMessage(merged, UserScore.class.getCanonicalName());
-                    })
                     .mapValues(value -> {
                         logger.info(String.format("processUserScores: TournamentScoresStore: [%s]", value.toString()));
                         return value;
                     })
-                    .toStream()
                     .transform(() -> new ScoreToStoreTransformer(tournamentScoreStore), tournamentScoreStore);
         };
     }

@@ -34,7 +34,9 @@ public class PlayMoveTransformer implements Transformer<String, JoinedPlayMoveMe
         AbstractGameState curGameState = play.getGameState();
         CompletedMoveMessage output_move = curGameState.offerMove(move);
         play.setGameState(curGameState);
-        play.setLastPlayedBy(move.getUsername());  //Set the 'last modified flag' so the other user can be notified about his turn
+        if (output_move.isValid()) {
+            play.setLastPlayedBy(move.getUsername());  //
+        }
 
         //Forward the new move
         logger.info(String.format("transform() forwarding output move [%s].", output_move.toString()));

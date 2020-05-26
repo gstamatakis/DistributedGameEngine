@@ -58,7 +58,6 @@ public class MyStompSessionHandler implements StompSessionHandler {
     public void handleFrame(StompHeaders headers, Object payload) {
         DefaultSTOMPMessage msg = (DefaultSTOMPMessage) payload;
         msg.setAckID(headers.getAck());
-        logger.info(String.format("Receiving message [%s]", msg.toString()));
 
         if (!receivedMessageQueue.offer(msg)) {
             logger.warn("Queue of received STOMP messages is full! Discarding messages!");

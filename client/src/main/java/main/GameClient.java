@@ -7,6 +7,8 @@ import message.requests.RequestCreateTournamentMessage;
 import model.GameTypeEnum;
 import model.PlayTypeEnum;
 import org.apache.commons.cli.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompHeaders;
@@ -24,13 +26,16 @@ import websocket.STOMPMessageType;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class GameClient {
+    private static final Logger logger = LoggerFactory.getLogger(GameClient.class);
+
     private static final String SIGN_IN_URL = "http://localhost:8080/users/signin";
     private static final String SIGNUP_URL = "http://localhost:8080/users/signup";
     private static final String PRACTICE_URL = "http://localhost:8080/queue/practice";
-    private static final String SCORE_URL = "http://localhost:8080/user/score";
+    private static final String SCORE_URL = "http://localhost:8080/users/score";
     private static final String TOURNAMENT_CREATE_URL = "http://localhost:8080/queue/tournament/create";
     private static final String TOURNAMENT_JOIN_URL = "http://localhost:8080/queue/tournament/join";
     private static final String SEARCH_URL = "http://localhost:8080/users/";
@@ -94,7 +99,11 @@ public class GameClient {
         String username = "";
         WebSocketStompClient stompClient;
         StompSession stompSession = null;
+        GameTypeEnum selectedGT = null;
         ArrayBlockingQueue<DefaultSTOMPMessage> queue = new ArrayBlockingQueue<>(10);
+
+        //Timer for periodic updates
+        Timer timer = new Timer("Timer");
 
         while (true) {
             try {
@@ -157,7 +166,8 @@ public class GameClient {
 
                         output.write("\nEnter username: ");
                         output.flush();
-                        loginParams.add("username", scanner.next());
+                        String temp_username = scanner.next();
+                        loginParams.add("username", temp_username);
 
                         output.write("\nEnter password: ");
                         output.flush();
@@ -174,6 +184,7 @@ public class GameClient {
                         //Token
                         token = loginResponse.getBody();
                         output.write("\nToken: " + token);
+                        username = temp_username;
 
                         //Connect to the STOMP endpoint
                         stompClient = new WebSocketStompClient(new StandardWebSocketClient());
@@ -210,9 +221,26 @@ public class GameClient {
                         }
 
                         //Arguments
-                        output.write("\nQueueing up for a practice play. Enter preferred game type: ");
+                        output.write("\nQueueing up for a practice play. Enter preferred game type");
+                        output.write("\n1.TicTacToe \n2.Chess \nPress another key to return to menu\nAnswer: ");
                         output.flush();
-                        GameTypeEnum gameType = GameTypeEnum.valueOf(scanner.next());
+                        String response = scanner.next();
+                        output.write("\n");
+                        GameTypeEnum gameType;
+                        switch (response) {
+                            case "1":
+                                gameType = GameTypeEnum.TIC_TAC_TOE;
+                                break;
+                            case "2":
+                                gameType = GameTypeEnum.CHESS;
+                                break;
+                            default:
+                                gameType = null;
+                        }
+                        if (gameType == null) {
+                            break;
+                        }
+                        selectedGT = gameType;
                         output.write("\n" + gameType.toString());
                         output.flush();
 
@@ -284,111 +312,104 @@ public class GameClient {
                             break;
                         }
 
-
-                        boolean finished = false;
-
-                        while (!finished) {
-                            DefaultSTOMPMessage srvMessage = queue.poll(1000, TimeUnit.MILLISECONDS);
-
-                            if (ctrlC) {
-                                ctrlC = false;
-                                output.write("\nLeaving game..");
-                                output.flush();
-                                if (srvMessage != null) {
-                                    stompSession.acknowledge(srvMessage.getAck(), false);
+                        ConcurrentHashMap<String, String> board = new ConcurrentHashMap<>();
+                        switch (selectedGT) {
+                            case TIC_TAC_TOE:
+                                for (int i = 1; i <= 9; i++) {
+                                    board.put(String.valueOf(i), "_");
                                 }
                                 break;
-                            }
+                            case CHESS:
+                                break;
+                            default:
+                                throw new IllegalStateException("Client does not support this game type.");
+                        }
+
+                        boolean finished = false;
+                        timer.schedule(new MyTimerTask(stompSession, queue, token, username, output, board), 0, 100L);
+
+                        while (!finished) {
+                            long timeoutMS = 300 * 1000;
+                            DefaultSTOMPMessage srvMessage = queue.poll(timeoutMS, TimeUnit.MILLISECONDS);
 
                             if (srvMessage == null) {
-                                continue;
+                                output.write("\nWaited for " + timeoutMS + " ms. Giving up...");
+                                output.flush();
+                                break;
                             }
 
                             //Process incoming messages
                             switch (srvMessage.getMessageType()) {
-                                case NOTIFICATION:
-                                    output.write("\nNOTIFICATION: " + srvMessage.getPayload());
-                                    break;
-                                case FETCH_PLAY:
-                                    PlayMessage playMessage = gson.fromJson(srvMessage.getPayload(), PlayMessage.class);
-                                    if (playMessage == null) {
-                                        output.write("\nRetrieved null play..");
-                                    } else {
-                                        output.write("\nRetrieved play: " + playMessage.getGameState().getPrintableBoard());
-                                    }
-                                    break;
-                                case MOVE_ACCEPTED:
-                                    CompletedMoveMessage successfulMoveMessage2 = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
-                                    output.write("\nNew valid move: " + successfulMoveMessage2.getMoveMessage());
-                                    break;
-                                case MOVE_DENIED:
-                                    CompletedMoveMessage deniedMoveMessage = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
-                                    output.write("\nMove denied: " + deniedMoveMessage.getMoveMessage());
-                                    break;
-                                case ERROR:
-                                    output.write("\nERROR: " + srvMessage.getPayload());
-                                    break;
-                                case KEEP_ALIVE:
-                                    break;
-                                case GAME_START:
-                                    String gameStartPlayID = srvMessage.getID();
-                                    output.write(String.format("\nGame with id=[%s] started against [%s].", gameStartPlayID, srvMessage.getPayload()));
-                                    StompHeaders stompHeaders = new StompHeaders();
-                                    stompHeaders.add("Authorization", token);
-                                    stompHeaders.setDestination("/app/play");
-                                    stompSession.send(stompHeaders, gameStartPlayID);
-                                    break;
                                 case NEED_TO_MOVE:
+                                    //Ask to make a move only if there are no incoming notifications
+                                    if (queue.size() != 0) {
+                                        queue.add(srvMessage);
+                                        continue;
+                                    }
                                     String newMovePlayID = srvMessage.getID();
                                     output.write(String.format("\n%s \nAnswer: ", srvMessage.getPayload()));
                                     output.flush();
-                                    if (!scanner.hasNext()) {
-                                        try {
-                                            Thread.sleep(1000);
-                                        } catch (Exception ignored) {
+                                    if (scanner.hasNext()) {
+                                        String newMove = scanner.next();
+                                        synchronized (stompSession) {
+                                            stompSession.send("/app/move", new DefaultSTOMPMessage("", newMove, STOMPMessageType.NEW_MOVE, null, newMovePlayID));
                                         }
                                     }
-                                    String newMove = scanner.next();
-                                    stompSession.send("/app/move", new DefaultSTOMPMessage("", newMove, STOMPMessageType.NEW_MOVE, null, newMovePlayID));
+                                    output.write("\n");
+                                    output.flush();
                                     break;
                                 case GAME_OVER:
                                     output.write("\nGame result: " + srvMessage.getPayload());
+                                    output.write("\n");
+                                    output.flush();
                                     finished = true;
                                     break;
                                 default:
-                                    throw new IOException(String.format("Server shouldn't be sending these kind of messages: [%s]", srvMessage.toString()));
+                                    queue.add(srvMessage);
                             }
 
-                            output.write("\n");
-                            output.flush();
-
                             //Acknowledge the message
-                            stompSession.acknowledge(srvMessage.getAck(), true);
+                            synchronized (stompSession) {
+                                stompSession.acknowledge(srvMessage.getAck(), true);
+                            }
                         }
 
                         //Disconnect and continue
-                        stompSession.disconnect();
+                        timer.cancel(); //Finish this run and stop scheduling this task
                         output.write("\nDisconnected from server!");
                         output.flush();
                         break;
 
                     case 8:
+                        if (stompSession == null) {
+                            output.write("\nNeed to sign-in first.");
+                            output.flush();
+                            break;
+                        }
+
                         //Arguments
                         output.write("\nEnter username to search for.\nAnswer: ");
                         output.flush();
                         String usernameForStats = scanner.next();
-                        output.write("\nEnter play type to search for.\nAnswer: ");
+                        output.write("\nEnter play type to search for.\n1.Practice\n2.Tournament\n3.Press any other key to return to menu. \nAnswer: ");
                         output.flush();
-                        String gameTypeForSearch = PlayTypeEnum.valueOf(scanner.next()).name();
-
-                        HttpEntity<String> scoreSearchResponse;
-                        try {
-                            scoreSearchResponse = client.searchStats(SCORE_URL, gameTypeForSearch, username, token);
-                        } catch (Exception e) {
-                            output.write("\n" + e.getMessage());
-                            output.flush();
-                            return -1;
+                        String answ8 = scanner.next();
+                        String gameTypeForSearch;
+                        switch (answ8) {
+                            case "1":
+                                gameTypeForSearch = PlayTypeEnum.PRACTICE.name();
+                                break;
+                            case "2":
+                                gameTypeForSearch = PlayTypeEnum.TOURNAMENT.name();
+                                break;
+                            default:
+                                gameTypeForSearch = null;
                         }
+                        if (gameTypeForSearch == null) {
+                            break;
+                        }
+
+                        HttpEntity<String> scoreSearchResponse = client.searchStats(SCORE_URL, gameTypeForSearch, usernameForStats, token);
 
                         //Token
                         String selfSearchResult = scoreSearchResponse.getBody();
@@ -397,6 +418,12 @@ public class GameClient {
                         break;
 
                     case 9:
+                        if (stompSession == null) {
+                            output.write("\nNeed to sign-in first.");
+                            output.flush();
+                            break;
+                        }
+
                         //Arguments
                         output.write("\nSearch username: ");
                         output.flush();
@@ -404,14 +431,8 @@ public class GameClient {
                         output.write("\n" + usernameToSearch);
                         output.flush();
 
-                        HttpEntity<String> searchResponse;
-                        try {
-                            searchResponse = client.searchUser(SEARCH_URL, usernameToSearch, token);
-                        } catch (Exception e) {
-                            output.write("\n" + e.getMessage());
-                            output.flush();
-                            return -1;
-                        }
+                        //Perform the search request
+                        HttpEntity<String> searchResponse = client.searchUser(SEARCH_URL, usernameToSearch, token);
 
                         //Token
                         String searchResult = searchResponse.getBody();
@@ -432,6 +453,100 @@ public class GameClient {
             } catch (Exception e) {
                 output.write("\n\nError: " + e.getMessage());
                 output.flush();
+            }
+        }
+    }
+
+    static class MyTimerTask extends TimerTask {
+        private final StompSession stompSession;
+        private final ArrayBlockingQueue<DefaultSTOMPMessage> queue;
+        private final String token;
+        private final String username;
+        private BufferedWriter output;
+        private ConcurrentHashMap<String, String> board;
+
+        public MyTimerTask(StompSession stompSession, ArrayBlockingQueue<DefaultSTOMPMessage> queue, String token,
+                           String username, BufferedWriter output, ConcurrentHashMap<String, String> board) {
+            this.stompSession = stompSession;
+            this.queue = queue;
+            this.token = token;
+            this.username = username;
+            this.output = output;
+            this.board = board;
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    DefaultSTOMPMessage srvMessage = queue.poll(0, TimeUnit.MILLISECONDS);
+
+                    if (srvMessage == null) {
+                        return;
+                    }
+
+                    //Process incoming messages
+                    switch (srvMessage.getMessageType()) {
+                        case NOTIFICATION:
+                            output.write("\nNOTIFICATION: " + srvMessage.getPayload());
+                            output.write("\n");
+                            output.flush();
+                            break;
+                        case FETCH_PLAY:
+                            PlayMessage playMessage = gson.fromJson(srvMessage.getPayload(), PlayMessage.class);
+                            if (playMessage == null) {
+                                output.write("\nRetrieved null play..");
+                            } else {
+                                output.write("\nRetrieved play: " + playMessage.getGameState().getPrintableBoard());
+                            }
+                            output.write("\n");
+                            output.flush();
+                            break;
+                        case MOVE_ACCEPTED:
+                            CompletedMoveMessage successfulMoveMessage2 = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
+                            output.write("\nNew valid move: " + successfulMoveMessage2.getMoveMessage());
+                            board.put(successfulMoveMessage2.getMoveMessage().getMove(), successfulMoveMessage2.getPlayedByUsername());
+                            output.write("\n\nBoard\n" + board.toString());
+                            output.write("\n");
+                            output.flush();
+                            break;
+                        case MOVE_DENIED:
+                            CompletedMoveMessage deniedMoveMessage = gson.fromJson(srvMessage.getPayload(), CompletedMoveMessage.class);
+                            output.write("\nMove denied: " + deniedMoveMessage.getMoveMessage());
+                            output.write("\nCurrent Board: " + board.toString());
+                            output.write("\n");
+                            output.flush();
+                            break;
+                        case ERROR:
+                            output.write("\nERROR: " + srvMessage.getPayload());
+                            output.write("\n");
+                            output.flush();
+                            break;
+                        case KEEP_ALIVE:
+                            break;
+                        case GAME_START:
+                            String gameStartPlayID = srvMessage.getID();
+                            output.write(String.format("\nGame with id=[%s] started against [%s].", gameStartPlayID, srvMessage.getPayload()));
+                            StompHeaders stompHeaders = new StompHeaders();
+                            stompHeaders.add("Authorization", token);
+                            stompHeaders.setDestination("/app/play");
+                            synchronized (stompSession) {
+                                stompSession.send(stompHeaders, gameStartPlayID);
+                            }
+                            output.write("\n");
+                            output.flush();
+                            break;
+                        default:
+                            queue.add(srvMessage);
+                            break;
+                    }
+                    //Acknowledge the message
+                    synchronized (stompSession) {
+                        stompSession.acknowledge(srvMessage.getAck(), true);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }

@@ -59,7 +59,7 @@ public class PlayMessage implements Serializable {
     }
 
     public String getNeedsToMove() {
-        return getLastPlayedBy().equals(this.p1) ? this.p2 : this.p1;
+        return this.lastPlayedBy.equals(this.p1) ? this.p2 : this.p1;
     }
 
     public AbstractGameState getGameState() {

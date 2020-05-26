@@ -3,11 +3,14 @@ package game;
 import message.completed.CompletedMoveMessage;
 import message.created.MoveMessage;
 import model.GameTypeEnum;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class TicTacToeGameState extends AbstractGameState {
+    private static final Logger logger = LoggerFactory.getLogger(TicTacToeGameState.class);
     private String p1, p2;
 
     public TicTacToeGameState() {
@@ -41,14 +44,14 @@ public class TicTacToeGameState extends AbstractGameState {
     public CompletedMoveMessage offerMove(MoveMessage message) {
         String move = message.getMove();
         String playedBy = message.getUsername();
-        String opponent = getPlaysFirstUsername().equals(playedBy)
-                ? getPlaysSecondUsername()
-                : getPlaysFirstUsername();
+        String opponent = getPlaysFirstUsername().equals(playedBy) ? getPlaysSecondUsername() : getPlaysFirstUsername();
+        if (this.finished) {
+            logger.error("Trying to offer moves on a finished game.");
+            return new CompletedMoveMessage(false, playedBy, opponent, message, finished);
+        }
         boolean valid = isValidMove(message, getBoard());
         if (valid) {
-            Map<Integer, MoveMessage> movesPerRound = getPlaysFirstUsername().equals(playedBy)
-                    ? getMovesPerRoundP1()
-                    : getMovesPerRoundP2();
+            Map<Integer, MoveMessage> movesPerRound = getPlaysFirstUsername().equals(playedBy) ? getMovesPerRoundP1() : getMovesPerRoundP2();
             movesPerRound.put(getCurrentRound(), message);
             getBoard().put(move, playedBy);
             checkForVictor();
@@ -66,43 +69,47 @@ public class TicTacToeGameState extends AbstractGameState {
         if (!board.get("1").equals(emptyCell()) && board.get("1").equals(board.get("2")) && board.get("1").equals(board.get("3"))) {
             this.winner = board.get("1").equals(p1) ? -1 : 1;
             this.finished = true;
+            return;
         }
         if (!board.get("4").equals(emptyCell()) && board.get("4").equals(board.get("5")) && board.get("4").equals(board.get("6"))) {
             this.winner = board.get("4").equals(p1) ? -1 : 1;
             this.finished = true;
+            return;
         }
         if (!board.get("7").equals(emptyCell()) && board.get("7").equals(board.get("8")) && board.get("7").equals(board.get("9"))) {
             this.winner = board.get("7").equals(p1) ? -1 : 1;
             this.finished = true;
+            return;
         }
 
         //Check vertically
         if (!board.get("1").equals(emptyCell()) && board.get("1").equals(board.get("4")) && board.get("1").equals(board.get("7"))) {
             this.winner = board.get("1").equals(p1) ? -1 : 1;
             this.finished = true;
+            return;
         }
         if (!board.get("2").equals(emptyCell()) && board.get("2").equals(board.get("5")) && board.get("2").equals(board.get("8"))) {
             this.winner = board.get("2").equals(p1) ? -1 : 1;
             this.finished = true;
+            return;
         }
         if (!board.get("3").equals(emptyCell()) && board.get("3").equals(board.get("6")) && board.get("3").equals(board.get("9"))) {
             this.winner = board.get("3").equals(p1) ? -1 : 1;
             this.finished = true;
+            return;
         }
 
         //Check diagonally
         if (!board.get("1").equals(emptyCell()) && board.get("1").equals(board.get("5")) && board.get("1").equals(board.get("9"))) {
             this.winner = board.get("1").equals(p1) ? -1 : 1;
             this.finished = true;
+            return;
         }
         if (!board.get("3").equals(emptyCell()) && board.get("3").equals(board.get("5")) && board.get("3").equals(board.get("7"))) {
             this.winner = board.get("3").equals(p1) ? -1 : 1;
             this.finished = true;
+            return;
         }
-    }
-
-    private boolean cellIsMine(int cell, String username) {
-        return this.board.get(String.valueOf(cell)).equals(username);
     }
 
     @Override

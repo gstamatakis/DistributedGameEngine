@@ -40,8 +40,8 @@ public class UserController {
     @Autowired
     private ModelMapper modelMapper;
 
-    @Value(value = "${playmaster.store.url}")
-    private String playMasterURL;
+    @Value(value = "${gamemaster.store.url}")
+    private String gameMasterURL;
 
 
     @ExceptionHandler({CustomException.class})
@@ -109,31 +109,34 @@ public class UserController {
                                 @PathVariable String username,
                                 Principal principal) {
 
-        logger.info(String.format("Received message in retrieveScore from %s [%s].", principal.getName(), username));
+        logger.info(String.format("retrieveScore: Received message from %s to search [%s].", principal.getName(), username));
         PlayTypeEnum playTypeEnum = PlayTypeEnum.valueOf(playType);
         String destURL;
         switch (playTypeEnum) {
             case PRACTICE:
-                destURL = playMasterURL + "/score/practice/";
+                destURL = gameMasterURL + "/score/practice/";
                 break;
             case TOURNAMENT:
-                destURL = playMasterURL + "/score/tournament/";
+                destURL = gameMasterURL + "/score/tournament/";
                 break;
             default:
-                throw new IllegalStateException(String.format("Invalid play type supplied [%s]", playType));
+                throw new IllegalStateException(String.format("retrieveScore: Invalid play type supplied [%s]", playType));
         }
 
         //Message setup
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
+        headers.setBearerAuth(token.split(" ")[1]);
         HttpEntity<String> entity = new HttpEntity<>(username, headers);
 
         //Retrieve from PlayMaster service
         String scoreJson = restTemplate.postForEntity(destURL, entity, String.class).getBody();
         UserScore userScore = gson.fromJson(scoreJson, UserScore.class);
-        logger.info(String.format("Received score in retrieveScore from %s [%s].", username, userScore.toString()));
+        logger.info(String.format("retrieveScore: Received score from %s [%s].", username, userScore == null ? null : userScore.toString()));
 
         //Send it back to user
+        if (userScore == null) {
+            return (new UserScore(principal.getName())).getScoreString(playTypeEnum, principal.getName().equals(username));
+        }
         return userScore.getScoreString(playTypeEnum, principal.getName().equals(username));
     }
 

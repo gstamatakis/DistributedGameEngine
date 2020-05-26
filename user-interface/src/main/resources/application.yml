@@ -35,6 +35,7 @@ redis:
   enc_key: dkdi38393kd
 
 playmaster.store.url: "http://localhost:8082"
+gamemaster.store.url: "http://localhost:8081"
 
 server:
   port: 8080
