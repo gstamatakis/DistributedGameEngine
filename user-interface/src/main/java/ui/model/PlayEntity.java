@@ -1,6 +1,7 @@
 package ui.model;
 
 import message.completed.CompletedPlayMessage;
+import message.completed.CompletedTournamentMessage;
 import message.created.PlayMessage;
 import message.requests.RequestCreateTournamentMessage;
 import model.GameTypeEnum;
@@ -62,6 +63,11 @@ public class PlayEntity {
         this.gameType = newPlay.getTournamentGameType();
         this.playType = PlayTypeEnum.TOURNAMENT;
         this.spectatorList = "";
+    }
+
+    public PlayEntity(CompletedTournamentMessage completedTournamentMessage) {
+        this.playID = completedTournamentMessage.getId();
+        this.winnerPlayer = completedTournamentMessage.getWinnerUsernames().toString();
     }
 
     public void addSpectator(String username) {

@@ -1,6 +1,7 @@
 package gm.transformer;
 
 import message.DefaultKafkaMessage;
+import message.completed.CompletedTournamentMessage;
 import message.created.PlayMessage;
 import message.created.TournamentPlayMessage;
 import message.queue.JoinTournamentQueueMessage;
@@ -22,6 +23,7 @@ public class JoinTournamentTransformer implements Transformer<String, JoinTourna
     private final String pairTournamentPlayersStore;
     private final String userToGameIDStore;
     private final String gameIDToGameStore;
+    private final String completedTournamentsTopic = "completed-tournaments";
     private KeyValueStore<String, TournamentPlayMessage> pairTournamentPlayersKVStore;
     private KeyValueStore<String, PlayMessage> userToGameKVStore;
     private KeyValueStore<String, PlayMessage> gameIDToGameKVStore;
@@ -50,8 +52,7 @@ public class JoinTournamentTransformer implements Transformer<String, JoinTourna
             if (tournament.addPlayer(newPlayer)) {
                 logger.info("Added " + newPlayer.toString() + " to tournament " + tournament.getTournamentID());
                 if (tournament.isFull()) {
-                    List<String> players = new ArrayList<>();
-                    tournament.getPlayerUsernames().iterator().forEachRemaining(players::add);
+                    List<String> players = new ArrayList<>(tournament.getPlayerUsernames());
                     Iterator<String> playerIter = players.iterator();
                     int div = players.size() / 4;
                     int rem = players.size() % 4;
@@ -67,17 +68,22 @@ public class JoinTournamentTransformer implements Transformer<String, JoinTourna
                         userToGameKVStore.put(p1, newPlay);
                         userToGameKVStore.put(p2, newPlay);
                         gameIDToGameKVStore.put(newPlay.getID(), newPlay);
-                        logger.info(String.format("JoinTournamentTransformer forwarding [%s].", newPlay.toString()));
+                        logger.info(String.format("transform: forwarding [%s].", newPlay.toString()));
                         this.ctx.forward(newPlay.getID(), new DefaultKafkaMessage(newPlay, PlayMessage.class.getCanonicalName()));
                     }
 
-                    //If the tournament is over just delete the tournament message
+                    //If the tournament is over just delete the tournament message and update the new plays
                     //Otherwise, create a new smaller tournament with the same tournamentID and 0 participants
                     if (div == 0) {
+                        CompletedTournamentMessage finalMsg = new CompletedTournamentMessage(tournament);
+                        DefaultKafkaMessage newDKM = new DefaultKafkaMessage(finalMsg, CompletedTournamentMessage.class.getCanonicalName());
+                        this.ctx.forward(finalMsg.getId(), newDKM, completedTournamentsTopic);
+                        logger.info(String.format("transform: Finished tournament [%s].", finalMsg.toString()));
                         pairTournamentPlayersKVStore.delete(tournament.getTournamentID());
                     } else {
                         tournament.progressTournament();
                         pairTournamentPlayersKVStore.put(tournament.getTournamentID(), tournament);
+                        logger.info(String.format("transform: Updating tournament [%s].", tournament.toString()));
                     }
                 } else {
                     //Put the tournament message back into the store

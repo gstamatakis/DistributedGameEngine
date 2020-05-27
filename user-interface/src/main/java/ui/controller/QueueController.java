@@ -44,7 +44,7 @@ public class QueueController {
                                            @AuthenticationPrincipal UserDetails userDetails)
             throws InterruptedException, ExecutionException, TimeoutException {
 
-        logger.info(String.format("User [%s] request to join a practice play.", userDetails.toString()));
+        logger.info(String.format("User [%s] request to join a practice play.", userDetails.getUsername()));
         playService.enqueuePractice(userDetails.getUsername(), msg);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
@@ -59,7 +59,7 @@ public class QueueController {
                                                    @ApiParam("Create tournament msg") @RequestBody RequestCreateTournamentMessage msg)
             throws InterruptedException, ExecutionException, TimeoutException {
 
-        logger.info(String.format("User [%s] request to create a tournament play with ID=[%s].", userDetails.toString(), msg.getTournamentID()));
+        logger.info(String.format("User [%s] request to create a tournament play with ID=[%s].", userDetails.getUsername(), msg.getTournamentID()));
         playService.createTournament(userDetails.getUsername(), msg);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
@@ -74,7 +74,7 @@ public class QueueController {
                                                  @ApiParam("Join tournament msg") @RequestBody String tournamentID)
             throws InterruptedException, ExecutionException, TimeoutException {
 
-        logger.info(String.format("User [%s] request to join a tournament play with ID=[%s].", userDetails.toString(), tournamentID));
+        logger.info(String.format("User [%s] request to join a tournament play with ID=[%s].", userDetails.getUsername(), tournamentID));
         PlayEntity entity = playService.joinTournament(userDetails.getUsername(), tournamentID);
         return new ResponseEntity<>(entity.getGameType().name(), HttpStatus.OK);
     }

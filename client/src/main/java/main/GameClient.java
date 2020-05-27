@@ -93,6 +93,7 @@ public class GameClient {
         int result = handleInputs(scanner, output);
         output.write("\nExit code: " + result + "\n");
         output.close();
+        System.exit(0);
     }
 
     public static int handleInputs(Scanner scanner, BufferedWriter output) throws Exception {
@@ -426,7 +427,6 @@ public class GameClient {
                                     output.write("\nGame result: " + srvMessage.getPayload());
                                     output.write("\n");
                                     output.flush();
-                                    timer.schedule(new MyTimerTask(stompSession, queue, token, username, output, board), 0);    //Run once more to clean up remaining messages
                                     finished = true;
                                     break;
                                 default:
@@ -440,7 +440,6 @@ public class GameClient {
                         }
 
                         //Run once more and print out the last messages before finishing with this play
-                        timer.schedule(new MyTimerTask(stompSession, queue, token, username, output, board), 1000);
                         output.flush();
                         break;
 

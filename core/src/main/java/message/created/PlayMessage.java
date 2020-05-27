@@ -38,24 +38,24 @@ public class PlayMessage implements Serializable {
         this.lastUserWhoMoved = msg1.getCreatedBy();
     }
 
-    public PlayMessage(TournamentPlayMessage message, String msg1, String msg2, int remainingRounds, Object... gameStateArgs) {
-        this.p1 = msg1;
-        this.p2 = msg2;
-        this.ID = message.getTournamentID();
+    public PlayMessage(TournamentPlayMessage tournamentMsg, String p1, String p2, int remainingRounds, Object... gameStateArgs) {
+        this.p1 = p1;
+        this.p2 = p2;
+        this.ID = generateID(tournamentMsg, p1, p2);
         this.playTypeEnum = PlayTypeEnum.TOURNAMENT;
-        this.gameTypeEnum = message.getGameType();
+        this.gameTypeEnum = tournamentMsg.getGameType();
         this.createdAt = String.valueOf(LocalDateTime.now());
         this.remainingRounds = remainingRounds;
         this.gameState = gameSerializer.newGame(gameTypeEnum, gameStateArgs);
-        this.lastUserWhoMoved = message.getCreatedBy();
-    }
-
-    public static GameSerializer getGameSerializer() {
-        return gameSerializer;
+        this.lastUserWhoMoved = tournamentMsg.getCreatedBy();
     }
 
     private String generateID(PracticeQueueMessage msg1, PracticeQueueMessage msg2) {
         return System.nanoTime() + "_" + msg1.getCreatedBy().hashCode();
+    }
+
+    private String generateID(TournamentPlayMessage tournamentMsg, String p1, String p2) {
+        return String.format("%s_%s", System.nanoTime(), (tournamentMsg.getTournamentID() + p1 + p2).hashCode());
     }
 
     public String getNeedsToWait() {

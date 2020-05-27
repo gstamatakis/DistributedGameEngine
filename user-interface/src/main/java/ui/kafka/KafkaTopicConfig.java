@@ -50,6 +50,10 @@ public class KafkaTopicConfig {
         return new NewTopic("join-play", 1, replicationFactor);
     }
 
+    public NewTopic completedTournamentsTopic() {
+        return new NewTopic("completed-tournaments", 1, replicationFactor);
+    }
+
     @Bean
     public NewTopic ongoingPlaysTopic() {
         return new NewTopic("ongoing-plays", 1, replicationFactor);

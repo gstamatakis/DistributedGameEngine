@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import message.DefaultKafkaMessage;
 import message.completed.CompletedMoveMessage;
 import message.completed.CompletedPlayMessage;
+import message.completed.CompletedTournamentMessage;
 import message.created.PlayMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ public class EventListenerService {
     private final String ongoingPlaysTopic = "ongoing-plays";
     private final String completedPlaysTopic = "completed-plays";
     private final String completedMovesTopic = "completed-moves";
+    private final String completedTournamentsTopic = "completed-tournaments";
 
     private final Gson gson = new Gson();
     private final long timeout = 5;
@@ -104,6 +106,44 @@ public class EventListenerService {
                 playID));
     }
 
+    @KafkaListener(topics = completedTournamentsTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
+    public void listenForCompletedTournaments(@Payload String message,
+                                              @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) throws InterruptedException, ExecutionException, TimeoutException {
+        CompletedTournamentMessage completedTournamentMessage = (CompletedTournamentMessage) gson.fromJson(message, DefaultKafkaMessage.class).retrieve(CompletedTournamentMessage.class.getCanonicalName());
+        logger.info("listenForCompletedTournaments: Received completed tournament message: " + completedTournamentMessage.toString() + " from partition " + partition);
+
+        //Notification to all users
+        String winnerUsernames = completedTournamentMessage.getWinnerUsernames().toString();
+        for (String username : completedTournamentMessage.getWinnerUsernames()) {
+            messagingTemplate.convertAndSendToUser(username, "/queue/reply",
+                    new DefaultSTOMPMessage(
+                            username,
+                            String.format("Tournament [%s] winners [%s]", completedTournamentMessage.getId(), winnerUsernames),
+                            STOMPMessageType.NOTIFICATION,
+                            null,
+                            completedTournamentMessage.getId()));
+        }
+
+        //Handle the spectators
+        String playID = completedTournamentMessage.getId();
+        String winner = completedTournamentMessage.getId();
+        PlayEntity entry = playRepository.findByPlayID(playID);
+
+        if (entry != null) {
+            Set<String> spectators = entry.getSpectators();
+            if (!spectators.isEmpty()) {
+                for (String spectator : spectators) {
+                    messagingTemplate.convertAndSendToUser(spectator, "/queue/reply",
+                            new DefaultSTOMPMessage(spectator, winner, STOMPMessageType.GAME_OVER, null, playID));
+                    logger.info(String.format("listenForCompletedPlays: Sent winner [%s] to spectator [%s] for playID=[%s].", winner, spectator, playID));
+                }
+            }
+        }
+
+        //Also save to database
+        playRepository.saveAndFlush(new PlayEntity(completedTournamentMessage));
+    }
+
     @KafkaListener(topics = completedPlaysTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
     public void listenForCompletedPlays(@Payload String message,
                                         @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) throws InterruptedException, ExecutionException, TimeoutException {
@@ -163,7 +203,7 @@ public class EventListenerService {
         //Send a Tombstone message to the ongoing-plays topic to remove the finished play
         //Make sure necessary info like scores is kept safe
         kafkaMessageTemplate
-                .send(ongoingPlaysTopic, completedPlayMessage.getPlayID(), null)
+                .send(ongoingPlaysTopic, completedPlayMessage.getPlayID(), null)    //TOMBSTONE MESSAGE
                 .get(timeout, TimeUnit.SECONDS);
 
         //Also save to database

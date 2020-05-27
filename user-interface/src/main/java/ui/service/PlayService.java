@@ -1,5 +1,6 @@
 package ui.service;
 
+import exception.CustomException;
 import message.DefaultKafkaMessage;
 import message.created.MoveMessage;
 import message.queue.CreateTournamentQueueMessage;
@@ -11,6 +12,7 @@ import model.GameTypeEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import ui.model.PlayEntity;
@@ -78,7 +80,7 @@ public class PlayService {
     public PlayEntity joinTournament(String username, String tournamentID) throws InterruptedException, ExecutionException, TimeoutException {
         PlayEntity entity = playRepository.findByPlayID(tournamentID);
         if (entity == null) {
-            throw new IllegalStateException("Tournament ID doesn't exist!");
+            throw new CustomException("Tournament ID doesn't exist!", HttpStatus.UNPROCESSABLE_ENTITY);
         }
         JoinTournamentQueueMessage newMsg = new JoinTournamentQueueMessage(username, tournamentID);
         kafkaMessageTemplate
