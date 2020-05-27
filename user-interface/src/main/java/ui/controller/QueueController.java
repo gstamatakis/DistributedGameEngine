@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
+import ui.model.PlayEntity;
 import ui.service.PlayService;
 
 import java.util.concurrent.ExecutionException;
@@ -28,7 +29,7 @@ public class QueueController {
     @Autowired
     private PlayService playService;
 
-    @ExceptionHandler({CustomException.class})
+    @ExceptionHandler({Exception.class, CustomException.class})
     public ResponseEntity<String> handleConflict(CustomException ex, WebRequest request) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
     }
@@ -74,8 +75,8 @@ public class QueueController {
             throws InterruptedException, ExecutionException, TimeoutException {
 
         logger.info(String.format("User [%s] request to join a tournament play with ID=[%s].", userDetails.toString(), tournamentID));
-        playService.joinTournament(userDetails.getUsername(), tournamentID);
-        return new ResponseEntity<>("OK", HttpStatus.OK);
+        PlayEntity entity = playService.joinTournament(userDetails.getUsername(), tournamentID);
+        return new ResponseEntity<>(entity.getGameType().name(), HttpStatus.OK);
     }
 
 }

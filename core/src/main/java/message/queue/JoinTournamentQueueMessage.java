@@ -13,7 +13,7 @@ public class JoinTournamentQueueMessage extends DefaultPlayMessage {
 
     @Override
     public String toString() {
-        return super.toString() +  "JoinTournamentQueueMessage{" +
+        return super.toString() + "JoinTournamentQueueMessage{" +
                 "tournamentID='" + tournamentID + '\'' +
                 '}';
     }

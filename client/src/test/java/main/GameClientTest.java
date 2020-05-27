@@ -39,6 +39,12 @@ class GameClientTest {
         }
     }
 
+    private static File[] getClientActionFiles(String resource, String prefix) {
+        String dirName = Thread.currentThread().getContextClassLoader().getResource(resource).getFile();
+        File dir = new File(dirName);
+        return dir.listFiles((dir1, name) -> name.startsWith(prefix) && name.endsWith(".txt"));
+    }
+
     @Test
     @Order(0)
     public void concurrent_2_practice_players_test() throws ExecutionException, InterruptedException {
@@ -131,11 +137,5 @@ class GameClientTest {
                 return e.getMessage();
             }
         }
-    }
-
-    private static File[] getClientActionFiles(String resource, String prefix) {
-        String dirName = Thread.currentThread().getContextClassLoader().getResource(resource).getFile();
-        File dir = new File(dirName);
-        return dir.listFiles((dir1, name) -> name.startsWith(prefix) && name.endsWith(".txt"));
     }
 }

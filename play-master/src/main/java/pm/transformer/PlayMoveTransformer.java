@@ -35,7 +35,7 @@ public class PlayMoveTransformer implements Transformer<String, JoinedPlayMoveMe
         CompletedMoveMessage output_move = curGameState.offerMove(move);
         play.setGameState(curGameState);
         if (output_move.isValid()) {
-            play.setLastPlayedBy(move.getUsername());  //
+            play.setLastUserWhoMoved(move.getUsername());  //
         }
 
         //Forward the new move

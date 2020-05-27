@@ -12,13 +12,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 @EnableWebSecurity
 public class GameMasterApplication implements ApplicationRunner {
 
+    public static void main(String[] args) {
+        SpringApplication.run(GameMasterApplication.class, args);
+    }
+
     @Bean
     public ModelMapper modelMapper() {
         return new ModelMapper();
-    }
-
-    public static void main(String[] args) {
-        SpringApplication.run(GameMasterApplication.class, args);
     }
 
     @Override

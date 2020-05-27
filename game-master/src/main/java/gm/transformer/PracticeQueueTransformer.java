@@ -22,10 +22,10 @@ public class PracticeQueueTransformer implements Transformer<String, PracticeQue
     private final String pairPracticePlayersStore;
     private final String userToGameIDStore;
     private final String gameIDToGameStore;
+    private final long BATCH_DURATION_SEC = 3;
     private KeyValueStore<String, PracticeQueueMessage> pairPracticePlayersKVStore;
     private KeyValueStore<String, PlayMessage> userToGameKVStore;
     private KeyValueStore<String, PlayMessage> gameIDToGameKVStore;
-    private final long BATCH_DURATION_SEC = 3;
 
     public PracticeQueueTransformer(String pairPracticePlayersStore, String userToGameIDStore, String gameIDToGameStore) {
         this.pairPracticePlayersStore = pairPracticePlayersStore;

@@ -9,9 +9,8 @@ import java.io.Serializable;
 public class DefaultKafkaMessage implements Serializable {
     private static final Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(DefaultKafkaMessage.class);
-
-    private String payload;
     private final String label;
+    private String payload;
 
     public DefaultKafkaMessage() {
         this.payload = "";

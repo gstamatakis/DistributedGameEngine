@@ -1,5 +1,3 @@
-import javax.swing.*;
-
 /**
  * The WorkerThread (actually not a thread at all) has a method called doWork() which is called whenever the user clicks the board.
  * This class\method then creates a "real" seperate thread for ther operation and executes it

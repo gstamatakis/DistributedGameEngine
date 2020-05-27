@@ -1,11 +1,11 @@
 package gm.kafka;
 
 import message.DefaultKafkaMessage;
+import message.completed.UserScore;
 import message.created.PlayMessage;
 import message.queue.CreateTournamentQueueMessage;
 import message.queue.JoinTournamentQueueMessage;
 import message.queue.PracticeQueueMessage;
-import message.completed.UserScore;
 import org.apache.kafka.common.serialization.Serde;
 import org.springframework.context.annotation.Bean;
 import serde.*;

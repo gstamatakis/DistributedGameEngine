@@ -1,6 +1,4 @@
-import javax.swing.*;
 import javax.swing.border.EtchedBorder;
-import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 

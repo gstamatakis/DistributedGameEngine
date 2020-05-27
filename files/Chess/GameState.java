@@ -1,6 +1,3 @@
-import javax.swing.*;
-
-
 /**
  * This Class stores various information about the 'state'
  * of the game. Like whose turn it is to move and which unit

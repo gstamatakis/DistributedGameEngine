@@ -64,6 +64,22 @@ public class UserInterfaceApplication implements CommandLineRunner {
         client2.setEmail("client2@email.com");
         client2.setRole(Role.ROLE_CLIENT);
         userService.signup(client2);
+
+        UserEntity client3 = new UserEntity();
+        client3.setUsername("client3");
+        client3.setPassword("client3");
+        client3.setEmail("client3@email.com");
+        client3.setRole(Role.ROLE_CLIENT);
+        userService.signup(client3);
+
+        UserEntity client4 = new UserEntity();
+        client4.setUsername("client4");
+        client4.setPassword("client4");
+        client4.setEmail("client4@email.com");
+        client4.setRole(Role.ROLE_CLIENT);
+        userService.signup(client4);
+
+        logger.info("Signed up users [admin,official,client1,client2,client3,client4] with passwords their usernames.");
     }
 
 }

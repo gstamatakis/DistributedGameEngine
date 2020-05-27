@@ -16,7 +16,7 @@ public class RequestPracticeMessage extends DefaultPlayMessage {
 
     @Override
     public String toString() {
-        return super.toString() +  "RequestPracticeMessage{}";
+        return super.toString() + "RequestPracticeMessage{}";
     }
 }
 

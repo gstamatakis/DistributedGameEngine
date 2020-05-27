@@ -1,12 +1,17 @@
 package ui.model;
 
+import message.completed.CompletedPlayMessage;
+import message.created.PlayMessage;
+import message.requests.RequestCreateTournamentMessage;
 import model.GameTypeEnum;
 import model.PlayTypeEnum;
-import message.completed.CompletedPlayMessage;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class PlayEntity {
@@ -23,17 +28,10 @@ public class PlayEntity {
     private GameTypeEnum gameType;
     @Column
     private PlayTypeEnum playType;
+    @Column
+    private String spectatorList;
 
     public PlayEntity() {
-    }
-
-    public PlayEntity(String playID, String winnerPlayer, String loserPlayer, String createdBy, GameTypeEnum gameType, PlayTypeEnum playType) {
-        this.playID = playID;
-        this.winnerPlayer = winnerPlayer;
-        this.loserPlayer = loserPlayer;
-        this.createdBy = createdBy;
-        this.gameType = gameType;
-        this.playType = playType;
     }
 
     public PlayEntity(CompletedPlayMessage finishedPlay) {
@@ -43,10 +41,39 @@ public class PlayEntity {
         this.createdBy = finishedPlay.getCreatedBy();
         this.gameType = finishedPlay.getGameType();
         this.playType = finishedPlay.getPlayType();
+        this.spectatorList = "";
     }
 
-    public PlayEntity(String tournamentID) {
-        this.playID = tournamentID;
+    public PlayEntity(PlayMessage newPlay) {
+        this.playID = newPlay.getID();
+        this.winnerPlayer = "";
+        this.loserPlayer = "";
+        this.createdBy = newPlay.getP1();
+        this.gameType = newPlay.getGameTypeEnum();
+        this.playType = newPlay.getPlayTypeEnum();
+        this.spectatorList = "";
+    }
+
+    public PlayEntity(RequestCreateTournamentMessage newPlay, String username) {
+        this.playID = newPlay.getTournamentID();
+        this.winnerPlayer = "";
+        this.loserPlayer = "";
+        this.createdBy = username;
+        this.gameType = newPlay.getTournamentGameType();
+        this.playType = PlayTypeEnum.TOURNAMENT;
+        this.spectatorList = "";
+    }
+
+    public void addSpectator(String username) {
+        if (!this.spectatorList.isEmpty()) {
+            this.spectatorList += ",";
+        }
+        this.spectatorList += username;
+    }
+
+    public Set<String> getSpectators() {
+        String[] users = this.spectatorList.split(",");
+        return new HashSet<>(Arrays.asList(users));
     }
 
     @Override
@@ -58,6 +85,7 @@ public class PlayEntity {
                 ", createdBy='" + createdBy + '\'' +
                 ", gameType=" + gameType +
                 ", playType=" + playType +
+                ", spectatorList=" + spectatorList +
                 '}';
     }
 
@@ -72,6 +100,8 @@ public class PlayEntity {
         if (winnerPlayer != null ? !winnerPlayer.equals(that.winnerPlayer) : that.winnerPlayer != null) return false;
         if (loserPlayer != null ? !loserPlayer.equals(that.loserPlayer) : that.loserPlayer != null) return false;
         if (createdBy != null ? !createdBy.equals(that.createdBy) : that.createdBy != null) return false;
+        if (spectatorList != null ? !spectatorList.equals(that.spectatorList) : that.spectatorList != null)
+            return false;
         if (gameType != that.gameType) return false;
         return playType == that.playType;
     }
@@ -84,6 +114,7 @@ public class PlayEntity {
         result = 31 * result + (createdBy != null ? createdBy.hashCode() : 0);
         result = 31 * result + (gameType != null ? gameType.hashCode() : 0);
         result = 31 * result + (playType != null ? playType.hashCode() : 0);
+        result = 31 * result + (spectatorList != null ? spectatorList.hashCode() : 0);
         return result;
     }
 
@@ -134,4 +165,5 @@ public class PlayEntity {
     public void setPlayType(PlayTypeEnum playType) {
         this.playType = playType;
     }
+
 }

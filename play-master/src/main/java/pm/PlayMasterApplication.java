@@ -9,13 +9,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 @SpringBootApplication
 @EnableWebSecurity
 public class PlayMasterApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(PlayMasterApplication.class, args);
+    }
+
     @Bean
     public ModelMapper modelMapper() {
         return new ModelMapper();
-    }
-
-    public static void main(String[] args) {
-        SpringApplication.run(PlayMasterApplication.class, args);
     }
 
 }

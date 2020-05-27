@@ -20,6 +20,7 @@ import ui.repository.PlayRepository;
 import websocket.DefaultSTOMPMessage;
 import websocket.STOMPMessageType;
 
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -61,7 +62,7 @@ public class EventListenerService {
                 null,
                 playID));
 
-        //P2
+        //Spectators can now access this play
         messagingTemplate.convertAndSendToUser(newPlay.getP2(), "/queue/reply",
                 new DefaultSTOMPMessage(
                         newPlay.getP2(),
@@ -69,6 +70,8 @@ public class EventListenerService {
                         STOMPMessageType.GAME_START,
                         null,
                         playID));
+
+        playRepository.saveAndFlush(new PlayEntity(newPlay));
     }
 
 
@@ -76,7 +79,6 @@ public class EventListenerService {
     public void listenOngoingPlays(@Payload String message,
                                    @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
         if (message == null || message.equals("null")) {
-            logger.error("listenOngoingPlays: Received null message.");
             return;
         }
 
@@ -89,14 +91,14 @@ public class EventListenerService {
         messagingTemplate.convertAndSendToUser(ongoingPlay.getNeedsToMove(), "/queue/reply",
                 new DefaultSTOMPMessage(
                         ongoingPlay.getNeedsToMove(),
-                        String.format("You need to make a move %s ", ongoingPlay.getNeedsToMove()),
+                        String.format("You need to make a move [%s] ", ongoingPlay.getNeedsToMove()),
                         STOMPMessageType.NEED_TO_MOVE,
                         null,
                         playID));
 
         messagingTemplate.convertAndSendToUser(ongoingPlay.getNeedsToWait(), "/queue/reply", new DefaultSTOMPMessage(
                 ongoingPlay.getNeedsToWait(),
-                String.format("Waiting for %s to make a move.", ongoingPlay.getNeedsToMove()),
+                String.format("Waiting for [%s] to make a move.", ongoingPlay.getNeedsToMove()),
                 STOMPMessageType.NOTIFICATION,
                 null,
                 playID));
@@ -112,7 +114,7 @@ public class EventListenerService {
             messagingTemplate.convertAndSendToUser(completedPlayMessage.getP1(), "/queue/reply",
                     new DefaultSTOMPMessage(
                             completedPlayMessage.getP1(),
-                            String.format("You tied against %s", completedPlayMessage.getP2()),
+                            String.format("Game TIE between [%s] and [%s].", completedPlayMessage.getP1(), completedPlayMessage.getP2()),
                             STOMPMessageType.GAME_OVER,
                             null,
                             completedPlayMessage.getPlayID()));
@@ -120,7 +122,7 @@ public class EventListenerService {
             messagingTemplate.convertAndSendToUser(completedPlayMessage.getP2(), "/queue/reply",
                     new DefaultSTOMPMessage(
                             completedPlayMessage.getP2(),
-                            String.format("You tied against %s", completedPlayMessage.getP1()),
+                            String.format("Game TIE between [%s] and [%s].", completedPlayMessage.getP1(), completedPlayMessage.getP2()),
                             STOMPMessageType.GAME_OVER,
                             null,
                             completedPlayMessage.getPlayID()));
@@ -128,7 +130,7 @@ public class EventListenerService {
             messagingTemplate.convertAndSendToUser(completedPlayMessage.getWinner(), "/queue/reply",
                     new DefaultSTOMPMessage(
                             completedPlayMessage.getWinner(),
-                            String.format("You *WON* against %s", completedPlayMessage.getLoser()),
+                            String.format("Winner=[%s],Loser=[%s]", completedPlayMessage.getWinner(), completedPlayMessage.getLoser()),
                             STOMPMessageType.GAME_OVER,
                             null,
                             completedPlayMessage.getPlayID()));
@@ -136,10 +138,26 @@ public class EventListenerService {
             messagingTemplate.convertAndSendToUser(completedPlayMessage.getLoser(), "/queue/reply",
                     new DefaultSTOMPMessage(
                             completedPlayMessage.getLoser(),
-                            String.format("You *LOST* against %s", completedPlayMessage.getWinner()),
+                            String.format("Winner=[%s],Loser=[%s]", completedPlayMessage.getWinner(), completedPlayMessage.getLoser()),
                             STOMPMessageType.GAME_OVER,
                             null,
                             completedPlayMessage.getPlayID()));
+        }
+
+        //Handle the spectators
+        String playID = completedPlayMessage.getPlayID();
+        String winner = completedPlayMessage.getWinner();
+        PlayEntity entry = playRepository.findByPlayID(playID);
+
+        if (entry != null) {
+            Set<String> spectators = entry.getSpectators();
+            if (!spectators.isEmpty()) {
+                for (String spectator : spectators) {
+                    messagingTemplate.convertAndSendToUser(spectator, "/queue/reply",
+                            new DefaultSTOMPMessage(spectator, winner, STOMPMessageType.GAME_OVER, null, playID));
+                    logger.info(String.format("listenForCompletedPlays: Sent winner [%s] to spectator [%s] for playID=[%s].", winner, spectator, playID));
+                }
+            }
         }
 
         //Send a Tombstone message to the ongoing-plays topic to remove the finished play
@@ -149,29 +167,47 @@ public class EventListenerService {
                 .get(timeout, TimeUnit.SECONDS);
 
         //Also save to database
-        playRepository.save(new PlayEntity(completedPlayMessage));
+        playRepository.saveAndFlush(new PlayEntity(completedPlayMessage));
     }
 
     @KafkaListener(topics = completedMovesTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
     public void listenForCompletedMoves(@Payload String message,
                                         @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
         CompletedMoveMessage completedMoveMessage = (CompletedMoveMessage) gson.fromJson(message, DefaultKafkaMessage.class).retrieve(CompletedMoveMessage.class.getCanonicalName());
+        String playPayload = gson.toJson(completedMoveMessage);
         logger.info("listenForCompletedMoves: Received completed move message: " + completedMoveMessage.toString() + " from partition " + partition);
+
         if (completedMoveMessage.isValid()) {
             messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(), "/queue/reply",
                     new DefaultSTOMPMessage(
                             completedMoveMessage.getPlayedByUsername(),
-                            gson.toJson(completedMoveMessage),
+                            playPayload,
                             STOMPMessageType.MOVE_ACCEPTED,
                             null,
                             completedMoveMessage.getMoveMessage().getPlayID()));
             messagingTemplate.convertAndSendToUser(completedMoveMessage.getOpponentUsername(), "/queue/reply",
                     new DefaultSTOMPMessage(
                             completedMoveMessage.getPlayedByUsername(),
-                            gson.toJson(completedMoveMessage),
+                            playPayload,
                             STOMPMessageType.MOVE_ACCEPTED,
                             null,
                             completedMoveMessage.getMoveMessage().getPlayID()));
+
+            //Handle the spectators
+            String playID = completedMoveMessage.getMoveMessage().getPlayID();
+            PlayEntity entry = playRepository.findByPlayID(playID);
+
+            if (entry != null) {
+                Set<String> spectators = entry.getSpectators();
+                if (!spectators.isEmpty()) {
+                    for (String spectator : spectators) {
+                        messagingTemplate.convertAndSendToUser(spectator, "/queue/reply",
+                                new DefaultSTOMPMessage(spectator, playPayload, STOMPMessageType.MOVE_ACCEPTED, null, playID));
+                        logger.info(String.format("listenForCompletedMoves: Sent play [%s] to spectator [%s] for playID=[%s].", playPayload, spectator, playID));
+                    }
+                }
+            }
+
         } else {
             if (completedMoveMessage.getPlayedByUsername() == null) {
                 logger.error(String.format("listenForCompletedMoves: Invalid move message can't be sent back due to null username [%s]", completedMoveMessage.toString()));
@@ -180,7 +216,7 @@ public class EventListenerService {
             messagingTemplate.convertAndSendToUser(completedMoveMessage.getPlayedByUsername(), "/queue/reply",
                     new DefaultSTOMPMessage(
                             completedMoveMessage.getPlayedByUsername(),
-                            gson.toJson(completedMoveMessage),
+                            playPayload,
                             STOMPMessageType.MOVE_DENIED,
                             null,
                             completedMoveMessage.getMoveMessage().getPlayID()));

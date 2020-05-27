@@ -21,7 +21,7 @@ public class PlayMessage implements Serializable {
     private String createdAt;
     private int remainingRounds;
     private String gameState;
-    private String lastPlayedBy;
+    private String lastUserWhoMoved;
 
     public PlayMessage() {
     }
@@ -35,7 +35,7 @@ public class PlayMessage implements Serializable {
         this.createdAt = String.valueOf(LocalDateTime.now());
         this.remainingRounds = 1;
         this.gameState = gameSerializer.newGame(gameTypeEnum, gameStateArgs);
-        this.lastPlayedBy = msg1.getCreatedBy();
+        this.lastUserWhoMoved = msg1.getCreatedBy();
     }
 
     public PlayMessage(TournamentPlayMessage message, String msg1, String msg2, int remainingRounds, Object... gameStateArgs) {
@@ -47,7 +47,11 @@ public class PlayMessage implements Serializable {
         this.createdAt = String.valueOf(LocalDateTime.now());
         this.remainingRounds = remainingRounds;
         this.gameState = gameSerializer.newGame(gameTypeEnum, gameStateArgs);
-        this.lastPlayedBy = message.getCreatedBy();
+        this.lastUserWhoMoved = message.getCreatedBy();
+    }
+
+    public static GameSerializer getGameSerializer() {
+        return gameSerializer;
     }
 
     private String generateID(PracticeQueueMessage msg1, PracticeQueueMessage msg2) {
@@ -55,11 +59,11 @@ public class PlayMessage implements Serializable {
     }
 
     public String getNeedsToWait() {
-        return this.lastPlayedBy;
+        return this.lastUserWhoMoved;
     }
 
     public String getNeedsToMove() {
-        return this.lastPlayedBy.equals(this.p1) ? this.p2 : this.p1;
+        return this.lastUserWhoMoved.equals(this.p1) ? this.p2 : this.p1;
     }
 
     public AbstractGameState getGameState() {
@@ -81,7 +85,7 @@ public class PlayMessage implements Serializable {
                 ", createdAt='" + createdAt + '\'' +
                 ", remainingRounds=" + remainingRounds +
                 ", gameState='" + getGameState().toString() + '\'' +
-                ", createdBy='" + lastPlayedBy + '\'' +
+                ", lastUserWhoMoved='" + lastUserWhoMoved + '\'' +
                 '}';
     }
 
@@ -117,15 +121,11 @@ public class PlayMessage implements Serializable {
         return remainingRounds;
     }
 
-    public static GameSerializer getGameSerializer() {
-        return gameSerializer;
+    public String getLastUserWhoMoved() {
+        return lastUserWhoMoved;
     }
 
-    public String getLastPlayedBy() {
-        return lastPlayedBy;
-    }
-
-    public void setLastPlayedBy(String username) {
-        this.lastPlayedBy = username;
+    public void setLastUserWhoMoved(String username) {
+        this.lastUserWhoMoved = username;
     }
 }

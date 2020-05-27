@@ -26,7 +26,7 @@ public class RequestJoinTournamentMessage extends DefaultPlayMessage {
 
     @Override
     public String toString() {
-        return super.toString() +  "RequestJoinTournamentMessage{" +
+        return super.toString() + "RequestJoinTournamentMessage{" +
                 "tournamentID='" + tournamentID + '\'' +
                 ", usernameWhitelist=" + usernameWhitelist +
                 ", numOfParticipants=" + numOfParticipants +

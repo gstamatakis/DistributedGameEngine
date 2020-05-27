@@ -66,7 +66,7 @@ public class CompletedPlayMessage {
      * @return Their score on this play.
      */
     public long getScore(String username) {
-        if (username.equals(p1)) {
+        if (username.equals(getWinner())) {
             return 1;
         } else {
             return 0;

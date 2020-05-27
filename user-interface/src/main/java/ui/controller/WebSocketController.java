@@ -13,16 +13,20 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.WebRequest;
+import ui.model.PlayEntity;
+import ui.repository.PlayRepository;
 import ui.service.PlayService;
 import websocket.DefaultSTOMPMessage;
 import websocket.STOMPMessageType;
 
 import java.security.Principal;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -35,15 +39,16 @@ import java.util.concurrent.TimeoutException;
 @Controller
 public class WebSocketController {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketController.class);
-
-    @Autowired
-    private PlayService playService;
-
-    @Value(value = "${playmaster.store.url}")
-    private String playMasterURL;
-
     //Local vars
     private final RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    private PlayService playService;
+    @Value(value = "${playmaster.store.url}")
+    private String playMasterURL;
+    @Autowired
+    private SimpMessageSendingOperations messagingTemplate;
+    @Autowired
+    private PlayRepository playRepository;
 
     @ExceptionHandler({CustomException.class})
     public ResponseEntity<String> handleConflict(CustomException ex, WebRequest request) {
@@ -85,7 +90,7 @@ public class WebSocketController {
     public DefaultSTOMPMessage retrievePlay(@Header(value = "Authorization") String token,  //Header and Payload are for STOMP
                                             @Payload String playID,
                                             Principal principal) {
-        logger.info(String.format("retrievePlay: Attempting to retrieved play for [%s] on playID=[%s].", principal.getName(), playID));
+        logger.info(String.format("retrievePlay: Attempting to retrieve play for [%s] on playID=[%s].", principal.getName(), playID));
 
         //Message setup
         HttpHeaders headers = new HttpHeaders();
@@ -96,7 +101,22 @@ public class WebSocketController {
         String playJson = restTemplate.postForEntity(playMasterURL + "/play", entity, String.class).getBody();
         logger.info(String.format("retrievePlay: Retrieved play [%s] for [%s] on playID=[%s].", playJson, principal.getName(), playID));
 
-        //Send it back to user
+        //Send it to spectators
+        PlayEntity entry = playRepository.findByPlayID(playID);
+        if (entry != null) {
+            Set<String> spectators = entry.getSpectators();
+            if (!spectators.isEmpty()) {
+                for (String spectator : spectators) {
+                    messagingTemplate.convertAndSendToUser(spectator, "/queue/reply",
+                            new DefaultSTOMPMessage(spectator, playJson == null ? "<empty>" : playJson,
+                                    STOMPMessageType.FETCH_PLAY, null, playID));
+                    logger.info(String.format("retrievePlay: Sent play [%s] to [%s] for playID=[%s].", playJson, spectator, playID));
+                }
+            }
+        }
+
+        //Send it back to player
+        logger.info(String.format("retrievePlay: Sending play [%s] to [%s] for playID=[%s].", playJson, principal.getName(), playID));
         return new DefaultSTOMPMessage(principal, playJson == null ? "<empty>" : playJson, STOMPMessageType.FETCH_PLAY, null, playID);
     }
 

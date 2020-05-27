@@ -53,6 +53,7 @@ public class UserScore implements Serializable {
         merged.playCount = this.playCount + other.playCount;
         merged.loseCount = this.loseCount + other.loseCount;
         merged.tieCount = this.tieCount + other.tieCount;
+        merged.totalScore = this.totalScore + other.totalScore;
         merged.opponentPerPlayID.putAll(this.opponentPerPlayID);
         merged.opponentPerPlayID.putAll(other.opponentPerPlayID);
         merged.scorePerPlayID.putAll(this.scorePerPlayID);

@@ -17,9 +17,9 @@ import java.util.Queue;
 public class MyStompSessionHandler implements StompSessionHandler {
     private static final Logger logger = LoggerFactory.getLogger(MyStompSessionHandler.class);
     private final Queue<DefaultSTOMPMessage> receivedMessageQueue;
+    private final Gson gson;
     private List<String> subs;
     private BufferedWriter output;
-    private final Gson gson;
 
     public MyStompSessionHandler(List<String> subs, Queue<DefaultSTOMPMessage> queue) {
         this.subs = subs;

@@ -29,8 +29,8 @@ public class ProcessUserInputConfig {
 
     private final String pairPracticePlayersStore = "pair-practice-players-store";
     private final String pairTournamentPlayersStore = "pair-tournament-players-store";
-    private final String userToGameIDStore = "user-to-playID";
-    private final String gameIDToGameStore = "playID-to-game";
+    private final String userToPlayIDStore = "user-to-playID";
+    private final String playIDToGameStore = "playID-to-game";
     private final String newPlaysTopic = "new-plays";
 
     //State stores
@@ -46,12 +46,12 @@ public class ProcessUserInputConfig {
 
     @Bean
     public StoreBuilder userToGameIDStore() {
-        return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(userToGameIDStore), Serdes.String(), new PlayMessageSerde());
+        return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(userToPlayIDStore), Serdes.String(), new PlayMessageSerde());
     }
 
     @Bean
     public StoreBuilder gameIDToGameStore() {
-        return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(gameIDToGameStore), Serdes.String(), new PlayMessageSerde());
+        return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(playIDToGameStore), Serdes.String(), new PlayMessageSerde());
     }
 
 
@@ -83,18 +83,18 @@ public class ProcessUserInputConfig {
 
             //Handle practice play pairs
             KStream<String, DefaultKafkaMessage> practiceBranch = practiceStream.transform(
-                    () -> new PracticeQueueTransformer(pairPracticePlayersStore, userToGameIDStore, gameIDToGameStore),
-                    pairPracticePlayersStore, userToGameIDStore, gameIDToGameStore);
+                    () -> new PracticeQueueTransformer(pairPracticePlayersStore, userToPlayIDStore, playIDToGameStore),
+                    pairPracticePlayersStore, userToPlayIDStore, playIDToGameStore);
 
             //Handle the tournament creation process
             createTournamentStream.transform(
                     () -> new CreateTournamentTransformer(pairTournamentPlayersStore),
-                    pairTournamentPlayersStore, userToGameIDStore, gameIDToGameStore);
+                    pairTournamentPlayersStore, userToPlayIDStore, playIDToGameStore);
 
             //Handle the tournament pairs
             KStream<String, DefaultKafkaMessage> tournamentBranch = joinTournamentStream.transform(
-                    () -> new JoinTournamentTransformer(pairTournamentPlayersStore, userToGameIDStore, gameIDToGameStore),
-                    pairTournamentPlayersStore, userToGameIDStore, gameIDToGameStore);
+                    () -> new JoinTournamentTransformer(pairTournamentPlayersStore, userToPlayIDStore, playIDToGameStore),
+                    pairTournamentPlayersStore, userToPlayIDStore, playIDToGameStore);
 
             //Merge everything into a single stream and output the result to the specified topic
             KStream<String, DefaultKafkaMessage> mergedStreams = practiceBranch.merge(tournamentBranch);

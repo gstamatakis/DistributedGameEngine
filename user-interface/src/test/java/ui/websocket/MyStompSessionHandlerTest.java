@@ -3,7 +3,10 @@ package ui.websocket;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.*;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.util.LinkedMultiValueMap;
@@ -13,8 +16,8 @@ import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.util.UriComponentsBuilder;
-import websocket.MyStompSessionHandler;
 import websocket.DefaultSTOMPMessage;
+import websocket.MyStompSessionHandler;
 import websocket.STOMPMessageType;
 
 import java.util.ArrayList;
@@ -25,23 +28,15 @@ import java.util.concurrent.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MyStompSessionHandlerTest {
+    private static final String SIGN_IN_URL = "http://localhost:8080/users/signin";
+    private static final Logger logger = LoggerFactory.getLogger(MyStompSessionHandlerTest.class);
     private static Random random = new Random();
     private static ExecutorService pool;
     private static RestTemplate restTemplate = new RestTemplate();
-    private static final String SIGN_IN_URL = "http://localhost:8080/users/signin";
-    private static final Logger logger = LoggerFactory.getLogger(MyStompSessionHandlerTest.class);
 
     @BeforeAll
     static void setUp() {
         pool = new ForkJoinPool(4);
-    }
-
-    @AfterEach
-    void afterEach() {
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException ignored) {
-        }
     }
 
     @AfterAll
@@ -81,6 +76,14 @@ class MyStompSessionHandlerTest {
 
         //Response = executed entity
         return restTemplate.postForEntity(builder.toUriString(), entity, String.class).getBody();
+    }
+
+    @AfterEach
+    void afterEach() {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException ignored) {
+        }
     }
 
     @Test

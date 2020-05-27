@@ -110,8 +110,4 @@ public abstract class AbstractGameState implements Serializable {
     public boolean isFinished() {
         return finished;
     }
-
-    public void setWinner(int winner) {
-        this.winner = winner;
-    }
 }

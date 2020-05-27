@@ -61,7 +61,8 @@ public class PlayService {
         if (playRepository.existsByPlayID(tournamentID)) {
             throw new IllegalStateException("Tournament ID already exists!");
         }
-        playRepository.save(new PlayEntity(tournamentID));
+        playRepository.saveAndFlush(new PlayEntity(msg, username));
+
 
         //Message
         CreateTournamentQueueMessage message = new CreateTournamentQueueMessage(username, gameType, blacklist, numOfParticipants, tournamentID);
@@ -74,12 +75,17 @@ public class PlayService {
     }
 
     //Queue a user for a tournament
-    public void joinTournament(String username, String tournamentID) throws InterruptedException, ExecutionException, TimeoutException {
+    public PlayEntity joinTournament(String username, String tournamentID) throws InterruptedException, ExecutionException, TimeoutException {
+        PlayEntity entity = playRepository.findByPlayID(tournamentID);
+        if (entity == null) {
+            throw new IllegalStateException("Tournament ID doesn't exist!");
+        }
         JoinTournamentQueueMessage newMsg = new JoinTournamentQueueMessage(username, tournamentID);
         kafkaMessageTemplate
                 .send(joinPlayTopic, tournamentID, new DefaultKafkaMessage(newMsg, JoinTournamentQueueMessage.class.getCanonicalName()))
                 .get(timeout, TimeUnit.SECONDS);
         logger.info(String.format("joinTournament: User [%s] joined the tournament with id=[%s]", username, tournamentID));
+        return entity;
     }
 
     //Send new move to play
@@ -89,5 +95,16 @@ public class PlayService {
                 .send(newMovesTopic, playID, new DefaultKafkaMessage(newMsg, MoveMessage.class.getCanonicalName()))
                 .get(timeout, TimeUnit.SECONDS);
         logger.info(String.format("sendMoveToPlay: User [%s] played move [%s] on play ID=[%s].", sentBy, move, playID));
+    }
+
+    public boolean registerSpectator(String specUsername, String playID) {
+        PlayEntity playEntity = playRepository.findByPlayID(playID);
+        if (playEntity == null) {
+            return false;
+        }
+        playEntity.addSpectator(specUsername);
+        playRepository.saveAndFlush(playEntity);
+        logger.info(String.format("registerSpectator: User [%s] registered as spectator on play with ID=[%s].", specUsername, playID));
+        return true;
     }
 }

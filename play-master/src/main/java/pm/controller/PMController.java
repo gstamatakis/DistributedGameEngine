@@ -29,12 +29,10 @@ public class PMController {
     private static final Logger logger = LoggerFactory.getLogger(PMController.class);
     private static final Gson gson = new Gson();
     private final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36";
-
-    @Autowired
-    private InteractiveQueryService interactiveQueryService;
-
     private final RestTemplate restTemplate = new RestTemplate();
     private final String playStateStoreName = "play-state-store";
+    @Autowired
+    private InteractiveQueryService interactiveQueryService;
 
     @ExceptionHandler(CustomException.class)
     public void handleCustomException(HttpServletResponse res, CustomException ex) throws Exception {
