@@ -32,11 +32,14 @@ public class GMController {
     private static final Logger logger = LoggerFactory.getLogger(GMController.class);
     private final Gson gson = new Gson();
     private final RestTemplate restTemplate = new RestTemplate();
+
     private final String practiceScoreStore = "practice-score-store";
     private final String tournamentScoreStore = "tournament-score-store";
     private final String userToPlayIDStore = "user-to-playID";
+
     @Autowired
     ModelMapper modelMapper;
+
     @Autowired
     private InteractiveQueryService interactiveQueryService;
 

@@ -450,7 +450,7 @@ In later steps, you may want to add some additional classes to secure your endpo
 ## Building the WebSocket Client
 Implementing a client is an even simpler task.
 
-Step 1. Autowire Spring STOMP client.
+Step 1. Autowire Spring STOMP client.0
 
 ```java
 @Autowired

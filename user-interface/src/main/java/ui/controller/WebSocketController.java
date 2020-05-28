@@ -39,14 +39,17 @@ import java.util.concurrent.TimeoutException;
 @Controller
 public class WebSocketController {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketController.class);
-    //Local vars
     private final RestTemplate restTemplate = new RestTemplate();
+
     @Autowired
     private PlayService playService;
+
     @Value(value = "${playmaster.store.url}")
     private String playMasterURL;
+
     @Autowired
     private SimpMessageSendingOperations messagingTemplate;
+
     @Autowired
     private PlayRepository playRepository;
 

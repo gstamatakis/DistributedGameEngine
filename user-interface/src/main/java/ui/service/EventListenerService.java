@@ -203,7 +203,7 @@ public class EventListenerService {
         //Send a Tombstone message to the ongoing-plays topic to remove the finished play
         //Make sure necessary info like scores is kept safe
         kafkaMessageTemplate
-                .send(ongoingPlaysTopic, completedPlayMessage.getPlayID(), null)    //TOMBSTONE MESSAGE
+                .send(ongoingPlaysTopic, "key", new DefaultKafkaMessage())    //TOMBSTONE MESSAGE
                 .get(timeout, TimeUnit.SECONDS);
 
         //Also save to database
