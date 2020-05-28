@@ -57,7 +57,7 @@ public class UserController {
 
     @ExceptionHandler({Exception.class, CustomException.class})
     public ResponseEntity<String> handleException(Exception ex, WebRequest request) {
-        logger.error(ex.getMessage());
+        logger.warn(ex.getMessage());
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
     }
 

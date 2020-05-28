@@ -41,28 +41,31 @@ class GameClientTest {
 
     @Test
     @Order(0)
-    public void concurrent_2_practice_players_test() throws ExecutionException, InterruptedException, TimeoutException {
-        //Submit user actions
-        List<Future<?>> futures = new ArrayList<>();
-        for (File file : Arrays.asList(clientActionFiles).subList(0, 2)) {
-            UserActionTask callable = new UserActionTask(file, false);
-            Future<?> future = executorService.submit(callable);
-            futures.add(future);
-        }
-        logger.info("Invoked all actions.");
+    public void concurrent_2_practice_players_test() {
+        try {
+            //Submit user actions
+            List<Future<?>> futures = new ArrayList<>();
+            for (File file : Arrays.asList(clientActionFiles).subList(0, 2)) {
+                UserActionTask callable = new UserActionTask(file, false);
+                Future<?> future = executorService.submit(callable);
+                futures.add(future);
+            }
+            logger.info("Invoked all actions.");
 
-        //Wait for futures to complete
-        for (Future<?> future : futures) {
-            future.get(10, TimeUnit.SECONDS);
+            //Wait for futures to complete
+            for (Future<?> future : futures) {
+                future.get(10, TimeUnit.SECONDS);
+            }
+            logger.info("Completed the processing of all Futures.");
+        } catch (Exception e) {
+            Assertions.fail(e);
         }
-        logger.info("Completed the processing of all Futures.");
     }
 
     @Test
     @Order(1)
     public void concurrent_practice_players_test() {
         try {
-
             //Submit user actions
             List<Future<?>> futures = new ArrayList<>();
             for (File file : clientActionFiles) {
@@ -78,13 +81,13 @@ class GameClientTest {
             }
             logger.info("Completed the processing of all Futures.");
         } catch (Exception e) {
-            e.printStackTrace();
+            Assertions.fail(e);
         }
     }
 
     @Test
     @Order(2)
-    public void concurrent_tournament_players_test() {
+    public void concurrent_tournament_players_instant_win_test() {
         try {
             //Submit the actions of the Official(s)
             List<Future<?>> officialsActions = new ArrayList<>();
@@ -100,7 +103,7 @@ class GameClientTest {
 
             //Submit the tournament players
             List<Future<?>> tournamentPlayerActions = new ArrayList<>();
-            for (File file : tournamentActionFiles) {
+            for (File file : Arrays.asList(tournamentActionFiles).subList(0, 4)) {
                 UserActionTask callable = new UserActionTask(file, false);
                 Future<?> future = executorService.submit(callable);
                 tournamentPlayerActions.add(future);
@@ -109,8 +112,42 @@ class GameClientTest {
                 future.get(10, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of Tournament Players.");
+        } catch (TimeoutException ignored) {
         } catch (Exception e) {
-            e.printStackTrace();
+            Assertions.fail(e);
+        }
+    }
+
+    @Test
+    @Order(3)
+    @Disabled
+    public void concurrent_tournament_players_2_rounds_test() {
+        try {
+            //Submit the actions of the Official(s)
+            List<Future<?>> officialsActions = new ArrayList<>();
+            for (File file : specialActionFiles) {
+                UserActionTask callable = new UserActionTask(file, false);
+                Future<?> future = executorService.submit(callable);
+                officialsActions.add(future);
+            }
+            for (Future<?> future : officialsActions) {
+                future.get(10, TimeUnit.SECONDS);
+            }
+            logger.info("Completed the processing of Official(s).");
+
+            //Submit the tournament players
+            List<Future<?>> tournamentPlayerActions = new ArrayList<>();
+            for (File file : Arrays.asList(tournamentActionFiles).subList(0, 8)) {  //All
+                UserActionTask callable = new UserActionTask(file, false);
+                Future<?> future = executorService.submit(callable);
+                tournamentPlayerActions.add(future);
+            }
+            for (Future<?> future : tournamentPlayerActions) {
+                future.get(15, TimeUnit.SECONDS);
+            }
+            logger.info("Completed the processing of Tournament Players.");
+        } catch (Exception e) {
+            Assertions.fail(e);
         }
     }
 

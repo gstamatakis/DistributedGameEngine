@@ -62,16 +62,31 @@ public class TournamentPlayMessage extends DefaultPlayMessage {
         return playerUsernames;
     }
 
+    public void setTournamentID(String tournamentID) {
+        this.tournamentID = tournamentID;
+    }
+
+    public Set<String> getBlacklist() {
+        return blacklist;
+    }
+
+    public void setBlacklist(Set<String> blacklist) {
+        this.blacklist = blacklist;
+    }
+
+    public void setPlayerUsernames(List<String> playerUsernames) {
+        this.playerUsernames = playerUsernames;
+    }
+
+    public void setRemainingSlots(int remainingSlots) {
+        this.remainingSlots = remainingSlots;
+    }
+
     public int getRemainingSlots() {
         return remainingSlots;
     }
 
     public String getTournamentID() {
         return tournamentID;
-    }
-
-    public void progressTournament() {
-        this.playerUsernames.clear();
-        this.remainingSlots /= 2;
     }
 }

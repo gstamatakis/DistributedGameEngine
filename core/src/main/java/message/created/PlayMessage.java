@@ -51,11 +51,11 @@ public class PlayMessage implements Serializable {
     }
 
     private String generateID(String p1, String p2) {
-        return String.format("%s_%s", System.nanoTime(), (p1 + p2).hashCode());
+        return String.format("%s_%s", System.nanoTime(), Math.abs((p1 + p2).hashCode()));
     }
 
     private String generateID(TournamentPlayMessage tournamentMsg, String p1, String p2) {
-        return String.format("%s_%s", System.nanoTime(), (tournamentMsg.getTournamentID() + p1 + p2).hashCode());
+        return String.format("%s_%s", System.nanoTime(), Math.abs((tournamentMsg.getTournamentID() + p1 + p2).hashCode()));
     }
 
     public String getNeedsToWait() {
@@ -84,7 +84,7 @@ public class PlayMessage implements Serializable {
                 ", gameTypeEnum=" + gameTypeEnum +
                 ", createdAt='" + createdAt + '\'' +
                 ", remainingRounds=" + remainingRounds +
-                ", gameState='" + getGameState().toString() + '\'' +
+                ", gameState='" + (getGameState() == null ? null : getGameState().toString()) + '\'' +
                 ", lastUserWhoMoved='" + lastUserWhoMoved + '\'' +
                 '}';
     }

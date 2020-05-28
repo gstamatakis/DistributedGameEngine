@@ -55,8 +55,8 @@ public class PlayService {
         int numOfParticipants = msg.getNumOfParticipants();
 
         //Make sure the number of participants is valid
-        if (numOfParticipants < 4) {
-            throw new IllegalStateException("Number of participants must be at least 4.");
+        if (numOfParticipants < 4 || numOfParticipants % 4 != 0) {
+            throw new IllegalStateException("Number of participants must be at least 4 and a multiple of 4.");
         }
 
         //Check the database to ensure a unique tournament ID

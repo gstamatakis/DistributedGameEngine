@@ -23,7 +23,6 @@ public class JoinTournamentTransformer implements Transformer<String, JoinTourna
     private final String pairTournamentPlayersStore;
     private final String userToGameIDStore;
     private final String gameIDToGameStore;
-    private final String completedTournamentsTopic = "completed-tournaments";
     private KeyValueStore<String, TournamentPlayMessage> pairTournamentPlayersKVStore;
     private KeyValueStore<String, PlayMessage> userToGameKVStore;
     private KeyValueStore<String, PlayMessage> gameIDToGameKVStore;
@@ -46,6 +45,7 @@ public class JoinTournamentTransformer implements Transformer<String, JoinTourna
     @Override
     public KeyValue<String, DefaultKafkaMessage> transform(String key, JoinTournamentQueueMessage newPlayer) {
         TournamentPlayMessage tournament = pairTournamentPlayersKVStore.get(newPlayer.getTournamentID());
+
         if (tournament == null) {
             logger.error("Tried to join a non existing tournament: " + newPlayer.toString());
         } else {
@@ -53,37 +53,34 @@ public class JoinTournamentTransformer implements Transformer<String, JoinTourna
                 logger.info("Added " + newPlayer.toString() + " to tournament " + tournament.getTournamentID());
                 if (tournament.isFull()) {
                     List<String> players = new ArrayList<>(tournament.getPlayerUsernames());
+                    int rounds = players.size() / 4;
+
+                    //Match players into pairs (similar to a practices play)
                     Iterator<String> playerIter = players.iterator();
-                    int div = players.size() / 4;
-                    int rem = players.size() % 4;
                     while (playerIter.hasNext()) {
-                        int rounds = div - 1;
-                        if (rem > 0) {
-                            rounds += 1;
-                            rem -= 1;
-                        }
                         String p1 = playerIter.next();
                         String p2 = playerIter.next();
                         PlayMessage newPlay = new PlayMessage(tournament, p1, p2, rounds, p1, p2, String.valueOf(LocalDateTime.now()));
                         userToGameKVStore.put(p1, newPlay);
                         userToGameKVStore.put(p2, newPlay);
                         gameIDToGameKVStore.put(newPlay.getID(), newPlay);
-                        logger.info(String.format("transform: forwarding [%s].", newPlay.toString()));
+                        logger.info(String.format("transform: Forwarding play [%s].", newPlay.toString()));
                         this.ctx.forward(newPlay.getID(), new DefaultKafkaMessage(newPlay, PlayMessage.class.getCanonicalName()));
                     }
 
-                    //If the tournament is over just delete the tournament message and update the new plays
-                    //Otherwise, create a new smaller tournament with the same tournamentID and 0 participants
-                    if (div == 0) {
+                    //If the tournament is over just delete the tournament message and update the completed plays topic
+                    if (rounds == 1) {
                         CompletedTournamentMessage finalMsg = new CompletedTournamentMessage(tournament);
-                        DefaultKafkaMessage newDKM = new DefaultKafkaMessage(finalMsg, CompletedTournamentMessage.class.getCanonicalName());
-                        this.ctx.forward(finalMsg.getId(), newDKM, completedTournamentsTopic);
+                        this.ctx.forward(finalMsg.getId(), new DefaultKafkaMessage(finalMsg, CompletedTournamentMessage.class.getCanonicalName()));
                         logger.info(String.format("transform: Finished tournament [%s].", finalMsg.toString()));
                         pairTournamentPlayersKVStore.delete(tournament.getTournamentID());
-                    } else {
-                        tournament.progressTournament();
+                    }else {
+                        //Create a new smaller tournament with the same tournamentID and 0 participants
+                        tournament.getPlayerUsernames().clear();
+                        tournament.setRemainingSlots(players.size() / 2);
                         pairTournamentPlayersKVStore.put(tournament.getTournamentID(), tournament);
-                        logger.info(String.format("transform: Updating tournament [%s].", tournament.toString()));
+                        logger.info(String.format("transform: Advancing tournament with id=[%s] and remaining slots=[%d].",
+                                tournament.getTournamentID(), tournament.getRemainingSlots()));
                     }
                 } else {
                     //Put the tournament message back into the store

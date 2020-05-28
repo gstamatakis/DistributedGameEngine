@@ -6,6 +6,8 @@ import message.completed.CompletedMoveMessage;
 import message.completed.CompletedPlayMessage;
 import message.completed.CompletedTournamentMessage;
 import message.created.PlayMessage;
+import message.queue.JoinTournamentQueueMessage;
+import model.PlayTypeEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,7 +124,7 @@ public class EventListenerService {
             messagingTemplate.convertAndSendToUser(username, "/queue/reply",
                     new DefaultSTOMPMessage(
                             username,
-                            String.format("Tournament [%s] winners [%s]", completedTournamentMessage.getId(), winnerUsernames),
+                            String.format("Tournament [%s] winners %s", completedTournamentMessage.getId(), winnerUsernames),
                             STOMPMessageType.NOTIFICATION,
                             null,
                             completedTournamentMessage.getId()));
@@ -210,8 +212,18 @@ public class EventListenerService {
                 .send(ongoingPlaysTopic, "key", new DefaultKafkaMessage())    //TOMBSTONE MESSAGE
                 .get(timeout, TimeUnit.SECONDS);
 
-        //Also save to database
-        playRepository.saveAndFlush(new PlayEntity(completedPlayMessage));
+        if (completedPlayMessage.getPlayType() == PlayTypeEnum.TOURNAMENT) {
+            //Queue up again for to play against other tournament players that won their rounds
+            JoinTournamentQueueMessage newMsg = new JoinTournamentQueueMessage(winner, playID);
+            kafkaMessageTemplate
+                    .send("join-plays", playID, new DefaultKafkaMessage(newMsg, JoinTournamentQueueMessage.class.getCanonicalName()))
+                    .get(timeout, TimeUnit.SECONDS);
+            logger.info(String.format("joinTournament: User [%s] advanced to the next round of the tournament with id=[%s]", winner, playID));
+        } else {
+            //Save to database
+            playRepository.saveAndFlush(new PlayEntity(completedPlayMessage));
+        }
+
     }
 
     @KafkaListener(topics = completedMovesTopic, containerFactory = "kafkaDefaultListenerContainerFactory")

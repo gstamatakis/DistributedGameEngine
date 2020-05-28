@@ -43,9 +43,9 @@ public class PlayMoveConfig {
                     (id, msg) -> msg.isType(CompletedPlayMessage.class.getCanonicalName()));//Processed moves -> Send to completed-plays
 
             //Log results
-            branches[0].foreach((k, v) -> logger.info(String.format("processPlaysAndMoves: Producing ongoing-play [%s],[%s].", k, v == null ? null : v.toString())));
-            branches[1].foreach((k, v) -> logger.info(String.format("processPlaysAndMoves: Producing completed-move [%s],[%s].", k, v == null ? null : v.toString())));
-            branches[2].foreach((k, v) -> logger.info(String.format("processPlaysAndMoves: Producing completed-plays [%s],[%s].", k, v == null ? null : v.toString())));
+            branches[0].foreach((k, v) -> logger.info(String.format("processPlaysAndMoves: Producing on ongoing-play [%s],[%s].", k, v == null ? null : v.toString())));
+            branches[1].foreach((k, v) -> logger.info(String.format("processPlaysAndMoves: Producing on completed-move [%s],[%s].", k, v == null ? null : v.toString())));
+            branches[2].foreach((k, v) -> logger.info(String.format("processPlaysAndMoves: Producing on completed-plays [%s],[%s].", k, v == null ? null : v.toString())));
 
             return branches;
         };

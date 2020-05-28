@@ -4,6 +4,7 @@ import gm.transformer.CreateTournamentTransformer;
 import gm.transformer.JoinTournamentTransformer;
 import gm.transformer.PracticeQueueTransformer;
 import message.DefaultKafkaMessage;
+import message.completed.CompletedTournamentMessage;
 import message.queue.CreateTournamentQueueMessage;
 import message.queue.JoinTournamentQueueMessage;
 import message.queue.PracticeQueueMessage;
@@ -32,6 +33,7 @@ public class ProcessUserInputConfig {
     private final String userToPlayIDStore = "user-to-playID";
     private final String playIDToGameStore = "playID-to-game";
     private final String newPlaysTopic = "new-plays";
+    private final String completedTournamentsTopic = "completed-tournaments";
 
     //State stores
     @Bean
@@ -91,13 +93,19 @@ public class ProcessUserInputConfig {
                     () -> new CreateTournamentTransformer(pairTournamentPlayersStore),
                     pairTournamentPlayersStore, userToPlayIDStore, playIDToGameStore);
 
-            //Handle the tournament pairs
-            KStream<String, DefaultKafkaMessage> tournamentBranch = joinTournamentStream.transform(
+            //Handle the tournament pairs. Send the completed tournaments to a different topic.
+            KStream<String, DefaultKafkaMessage> tournamentBranch_mixed = joinTournamentStream.transform(
                     () -> new JoinTournamentTransformer(pairTournamentPlayersStore, userToPlayIDStore, playIDToGameStore),
                     pairTournamentPlayersStore, userToPlayIDStore, playIDToGameStore);
+            KStream<String, DefaultKafkaMessage> completedTournaments = tournamentBranch_mixed
+                    .filter((key, value) -> value.isType(CompletedTournamentMessage.class.getCanonicalName()));
+            KStream<String, DefaultKafkaMessage> ongoingTournaments = tournamentBranch_mixed
+                    .filter((key, value) -> !value.isType(CompletedTournamentMessage.class.getCanonicalName()));
+            completedTournaments.to(completedTournamentsTopic);
+
 
             //Merge everything into a single stream and output the result to the specified topic
-            KStream<String, DefaultKafkaMessage> mergedStreams = practiceBranch.merge(tournamentBranch);
+            KStream<String, DefaultKafkaMessage> mergedStreams = practiceBranch.merge(ongoingTournaments);
 
             //Duplicate the stream so it can be forwarded to both new and ongoing plays
             KStream<String, DefaultKafkaMessage> s1 = mergedStreams.filter((key, value) -> true);
