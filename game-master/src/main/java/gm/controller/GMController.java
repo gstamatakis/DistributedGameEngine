@@ -43,8 +43,9 @@ public class GMController {
     @Autowired
     private InteractiveQueryService interactiveQueryService;
 
-    @ExceptionHandler({CustomException.class})
-    public ResponseEntity<String> handleConflict(CustomException ex, WebRequest request) {
+    @ExceptionHandler({Exception.class, CustomException.class})
+    public ResponseEntity<String> handleException(Exception ex, WebRequest request) {
+        logger.error(ex.getMessage());
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
     }
 

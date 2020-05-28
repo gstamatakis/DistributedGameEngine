@@ -29,7 +29,7 @@ public class PlayMessage implements Serializable {
     public PlayMessage(PracticeQueueMessage msg1, PracticeQueueMessage msg2, Object... gameStateArgs) {
         this.p1 = msg1.getCreatedBy();
         this.p2 = msg2.getCreatedBy();
-        this.ID = generateID(msg1, msg2);
+        this.ID = generateID(p1, p2);
         this.playTypeEnum = PlayTypeEnum.PRACTICE;
         this.gameTypeEnum = msg1.getGameType();
         this.createdAt = String.valueOf(LocalDateTime.now());
@@ -50,8 +50,8 @@ public class PlayMessage implements Serializable {
         this.lastUserWhoMoved = tournamentMsg.getCreatedBy();
     }
 
-    private String generateID(PracticeQueueMessage msg1, PracticeQueueMessage msg2) {
-        return System.nanoTime() + "_" + msg1.getCreatedBy().hashCode();
+    private String generateID(String p1, String p2) {
+        return String.format("%s_%s", System.nanoTime(), (p1 + p2).hashCode());
     }
 
     private String generateID(TournamentPlayMessage tournamentMsg, String p1, String p2) {

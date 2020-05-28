@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,7 +31,8 @@ public class QueueController {
     private PlayService playService;
 
     @ExceptionHandler({Exception.class, CustomException.class})
-    public ResponseEntity<String> handleConflict(CustomException ex, WebRequest request) {
+    public ResponseEntity<String> handleException(Exception ex, WebRequest request) {
+        logger.error(ex.getMessage());
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
     }
 

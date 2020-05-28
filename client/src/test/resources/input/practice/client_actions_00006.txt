@@ -1,13 +1,12 @@
 1
-user00006 pass00006 user00006@gmail.com ROLE_CLIENT
+user00006 pass00006 user00006@gmail.com
 2
 user00006 pass00006
 3
 1
+6
 1
 2
 3
-4
-5
-6
+10
 10

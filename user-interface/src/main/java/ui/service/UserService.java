@@ -53,7 +53,7 @@ public class UserService {
                 throw new CustomException("Username contains invalid character(s).", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             if (!user.getEmail().matches(EMAIL_REGEX)) {
-                throw new CustomException("Invalid e-mail address.", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new CustomException(String.format("Invalid e-mail address [%s].", user.getEmail()), HttpStatus.UNPROCESSABLE_ENTITY);
             }
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             userRepository.save(user);

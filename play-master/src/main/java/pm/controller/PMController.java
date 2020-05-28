@@ -13,11 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.kafka.streams.InteractiveQueryService;
-import org.springframework.http.CacheControl;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletResponse;
@@ -34,10 +33,10 @@ public class PMController {
     @Autowired
     private InteractiveQueryService interactiveQueryService;
 
-    @ExceptionHandler(CustomException.class)
-    public void handleCustomException(HttpServletResponse res, CustomException ex) throws Exception {
+    @ExceptionHandler({Exception.class, CustomException.class})
+    public ResponseEntity<String> handleException(Exception ex, WebRequest request) {
         logger.error(ex.getMessage());
-        res.sendError(ex.getHttpStatus().value(), ex.getMessage());
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @GetMapping(value = "/ping/{value}")

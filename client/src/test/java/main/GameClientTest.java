@@ -23,7 +23,7 @@ class GameClientTest {
         clientActionFiles = getClientActionFiles("input/practice", "client_actions_");
         specialActionFiles = getClientActionFiles("input/special", "official_actions_");
         tournamentActionFiles = getClientActionFiles("input/tournament", "tournament_player_actions_");
-        executorService = new ForkJoinPool(4);
+        executorService = Executors.newFixedThreadPool(8);
     }
 
     @AfterAll
@@ -39,103 +39,84 @@ class GameClientTest {
         }
     }
 
-    private static File[] getClientActionFiles(String resource, String prefix) {
-        String dirName = Thread.currentThread().getContextClassLoader().getResource(resource).getFile();
-        File dir = new File(dirName);
-        return dir.listFiles((dir1, name) -> name.startsWith(prefix) && name.endsWith(".txt"));
-    }
-
     @Test
     @Order(0)
-    public void concurrent_2_practice_players_test() throws ExecutionException, InterruptedException {
+    public void concurrent_2_practice_players_test() throws ExecutionException, InterruptedException, TimeoutException {
         //Submit user actions
-        List<Future<String>> futures = new ArrayList<>();
+        List<Future<?>> futures = new ArrayList<>();
         for (File file : Arrays.asList(clientActionFiles).subList(0, 2)) {
             UserActionTask callable = new UserActionTask(file, false);
-            Future<String> future = executorService.submit(callable);
+            Future<?> future = executorService.submit(callable);
             futures.add(future);
         }
         logger.info("Invoked all actions.");
 
         //Wait for futures to complete
-        for (Future<String> future : futures) {
-            String res = future.get();
-            Assertions.assertEquals("CALLABLE_OK", res);
+        for (Future<?> future : futures) {
+            future.get(10, TimeUnit.SECONDS);
         }
         logger.info("Completed the processing of all Futures.");
     }
 
     @Test
     @Order(1)
-    public void concurrent_practice_players_test() throws ExecutionException, InterruptedException {
-        //Submit user actions
-        List<Future<String>> futures = new ArrayList<>();
-        for (File file : clientActionFiles) {
-            UserActionTask callable = new UserActionTask(file, false);
-            Future<String> future = executorService.submit(callable);
-            futures.add(future);
-        }
-        logger.info("Invoked all actions.");
+    public void concurrent_practice_players_test() {
+        try {
 
-        //Wait for futures to complete
-        for (Future<String> future : futures) {
-            String res = future.get();
-            Assertions.assertEquals("CALLABLE_OK", res);
+            //Submit user actions
+            List<Future<?>> futures = new ArrayList<>();
+            for (File file : clientActionFiles) {
+                UserActionTask callable = new UserActionTask(file, false);
+                Future<?> future = executorService.submit(callable);
+                futures.add(future);
+            }
+            logger.info("Invoked all actions.");
+
+            //Wait for futures to complete
+            for (Future<?> future : futures) {
+                future.get(10, TimeUnit.SECONDS);
+            }
+            logger.info("Completed the processing of all Futures.");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        logger.info("Completed the processing of all Futures.");
     }
 
     @Test
     @Order(2)
-    public void concurrent_tournament_players_test() throws ExecutionException, InterruptedException {
-        //Submit the actions of the Official(s)
-        List<Future<String>> officialsActions = new ArrayList<>();
-        for (File file : specialActionFiles) {
-            UserActionTask callable = new UserActionTask(file, false);
-            Future<String> future = executorService.submit(callable);
-            officialsActions.add(future);
-        }
-        for (Future<String> future : officialsActions) {
-            String res = future.get();
-            Assertions.assertEquals("CALLABLE_OK", res);
-        }
-        logger.info("Completed the processing of Official(s).");
+    public void concurrent_tournament_players_test() {
+        try {
+            //Submit the actions of the Official(s)
+            List<Future<?>> officialsActions = new ArrayList<>();
+            for (File file : specialActionFiles) {
+                UserActionTask callable = new UserActionTask(file, false);
+                Future<?> future = executorService.submit(callable);
+                officialsActions.add(future);
+            }
+            for (Future<?> future : officialsActions) {
+                future.get(10, TimeUnit.SECONDS);
+            }
+            logger.info("Completed the processing of Official(s).");
 
-        //Submit the tournament players
-        List<Future<String>> tournamentPlayerActions = new ArrayList<>();
-        for (File file : tournamentActionFiles) {
-            UserActionTask callable = new UserActionTask(file, false);
-            Future<String> future = executorService.submit(callable);
-            tournamentPlayerActions.add(future);
+            //Submit the tournament players
+            List<Future<?>> tournamentPlayerActions = new ArrayList<>();
+            for (File file : tournamentActionFiles) {
+                UserActionTask callable = new UserActionTask(file, false);
+                Future<?> future = executorService.submit(callable);
+                tournamentPlayerActions.add(future);
+            }
+            for (Future<?> future : tournamentPlayerActions) {
+                future.get(10, TimeUnit.SECONDS);
+            }
+            logger.info("Completed the processing of Tournament Players.");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        for (Future<String> future : tournamentPlayerActions) {
-            String res = future.get();
-            Assertions.assertEquals("CALLABLE_OK", res);
-        }
-        logger.info("Completed the processing of Tournament Players.");
     }
 
-    private static class UserActionTask implements Callable<String> {
-        private final File file;
-        private boolean silent;
-
-        public UserActionTask(File file, boolean silent) {
-            this.file = file;
-            this.silent = silent;
-        }
-
-        public String call() {
-            try {
-                GameClient.main(new String[]{
-                        "-f",
-                        file.getAbsolutePath(),
-                        "-s",
-                        String.valueOf(silent)
-                });
-                return "CALLABLE_OK";
-            } catch (Exception e) {
-                return e.getMessage();
-            }
-        }
+    private static File[] getClientActionFiles(String resource, String prefix) {
+        String dirName = Thread.currentThread().getContextClassLoader().getResource(resource).getFile();
+        File dir = new File(dirName);
+        return dir.listFiles((dir1, name) -> name.startsWith(prefix) && name.endsWith(".txt"));
     }
 }

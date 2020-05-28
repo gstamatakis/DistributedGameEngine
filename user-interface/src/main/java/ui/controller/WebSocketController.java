@@ -85,7 +85,8 @@ public class WebSocketController {
         }
         playService.sendMoveToPlay(principal.getName(), newMove, playID);
         logger.info(String.format("handleMoves: Move [%s] sent to playID=[%s].", newMove, playID));
-        return new DefaultSTOMPMessage(principal, String.format("Move [%s] submitted successfully.", newMove), STOMPMessageType.NOTIFICATION, null, playID);
+        return new DefaultSTOMPMessage(principal, String.format("Move [%s] from [%s] submitted successfully.", newMove, principal.getName()),
+                STOMPMessageType.NOTIFICATION, null, playID);
     }
 
     @MessageMapping("/play")

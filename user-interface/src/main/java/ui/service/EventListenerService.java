@@ -86,8 +86,12 @@ public class EventListenerService {
 
         //Convert the new play to an object
         PlayMessage ongoingPlay = (PlayMessage) gson.fromJson(message, DefaultKafkaMessage.class).retrieve(PlayMessage.class.getCanonicalName());
-        String playID = ongoingPlay.getID();
+        if (ongoingPlay == null) {
+            return;
+        }
+
         logger.info("listenOngoingPlays: Received ongoing play message: " + ongoingPlay.toString() + " from partition " + partition);
+        String playID = ongoingPlay.getID();
 
         //Alert the 2 users that they either need to move or wait for the opponent
         messagingTemplate.convertAndSendToUser(ongoingPlay.getNeedsToMove(), "/queue/reply",
@@ -135,7 +139,7 @@ public class EventListenerService {
                 for (String spectator : spectators) {
                     messagingTemplate.convertAndSendToUser(spectator, "/queue/reply",
                             new DefaultSTOMPMessage(spectator, winner, STOMPMessageType.GAME_OVER, null, playID));
-                    logger.info(String.format("listenForCompletedPlays: Sent winner [%s] to spectator [%s] for playID=[%s].", winner, spectator, playID));
+                    logger.info(String.format("listenForCompletedPlays: Sent winner [%s] to spectators [%s] for playID=[%s].", winner, spectator, playID));
                 }
             }
         }
@@ -195,7 +199,7 @@ public class EventListenerService {
                 for (String spectator : spectators) {
                     messagingTemplate.convertAndSendToUser(spectator, "/queue/reply",
                             new DefaultSTOMPMessage(spectator, winner, STOMPMessageType.GAME_OVER, null, playID));
-                    logger.info(String.format("listenForCompletedPlays: Sent winner [%s] to spectator [%s] for playID=[%s].", winner, spectator, playID));
+                    logger.info(String.format("listenForCompletedPlays: Sent winner [%s] to spectators [%s] for playID=[%s].", winner, spectator, playID));
                 }
             }
         }
@@ -243,7 +247,7 @@ public class EventListenerService {
                     for (String spectator : spectators) {
                         messagingTemplate.convertAndSendToUser(spectator, "/queue/reply",
                                 new DefaultSTOMPMessage(spectator, playPayload, STOMPMessageType.MOVE_ACCEPTED, null, playID));
-                        logger.info(String.format("listenForCompletedMoves: Sent play [%s] to spectator [%s] for playID=[%s].", playPayload, spectator, playID));
+                        logger.info(String.format("listenForCompletedMoves: Sent play [%s] to spectators [%s] for playID=[%s].", playPayload, spectator, playID));
                     }
                 }
             }

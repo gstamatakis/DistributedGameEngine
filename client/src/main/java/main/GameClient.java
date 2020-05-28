@@ -67,7 +67,11 @@ public class GameClient {
         //Destination stream
         BufferedWriter output;
         if (cmd.hasOption("silent")) {
-            output = new BufferedWriter(new OutputStreamWriter(new NullPrintStream()));
+            if (cmd.getOptionValue("silent").equalsIgnoreCase("true")) {
+                output = new BufferedWriter(new OutputStreamWriter(new NullPrintStream()));
+            } else {
+                output = new BufferedWriter(new OutputStreamWriter(System.out));
+            }
         } else {
             output = new BufferedWriter(new OutputStreamWriter(System.out));
         }
@@ -92,8 +96,7 @@ public class GameClient {
         //Execute the main loop
         int result = handleInputs(scanner, output);
         output.write("\nExit code: " + result + "\n");
-        output.close();
-        System.exit(0);
+        output.flush();
     }
 
     public static int handleInputs(Scanner scanner, BufferedWriter output) throws Exception {
@@ -292,7 +295,7 @@ public class GameClient {
                             output.write("\n" + e.getMessage());
                             break;
                         }
-                        output.write(String.format("\nTournament play of type [%s] enqueued.", tournamentJoinResponse.getBody()));
+                        output.write(String.format("\nTournament play of type [%s] enqueued. You should join.", tournamentJoinResponse.getBody()));
                         output.flush();
                         break;
 
@@ -605,7 +608,7 @@ public class GameClient {
 
                     //Exit
                     case 10:
-                        output.write("\n\nExiting..");
+                        output.write(String.format("\n\nUser [%s] is exiting..", username));
                         output.flush();
                         return 0;
 
@@ -615,7 +618,6 @@ public class GameClient {
                         output.flush();
                 }
             } catch (Exception e) {
-                e.printStackTrace();    //TODO remove
                 output.write("\n\nError: " + e.getMessage());
                 output.flush();
             }
