@@ -26,7 +26,7 @@ build:
 	docker pull robinong79/mysqlfailover:1.6.4
 	docker pull robinong79/mysqlrouter:2.0.4
 	docker pull wurstmeister/zookeeper
-	docker pull wurstmeister/kafka:2.12-2.4.1
+	docker pull wurstmeister/kafka:2.12-2.5.0
 
 tag:
 	docker tag $(GM_IMAGE) $(REGISTRY_HOST)/$(GM_IMAGE)
@@ -37,7 +37,7 @@ tag:
 	docker tag robinong79/mysqlfailover:1.6.4 $(REGISTRY_HOST)/$(MYSQL_FAILOVER_IMAGE)
 	docker tag robinong79/mysqlrouter:2.0.4 $(REGISTRY_HOST)/$(MYSQL_ROUTER_IMAGE)
 	docker tag wurstmeister/zookeeper $(REGISTRY_HOST)/$(ZOOKEEPER_IMAGE)
-	docker tag wurstmeister/kafka:2.12-2.4.1 $(REGISTRY_HOST)/$(KAFKA_IMAGE)
+	docker tag wurstmeister/kafka:2.12-2.5.0 $(REGISTRY_HOST)/$(KAFKA_IMAGE)
 
 push:
 	docker tag $(GM_IMAGE) $(REGISTRY_HOST)/$(GM_IMAGE)
@@ -48,7 +48,7 @@ push:
 	docker tag robinong79/mysqlfailover:1.6.4 $(REGISTRY_HOST)/$(MYSQL_FAILOVER_IMAGE)
 	docker tag robinong79/mysqlrouter:2.0.4 $(REGISTRY_HOST)/$(MYSQL_ROUTER_IMAGE)
 	docker tag wurstmeister/zookeeper $(REGISTRY_HOST)/$(ZOOKEEPER_IMAGE)
-	docker tag wurstmeister/kafka:2.12-2.4.1 $(REGISTRY_HOST)/$(KAFKA_IMAGE)
+	docker tag wurstmeister/kafka:2.12-2.5.0 $(REGISTRY_HOST)/$(KAFKA_IMAGE)
 	docker push $(REGISTRY_HOST)/$(GM_IMAGE) --disable-content-trust
 	docker push $(REGISTRY_HOST)/$(PM_IMAGE) --disable-content-trust
 	docker push $(REGISTRY_HOST)/$(UI_IMAGE) --disable-content-trust
@@ -87,5 +87,5 @@ clean:
 	docker image remove robinong79/mysqlfailover:1.6.4
 	docker image remove robinong79/mysqlrouter:2.0.4
 	docker image remove wurstmeister/zookeeper
-	docker image remove wurstmeister/kafka:2.12-2.4.1
+	docker image remove wurstmeister/kafka:2.12-2.5.0
 	docker image remove openjdk:8-jdk-alpine

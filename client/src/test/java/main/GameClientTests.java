@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.concurrent.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class GameClientTest {
-    private static final Logger logger = LoggerFactory.getLogger(GameClientTest.class);
+class GameClientTests {
+    private static final Logger logger = LoggerFactory.getLogger(GameClientTests.class);
     private static File[] clientActionFiles;
     private static File[] specialActionFiles4;
     private static File[] specialActionFiles8;
@@ -58,7 +58,7 @@ class GameClientTest {
 
             //Wait for futures to complete
             for (Future<?> future : futures) {
-                future.get(10, TimeUnit.SECONDS);
+                future.get(30, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of all Futures.");
         } catch (Exception e) {
@@ -81,7 +81,7 @@ class GameClientTest {
 
             //Wait for futures to complete
             for (Future<?> future : futures) {
-                future.get(10, TimeUnit.SECONDS);
+                future.get(30, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of all Futures.");
         } catch (Exception e) {

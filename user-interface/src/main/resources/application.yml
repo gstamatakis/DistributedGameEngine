@@ -33,6 +33,7 @@ gamemaster.store.url: "http://game-master:8081"
 
 server:
   port: 8080
+debug: true
 
 security:
   jwt:

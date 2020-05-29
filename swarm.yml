@@ -159,11 +159,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka1:9094,OUTSIDE://localhost:19094
       KAFKA_LISTENERS: INSIDE://:9094,OUTSIDE://:19094
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-      KAFKA_CREATE_TOPICS: 'testtopic:1:1'
       KAFKA_LOG_RETENTION_BYTES: 100048576
       KAFKA_LOG_RETENTION_DAYS: 1
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       replicas: 1
       resources:
@@ -194,11 +191,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka2:9095,OUTSIDE://localhost:19095
       KAFKA_LISTENERS: INSIDE://:9095,OUTSIDE://:19095
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-      KAFKA_CREATE_TOPICS: 'testtopic:1:1'
       KAFKA_LOG_RETENTION_BYTES: 100048576
       KAFKA_LOG_RETENTION_DAYS: 1
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       replicas: 1
       resources:
@@ -229,11 +223,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka3:9096,OUTSIDE://localhost:19096
       KAFKA_LISTENERS: INSIDE://:9096,OUTSIDE://:19096
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-      KAFKA_CREATE_TOPICS: 'testtopic:1:1'
       KAFKA_LOG_RETENTION_BYTES: 100048576
       KAFKA_LOG_RETENTION_DAYS: 1
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       replicas: 1
       resources:

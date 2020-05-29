@@ -1,6 +1,6 @@
 server:
   port: 8082
-
+debug: true
 security:
   jwt:
     token:

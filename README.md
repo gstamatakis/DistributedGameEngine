@@ -6,10 +6,10 @@ Simply run:
 
     ./run.sh
 
-Test that everything is working by running some client side tests.
+Test that everything is working by running some client side commands.
 Working directory is considered the top level.
 
-    java -jar client\target\client.jar main.GameClientTest
+    java -jar client\target\client.jar main.GameClientTests
         
 # Swarm 
 
@@ -26,7 +26,7 @@ directory of the project (same as this README).
 
 Build the project
     
-    mvn clean package 
+    mvn clean package -DskipTests=true
 
 
 Build the docker images 

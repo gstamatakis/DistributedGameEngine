@@ -137,7 +137,6 @@
                 <version>${maven.surefire.version}</version>
                 <configuration>
                     <excludes>
-                        <exclude>*</exclude>
                     </excludes>
                     <includes>
                     </includes>

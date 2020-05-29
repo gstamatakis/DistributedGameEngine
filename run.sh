@@ -3,7 +3,7 @@ docker rm $(docker ps --filter "status=exited" -q)
 docker image prune -f
 
 #Build local project
-mvn clean package
+mvn clean package -DskipTests=true
 
 #Build docker images and make them accessible to the stack
 make build

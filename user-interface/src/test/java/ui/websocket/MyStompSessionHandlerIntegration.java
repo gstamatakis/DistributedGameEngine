@@ -27,9 +27,9 @@ import java.util.Random;
 import java.util.concurrent.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class MyStompSessionHandlerTest {
+class MyStompSessionHandlerIntegration {
     private static final String SIGN_IN_URL = "http://localhost:8080/users/signin";
-    private static final Logger logger = LoggerFactory.getLogger(MyStompSessionHandlerTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(MyStompSessionHandlerIntegration.class);
     private static Random random = new Random();
     private static ExecutorService pool;
     private static RestTemplate restTemplate = new RestTemplate();
