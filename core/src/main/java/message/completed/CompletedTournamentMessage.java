@@ -7,6 +7,7 @@ import java.util.List;
 public class CompletedTournamentMessage {
     private String id;
     private List<String> winnerUsernames;
+    private List<String> allPlayers;
 
     public CompletedTournamentMessage() {
     }
@@ -14,6 +15,7 @@ public class CompletedTournamentMessage {
     public CompletedTournamentMessage(TournamentPlayMessage tournament) {
         this.id = tournament.getTournamentID();
         this.winnerUsernames = tournament.getPlayerUsernames();
+        this.allPlayers = tournament.getAllPlayers();
     }
 
     @Override
@@ -21,6 +23,7 @@ public class CompletedTournamentMessage {
         return "CompletedTournamentMessage{" +
                 "id='" + id + '\'' +
                 ", winnerUsernames=" + winnerUsernames +
+                ", allPlayers=" + allPlayers +
                 '}';
     }
 
@@ -30,5 +33,9 @@ public class CompletedTournamentMessage {
 
     public List<String> getWinnerUsernames() {
         return winnerUsernames;
+    }
+
+    public List<String> getAllPlayers() {
+        return allPlayers;
     }
 }

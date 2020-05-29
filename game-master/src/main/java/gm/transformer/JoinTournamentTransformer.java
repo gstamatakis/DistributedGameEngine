@@ -53,7 +53,17 @@ public class JoinTournamentTransformer implements Transformer<String, JoinTourna
                 logger.info("Added " + newPlayer.toString() + " to tournament " + tournament.getTournamentID());
                 if (tournament.isFull()) {
                     List<String> players = new ArrayList<>(tournament.getPlayerUsernames());
+                    players.sort(String::compareToIgnoreCase);
                     int rounds = players.size() / 4;
+
+                    //If the tournament is over just delete the tournament message and update the completed plays topic
+                    if (rounds == 1) {
+                        CompletedTournamentMessage finalMsg = new CompletedTournamentMessage(tournament);
+                        this.ctx.forward(finalMsg.getId(), new DefaultKafkaMessage(finalMsg, CompletedTournamentMessage.class.getCanonicalName()));
+                        logger.info(String.format("transform: Finished tournament [%s].", finalMsg.toString()));
+                        pairTournamentPlayersKVStore.delete(tournament.getTournamentID());
+                        return null;
+                    }
 
                     //Match players into pairs (similar to a practices play)
                     Iterator<String> playerIter = players.iterator();
@@ -68,20 +78,17 @@ public class JoinTournamentTransformer implements Transformer<String, JoinTourna
                         this.ctx.forward(newPlay.getID(), new DefaultKafkaMessage(newPlay, PlayMessage.class.getCanonicalName()));
                     }
 
-                    //If the tournament is over just delete the tournament message and update the completed plays topic
-                    if (rounds == 1) {
-                        CompletedTournamentMessage finalMsg = new CompletedTournamentMessage(tournament);
-                        this.ctx.forward(finalMsg.getId(), new DefaultKafkaMessage(finalMsg, CompletedTournamentMessage.class.getCanonicalName()));
-                        logger.info(String.format("transform: Finished tournament [%s].", finalMsg.toString()));
-                        pairTournamentPlayersKVStore.delete(tournament.getTournamentID());
-                    }else {
-                        //Create a new smaller tournament with the same tournamentID and 0 participants
-                        tournament.getPlayerUsernames().clear();
-                        tournament.setRemainingSlots(players.size() / 2);
-                        pairTournamentPlayersKVStore.put(tournament.getTournamentID(), tournament);
-                        logger.info(String.format("transform: Advancing tournament with id=[%s] and remaining slots=[%d].",
-                                tournament.getTournamentID(), tournament.getRemainingSlots()));
+                    //Create a new smaller tournament with the same tournamentID and half the participants
+                    tournament.getPlayerUsernames().clear();
+                    tournament.setRemainingSlots(players.size() / 2);
+                    if (tournament.getAllPlayers() == null){
+                        tournament.setAllPlayers(players);
                     }
+
+                    pairTournamentPlayersKVStore.put(tournament.getTournamentID(), tournament);
+                    logger.info(String.format("transform: Advancing tournament with id=[%s] and remaining slots=[%d].",
+                            tournament.getTournamentID(), tournament.getRemainingSlots()));
+
                 } else {
                     //Put the tournament message back into the store
                     pairTournamentPlayersKVStore.put(tournament.getTournamentID(), tournament);

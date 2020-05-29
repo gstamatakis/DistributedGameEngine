@@ -3,10 +3,8 @@ user00001 pass00001 user00001@gmail.com
 2
 user00001 pass00001
 4
-tournament_1590685397.4306111
+tournament_21aff1
 6
 4
 5
-6
-10
 10

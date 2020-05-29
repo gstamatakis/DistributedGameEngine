@@ -2,10 +2,10 @@ import time
 
 if __name__ == '__main__':
     destination_practice_folder = r"..\client\src\test\resources\input\practice"
-    destination_tournament_folder = r"..\client\src\test\resources\input\tournament"
-    destination_admin_folder = r"..\client\src\test\resources\input\special"
-    numOfFiles = 4
-    tournament_size = 4
+    destination_tournament_folder = r"..\client\src\test\resources\input\tournament8"
+    destination_admin_folder = r"..\client\src\test\resources\input\tournament8"
+    numOfFiles = 8
+    tournament_size = 8
     tournamentID = 'tournament_{0}'.format(time.time())
 
     # Pre recorded player actions
@@ -44,7 +44,9 @@ if __name__ == '__main__':
                           "{1}\n" \
                           "{2}\n" \
                           "{3}\n" \
-                          "10\n" \
+                          "4\n" \
+                          "{4}\n" \
+                          "6\n" \
                           "10"
 
 

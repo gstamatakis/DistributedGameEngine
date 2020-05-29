@@ -13,6 +13,7 @@ public class TournamentPlayMessage extends DefaultPlayMessage {
     private String tournamentID;
     private Set<String> blacklist;
     private List<String> playerUsernames;
+    private List<String> allPlayers;
     private int remainingSlots;
 
     public TournamentPlayMessage(CreateTournamentQueueMessage incomingMsg) {
@@ -88,5 +89,13 @@ public class TournamentPlayMessage extends DefaultPlayMessage {
 
     public String getTournamentID() {
         return tournamentID;
+    }
+
+    public List<String> getAllPlayers() {
+        return allPlayers;
+    }
+
+    public void setAllPlayers(List<String> allPlayers) {
+        this.allPlayers = allPlayers;
     }
 }

@@ -14,15 +14,19 @@ import java.util.concurrent.*;
 class GameClientTest {
     private static final Logger logger = LoggerFactory.getLogger(GameClientTest.class);
     private static File[] clientActionFiles;
-    private static File[] specialActionFiles;
-    private static File[] tournamentActionFiles;
+    private static File[] specialActionFiles4;
+    private static File[] specialActionFiles8;
+    private static File[] tournamentActionFiles4;
+    private static File[] tournamentActionFiles8;
     private static ExecutorService executorService;
 
     @BeforeAll
     static void setUp() {
         clientActionFiles = getClientActionFiles("input/practice", "client_actions_");
-        specialActionFiles = getClientActionFiles("input/special", "official_actions_");
-        tournamentActionFiles = getClientActionFiles("input/tournament", "tournament_player_actions_");
+        specialActionFiles4 = getClientActionFiles("input/tournament4", "official_actions_");
+        tournamentActionFiles4 = getClientActionFiles("input/tournament4", "tournament_player_actions_");
+        specialActionFiles8 = getClientActionFiles("input/tournament8", "official_actions_");
+        tournamentActionFiles8 = getClientActionFiles("input/tournament8", "tournament_player_actions_");
         executorService = Executors.newFixedThreadPool(8);
     }
 
@@ -91,7 +95,7 @@ class GameClientTest {
         try {
             //Submit the actions of the Official(s)
             List<Future<?>> officialsActions = new ArrayList<>();
-            for (File file : specialActionFiles) {
+            for (File file : specialActionFiles4) {
                 UserActionTask callable = new UserActionTask(file, false);
                 Future<?> future = executorService.submit(callable);
                 officialsActions.add(future);
@@ -103,7 +107,7 @@ class GameClientTest {
 
             //Submit the tournament players
             List<Future<?>> tournamentPlayerActions = new ArrayList<>();
-            for (File file : Arrays.asList(tournamentActionFiles).subList(0, 4)) {
+            for (File file : tournamentActionFiles4) {
                 UserActionTask callable = new UserActionTask(file, false);
                 Future<?> future = executorService.submit(callable);
                 tournamentPlayerActions.add(future);
@@ -125,7 +129,7 @@ class GameClientTest {
         try {
             //Submit the actions of the Official(s)
             List<Future<?>> officialsActions = new ArrayList<>();
-            for (File file : specialActionFiles) {
+            for (File file : specialActionFiles8) {
                 UserActionTask callable = new UserActionTask(file, false);
                 Future<?> future = executorService.submit(callable);
                 officialsActions.add(future);
@@ -137,7 +141,7 @@ class GameClientTest {
 
             //Submit the tournament players
             List<Future<?>> tournamentPlayerActions = new ArrayList<>();
-            for (File file : Arrays.asList(tournamentActionFiles).subList(0, 8)) {  //All
+            for (File file : Arrays.asList(tournamentActionFiles8).subList(0, 8)) {  //All
                 UserActionTask callable = new UserActionTask(file, false);
                 Future<?> future = executorService.submit(callable);
                 tournamentPlayerActions.add(future);

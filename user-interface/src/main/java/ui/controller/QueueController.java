@@ -76,7 +76,7 @@ public class QueueController {
                                                  @ApiParam("Join tournament msg") @RequestBody String tournamentID)
             throws InterruptedException, ExecutionException, TimeoutException {
 
-        logger.info(String.format("User [%s] request to join a tournament play with ID=[%s].", userDetails.getUsername(), tournamentID));
+        logger.info(String.format("User [%s] requests to join a tournament play with ID=[%s].", userDetails.getUsername(), tournamentID));
         PlayEntity entity = playService.joinTournament(userDetails.getUsername(), tournamentID);
         return new ResponseEntity<>(entity.getGameType().name(), HttpStatus.OK);
     }

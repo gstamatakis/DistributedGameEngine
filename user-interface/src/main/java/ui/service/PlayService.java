@@ -81,7 +81,7 @@ public class PlayService {
     public PlayEntity joinTournament(String username, String tournamentID) throws InterruptedException, ExecutionException, TimeoutException {
         PlayEntity entity = playRepository.findByPlayID(tournamentID);
         if (entity == null) {
-            throw new CustomException("Tournament ID doesn't exist!", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new CustomException("Tournament hasn't started or isn't valid!", HttpStatus.UNPROCESSABLE_ENTITY);
         }
         JoinTournamentQueueMessage newMsg = new JoinTournamentQueueMessage(username, tournamentID);
         kafkaMessageTemplate

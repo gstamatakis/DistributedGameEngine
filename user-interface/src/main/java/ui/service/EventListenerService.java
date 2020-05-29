@@ -114,20 +114,19 @@ public class EventListenerService {
 
     @KafkaListener(topics = completedTournamentsTopic, containerFactory = "kafkaDefaultListenerContainerFactory")
     public void listenForCompletedTournaments(@Payload String message,
-                                              @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) throws InterruptedException, ExecutionException, TimeoutException {
+                                              @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
         CompletedTournamentMessage completedTournamentMessage = (CompletedTournamentMessage) gson.fromJson(message, DefaultKafkaMessage.class).retrieve(CompletedTournamentMessage.class.getCanonicalName());
         logger.info("listenForCompletedTournaments: Received completed tournament message: " + completedTournamentMessage.toString() + " from partition " + partition);
 
         //Notification to all users
         String winnerUsernames = completedTournamentMessage.getWinnerUsernames().toString();
-        for (String username : completedTournamentMessage.getWinnerUsernames()) {
-            messagingTemplate.convertAndSendToUser(username, "/queue/reply",
-                    new DefaultSTOMPMessage(
-                            username,
-                            String.format("Tournament [%s] winners %s", completedTournamentMessage.getId(), winnerUsernames),
-                            STOMPMessageType.NOTIFICATION,
-                            null,
-                            completedTournamentMessage.getId()));
+        for (String username : completedTournamentMessage.getAllPlayers()) {    //Send to all participants (even losers)
+            messagingTemplate.convertAndSendToUser(username, "/queue/reply", new DefaultSTOMPMessage(
+                    username,
+                    String.format("Tournament [%s] winners %s", completedTournamentMessage.getId(), winnerUsernames),
+                    STOMPMessageType.GAME_OVER,
+                    null,
+                    completedTournamentMessage.getId()));
         }
 
         //Handle the spectators
@@ -141,7 +140,7 @@ public class EventListenerService {
                 for (String spectator : spectators) {
                     messagingTemplate.convertAndSendToUser(spectator, "/queue/reply",
                             new DefaultSTOMPMessage(spectator, winner, STOMPMessageType.GAME_OVER, null, playID));
-                    logger.info(String.format("listenForCompletedPlays: Sent winner [%s] to spectators [%s] for playID=[%s].", winner, spectator, playID));
+                    logger.info(String.format("listenForCompletedTournaments: Sent winner [%s] to spectators [%s] for playID=[%s].", winner, spectator, playID));
                 }
             }
         }
