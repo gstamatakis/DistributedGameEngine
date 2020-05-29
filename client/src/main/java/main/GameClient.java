@@ -635,6 +635,10 @@ public class GameClient {
         silent.setRequired(false);
         options.addOption(silent);
 
+        Option host = new Option("h", "host", true, "Redirect everything to STDOUT.");
+        host.setRequired(false);
+        options.addOption(host);
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
 

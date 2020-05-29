@@ -25,9 +25,9 @@ spring:
         group: group1
         auto.offset.reset: latest
     kafka:
-      streams.binder.configuration.application.server: localhost:18081
+      streams.binder.configuration.application.server: game-master:18081
       binder:
-        brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
+        brokers: kafka1:9094,kafka2:9095,kafka3:9096
         replication-factor: 3
         configuration:
           auto.offset.reset: latest
@@ -37,7 +37,7 @@ spring:
             applicationId: app_processUsersJoinGame
           processUserScores:
             applicationId: app_processUserScores
-        brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
+        brokers: kafka1:9094,kafka2:9095,kafka3:9096
         deserialization-exception-handler: logandfail
         stateStoreRetry:
           maxAttempts: 3

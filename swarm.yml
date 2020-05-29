@@ -1,12 +1,13 @@
 version: '3.5'
 services:
-
   registry:
     image: registry:2
     networks:
       - swarm_net
     ports:
       - 5000:5000
+    environment:
+      REGISTRY_HTTP_ADDR: 0.0.0.0:5001
     deploy:
       mode: global
       resources:
@@ -19,7 +20,7 @@ services:
         window: 120s
 
   mysql1:
-    image: 127.0.0.1:5000/dge/mysql:latest
+    image: localhost:5000/dge/mysql:latest
     networks:
       - swarm_net
     environment:
@@ -28,6 +29,9 @@ services:
       - MYSQL_PASSWORD=password1
       - MYSQL_DATABASE=uidb
       - SERVER_ID=1
+      - BIND_ADDRESS=0.0.0.0
+    ports:
+      - 3307:3306
     deploy:
       mode: replicated
       replicas: 1
@@ -42,18 +46,18 @@ services:
         condition: on-failure
         delay: 5s
         window: 120s
-      placement:
-        constraints:
-          - node.labels.mysql == true
 
   mysql2:
-    image: 127.0.0.1:5000/dge/mysql:latest
+    image: localhost:5000/dge/mysql:latest
     networks:
       - swarm_net
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - SERVER_ID=2
+      - BIND_ADDRESS=0.0.0.0
       - AUTO_INIT_MASTER_IP=mysql1
+    ports:
+      - 3308:3306
     deploy:
       mode: replicated
       replicas: 1
@@ -68,17 +72,16 @@ services:
         condition: on-failure
         delay: 5s
         window: 120s
-      placement:
-        constraints:
-          - node.labels.mysql == true
 
   mysqlfailover:
-    image: 127.0.0.1:5000/dge/mysql-failover:latest
+    image: localhost:5000/dge/mysql-failover:latest
     networks:
       - swarm_net
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MASTER=mysql1
+    depends_on:
+      - mysql1
     deploy:
       mode: replicated
       replicas: 1
@@ -93,27 +96,27 @@ services:
         condition: on-failure
         delay: 5s
         window: 120s
-      placement:
-        constraints:
-          - node.labels.mysql == true
 
   mysqlrouter:
-    image: 127.0.0.1:5000/dge/mysql-router:latest
+    image: localhost:5000/dge/mysql-router:latest
     ports:
       - 3306:3306
     networks:
       - swarm_net
     environment:
-      - MLOGGER_LEVEL=ERROR
+      - MLOGGER_LEVEL=INFO
       - MYSQLROUTER_BINDPORT=3306
-      - DESTINATIONS=mysql1,mysql2
+      - DESTINATIONS=mysql1:3306,mysql2:3306
+    depends_on:
+      - mysql1
+      - mysql2
     deploy:
       mode: replicated
       replicas: 2
       resources:
         limits:
           cpus: '0.5'
-          memory: 128M
+          memory: 64M
       update_config:
         parallelism: 1
         delay: 60s
@@ -121,91 +124,17 @@ services:
         condition: on-failure
         delay: 5s
         window: 120s
-      placement:
-        constraints:
-          - node.labels.mysql == true
-
-  redis-master:
-    image: 127.0.0.1:5000/dge/redis:latest
-    ports:
-      - 6379:6379
-    deploy:
-      mode: replicated
-      replicas: 1
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-      placement:
-        constraints:
-          - node.labels.redis-master == true
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        window: 120s
-    networks:
-      - swarm_net
-
-  redis-slave:
-    image: 127.0.0.1:5000/dge/redis:latest
-    command: --slaveof redis-master 6379
-    depends_on:
-      - redis-master
-    deploy:
-      mode: replicated
-      replicas: 1
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-      placement:
-        constraints:
-          - node.labels.redis-replica == true
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        window: 120s
-    networks:
-      - swarm_net
-
-  redis-sentinel:
-    image: 127.0.0.1:5000/dge/redis-sentinel:latest
-    depends_on:
-      - redis-master
-    deploy:
-      mode: replicated
-      replicas: 1
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-      placement:
-        constraints:
-          - node.labels.redis-sentinel == true
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        window: 120s
-    environment:
-      - "SENTINEL_MASTER_IP=redis-master"
-    networks:
-      - swarm_net
 
   zookeeper:
-    image: 127.0.0.1:5000/dge/zookeeper:latest
+    image: localhost:5000/dge/zookeeper:latest
     ports:
       - 2181:2181
-    depends_on:
-      - redis-master
     deploy:
       replicas: 1
       resources:
         limits:
           cpus: '0.5'
           memory: 512M
-      placement:
-        constraints:
-          - node.labels.zookeeper == true
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -214,9 +143,9 @@ services:
       - swarm_net
 
   kafka1:
-    image: 127.0.0.1:5000/dge/kafka:latest
+    image: localhost:5000/dge/kafka:latest
     ports:
-      - 9094:9094
+      - 19094:19094
     environment:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_MIN_INSYNC_REPLICAS: 1
@@ -226,21 +155,21 @@ services:
       KAFKA_CONTROLLER_SHUTDOWN_ENABLE: 'true'
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
-      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://127.0.0.1:9094
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka1:9094,OUTSIDE://localhost:19094
+      KAFKA_LISTENERS: INSIDE://:9094,OUTSIDE://:19094
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_CREATE_TOPICS: 'testtopic:1:1'
       KAFKA_LOG_RETENTION_BYTES: 100048576
       KAFKA_LOG_RETENTION_DAYS: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       replicas: 1
       resources:
         limits:
           cpus: '1'
           memory: 512M
-      placement:
-        constraints:
-          - node.labels.kafka == true
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -249,9 +178,9 @@ services:
       - swarm_net
 
   kafka2:
-    image: 127.0.0.1:5000/dge/kafka:latest
+    image: localhost:5000/dge/kafka:latest
     ports:
-      - 9095:9095
+      - 19095:19095
     environment:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_MIN_INSYNC_REPLICAS: 1
@@ -261,21 +190,21 @@ services:
       KAFKA_CONTROLLER_SHUTDOWN_ENABLE: 'true'
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
-      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9095
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://127.0.0.1:9095
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka2:9095,OUTSIDE://localhost:19095
+      KAFKA_LISTENERS: INSIDE://:9095,OUTSIDE://:19095
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_CREATE_TOPICS: 'testtopic:1:1'
       KAFKA_LOG_RETENTION_BYTES: 100048576
       KAFKA_LOG_RETENTION_DAYS: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       replicas: 1
       resources:
         limits:
           cpus: '1'
           memory: 512M
-      placement:
-        constraints:
-          - node.labels.kafka == true
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -284,9 +213,9 @@ services:
       - swarm_net
 
   kafka3:
-    image: 127.0.0.1:5000/dge/kafka:latest
+    image: localhost:5000/dge/kafka:latest
     ports:
-      - 9096:9096
+      - 19096:19096
     environment:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_MIN_INSYNC_REPLICAS: 1
@@ -296,21 +225,21 @@ services:
       KAFKA_CONTROLLER_SHUTDOWN_ENABLE: 'true'
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
-      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9096
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://127.0.0.1:9096
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka3:9096,OUTSIDE://localhost:19096
+      KAFKA_LISTENERS: INSIDE://:9096,OUTSIDE://:19096
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_CREATE_TOPICS: 'testtopic:1:1'
       KAFKA_LOG_RETENTION_BYTES: 100048576
       KAFKA_LOG_RETENTION_DAYS: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       replicas: 1
       resources:
         limits:
           cpus: '1'
           memory: 512M
-      placement:
-        constraints:
-          - node.labels.kafka == true
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -320,21 +249,18 @@ services:
 
 
   game-master:
-    image: 127.0.0.1:5000/dge/game-master:latest
+    image: localhost:5000/dge/game-master:latest
     ports:
       - 8081:8081
     depends_on:
       - mysqlrouter
-      - kafka
+      - kafka1
     deploy:
       replicas: 1
       resources:
         limits:
           cpus: '0.5'
           memory: 512M
-      placement:
-        constraints:
-          - node.labels.spring == true
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -343,21 +269,18 @@ services:
       - swarm_net
 
   play-master:
-    image: 127.0.0.1:5000/dge/play-master:latest
+    image: localhost:5000/dge/play-master:latest
     ports:
       - 8082:8082
     depends_on:
       - mysqlrouter
-      - kafka
+      - kafka1
     deploy:
       replicas: 1
       resources:
         limits:
           cpus: '0.5'
           memory: 512M
-      placement:
-        constraints:
-          - node.labels.spring == true
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -366,21 +289,18 @@ services:
       - swarm_net
 
   user-interface:
-    image: 127.0.0.1:5000/dge/user-interface:latest
+    image: localhost:5000/dge/user-interface:latest
     ports:
       - 8080:8080
     depends_on:
       - mysqlrouter
-      - kafka
+      - kafka1
     deploy:
       replicas: 1
       resources:
         limits:
           cpus: '0.5'
           memory: 512M
-      placement:
-        constraints:
-          - node.labels.spring == true
       restart_policy:
         condition: on-failure
         delay: 5s

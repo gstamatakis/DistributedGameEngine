@@ -4,7 +4,7 @@ spring:
     livereload:
       port: 12345
   datasource:
-    url: jdbc:mysql://192.168.1.100:3306/uidb
+    url: jdbc:mysql://mysqlrouter:3306/uidb
     username: user1
     password: password1
   tomcat:
@@ -24,18 +24,12 @@ spring:
   cloud.stream:
     kafka:
       binder:
-        brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
+        brokers: kafka1:9094,kafka2:9095,kafka3:9096
         replication-factor: 3
-      streams.binder.configuration.application.server: localhost:18080
+      streams.binder.configuration.application.server: user-interface:18080
 
-redis:
-  host: 192.168.1.100
-  port: 6379
-  pass:
-  enc_key: dkdi38393kd
-
-playmaster.store.url: "http://localhost:8082"
-gamemaster.store.url: "http://localhost:8081"
+playmaster.store.url: "http://play-master:8082"
+gamemaster.store.url: "http://game-master:8081"
 
 server:
   port: 8080

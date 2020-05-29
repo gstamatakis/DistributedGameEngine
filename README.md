@@ -1,9 +1,23 @@
+# Quick run
+
+Have a docker service running and just run this script.
+Set the docker host in the Makefile under the REGISTRY_HOST tag.
+Simply run: 
+
+    ./run.sh
+
+Test that everything is working by running some client side tests.
+Working directory is considered the top level.
+
+    java -jar client\target\client.jar main.GameClientTest
+        
 # Swarm 
 
 Start (or join) a Docker Swarm
 
-    docker swarm init --advertise-addr 83.212.102.12
+    docker swarm init --advertise-addr 127.0.0.1
     
+        
 #Build and Run
 The following instruction can be used to deploy the entire application in a Docker
 Swarm environment. The following steps assume that the path is at the top-level

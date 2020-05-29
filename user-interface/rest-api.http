@@ -31,14 +31,14 @@ Cache-Control: no-cache
 
 
 ###
-GET http://localhost:8082/ping/123
+GET http://play-master:8082/ping/123
 Accept: */*
 Cache-Control: no-cache
 Authorization:
 
 
 ###
-POST http://localhost:8082/play/123
+POST http://play-master:8082/play/123
 Accept: */*
 Cache-Control: no-cache
 Authorization:eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjbGllbnQxIiwiYXV0aCI6W3siYXV0aG9yaXR5IjoiUk9MRV9DTElFTlQifV0sImlhdCI6MTU5MDEzODgxNCwiZXhwIjoxNTkwMTM5MTE0fQ.YyU3bM300CR-hYOhvR7kk_t4ZjeN7LkLc5kkXlA1iS8

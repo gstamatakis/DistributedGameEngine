@@ -50,7 +50,7 @@ class GameClientTest {
             //Submit user actions
             List<Future<?>> futures = new ArrayList<>();
             for (File file : Arrays.asList(clientActionFiles).subList(0, 2)) {
-                UserActionTask callable = new UserActionTask(file, false);
+                UserActionTask callable = new UserActionTask(file, false, "192.168.1.100");
                 Future<?> future = executorService.submit(callable);
                 futures.add(future);
             }

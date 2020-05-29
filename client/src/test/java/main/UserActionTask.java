@@ -1,12 +1,17 @@
 package main;
 
-import main.GameClient;
-
 import java.io.File;
 
 public class UserActionTask implements Runnable {
     private final File file;
     private boolean silent;
+    private String host;
+
+    public UserActionTask(File file, boolean silent, String host) {
+        this.file = file;
+        this.silent = silent;
+        this.host = host;
+    }
 
     public UserActionTask(File file, boolean silent) {
         this.file = file;
@@ -19,7 +24,9 @@ public class UserActionTask implements Runnable {
                     "-f",
                     file.getAbsolutePath(),
                     "-s",
-                    String.valueOf(silent)
+                    String.valueOf(silent),
+                    "-h",
+                    host
             });
         } catch (Exception e) {
             e.printStackTrace();
