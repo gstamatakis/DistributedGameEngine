@@ -5,6 +5,8 @@ ARG JAR_FILE=target/user-interface.jar
 # cd /opt/app
 WORKDIR /opt/app
 
+RUN apk update && apk add --no-cache libc6-compat
+
 # cp target/spring-boot-web.jar /opt/app/app.jar
 COPY ${JAR_FILE} app.jar
 
