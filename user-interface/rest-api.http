@@ -1,4 +1,4 @@
-POST http://localhost:8080/users/signin?username=admin&password=admin
+POST http://localhost:8080/users/signin?username=client1&password=client1
 Accept: */*
 Cache-Control: no-cache
 
@@ -8,6 +8,7 @@ GET http://localhost:8080/users/user_0001
 Accept: */*
 Cache-Control: no-cache
 Authorization:eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOlt7ImF1dGhvcml0eSI6IlJPTEVfQURNSU4ifV0sImlhdCI6MTU4ODA3Nzk2MSwiZXhwIjoxNTg4MDc4MjYxfQ.XKWPGhbPe8lwVmXRAhDysKFckL0Tc5fftU0AucheC5I
+
 ###
 
 GET http://localhost:8080/users/refresh
@@ -27,3 +28,17 @@ Cache-Control: no-cache
   "email": "user_0001@gmail.com",
   "role": "ROLE_CLIENT"
 }
+
+
+###
+GET http://play-master:8082/ping/123
+Accept: */*
+Cache-Control: no-cache
+Authorization:
+
+
+###
+POST http://play-master:8082/play/123
+Accept: */*
+Cache-Control: no-cache
+Authorization:eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjbGllbnQxIiwiYXV0aCI6W3siYXV0aG9yaXR5IjoiUk9MRV9DTElFTlQifV0sImlhdCI6MTU5MDEzODgxNCwiZXhwIjoxNTkwMTM5MTE0fQ.YyU3bM300CR-hYOhvR7kk_t4ZjeN7LkLc5kkXlA1iS8

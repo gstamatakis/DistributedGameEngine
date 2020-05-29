@@ -1,0 +1,8 @@
+1
+user00001 pass00001 user00001@gmail.com
+2
+user00001 pass00001
+4
+tournament_123456
+6
+10

@@ -1,6 +1,6 @@
 package ui.kafka;
 
-import message.JoinPlayMessage;
+import message.DefaultKafkaMessage;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
-import serde.JoinPlaySerde;
+import serde.DefaultKafkaMessageSerde;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,19 +35,14 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, JoinPlayMessage> joinQueueProducerFactory() {
-        Map<String, Object> cfg = producerConfigs();
-        cfg.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JoinPlaySerde.class);
-        return new DefaultKafkaProducerFactory<>(cfg);
-    }
-
-    @Bean
     public KafkaTemplate<String, String> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean
-    public KafkaTemplate<String, JoinPlayMessage> kafkaJoinQueueTemplate() {
-        return new KafkaTemplate<>(joinQueueProducerFactory());
+    public KafkaTemplate<String, DefaultKafkaMessage> DefaultKafkaMessageTemplate() {
+        Map<String, Object> cfg = producerConfigs();
+        cfg.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, DefaultKafkaMessageSerde.class);
+        return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(cfg));
     }
 }

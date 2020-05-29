@@ -6,13 +6,13 @@ import model.Role;
 public class UserResponseDTO {
 
     @ApiModelProperty()
+    Role role;
+    @ApiModelProperty()
     private Integer id;
     @ApiModelProperty()
     private String username;
     @ApiModelProperty()
     private String email;
-    @ApiModelProperty()
-    Role role;
 
     public Integer getId() {
         return id;

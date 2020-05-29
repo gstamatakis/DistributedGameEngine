@@ -5,8 +5,8 @@ import model.Role;
 
 public class UserDataDTO {
 
-    @ApiModelProperty(position = 3)
-    Role role;
+    //Fixed role as client
+    Role role = Role.ROLE_CLIENT;
     @ApiModelProperty(position = 0)
     private String username;
     @ApiModelProperty(position = 1)

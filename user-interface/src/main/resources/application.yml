@@ -1,6 +1,10 @@
 spring:
+  application.name: UserInterfaceApplication
+  devtools:
+    livereload:
+      port: 12345
   datasource:
-    url: jdbc:mysql://192.168.1.100:3306/uidb
+    url: jdbc:mysql://mysqlrouter:3306/uidb
     username: user1
     password: password1
   tomcat:
@@ -20,29 +24,22 @@ spring:
   cloud.stream:
     kafka:
       binder:
-        brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
+        brokers: kafka1:9094,kafka2:9095,kafka3:9096
         replication-factor: 3
+      streams.binder.configuration.application.server: user-interface:18080
 
-secets:
-  ui-token: token_ui
-  gm-token: token_gm
-  pm-token: token_pm
-
-redis:
-  host: 192.168.1.100
-  port: 6379
-  pass:
-  enc_key: dkdi38393kd
-
+playmaster.store.url: "http://play-master:8082"
+gamemaster.store.url: "http://game-master:8081"
 
 server:
   port: 8080
+debug: true
 
 security:
   jwt:
     token:
       secret-key: secret-key
-      expire-length: 300000 # 5 minutes duration by default: 5 minutes * 60 seconds * 1000 milliseconds
+      expire-length: 3000000 # 50 minutes duration by default: 50 minutes * 60 seconds * 1000 milliseconds
 
 UserController:
   signin: Authenticates user and returns its JWT token.
@@ -50,6 +47,9 @@ UserController:
   delete: Deletes specific user by username
   search: Returns specific user by username
   me: Returns current user's data
+  score: Returns the score of the given user
 
 QueueController:
   practice: Queue up for a practice play.
+  tournament: Queue up for a tournament.
+  tournament_create: Create a tournament and get its ID

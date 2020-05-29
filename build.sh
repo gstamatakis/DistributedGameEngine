@@ -5,5 +5,5 @@ docker rm $(docker ps --filter "status=exited" -q)
 docker image prune -f
 
 #Build everything
-mvn clean package
+mvn clean package -DskipTests=true
 make build

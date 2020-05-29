@@ -1,30 +1,49 @@
 server:
   port: 8081
-
+debug: true
 security:
   jwt:
     token:
       secret-key: secret-key
 
-secets:
-  ui-token: token_ui
-  gm-token: token_gm
-  pm-token: token_pm
-
 spring:
+  application.name: GameMasterApplication
+  devtools:
+    livereload:
+      port: 12347
   cloud.stream:
+    function.definition: processUsersJoinGame;processUserScores
     bindings:
       processUsersJoinGame-in-0:
         destination: join-play
+        group: group1
+        auto.offset.reset: latest
       processUsersJoinGame-out-0:
-        destination: plays
+        destination: ongoing-plays
+      processUserScores-in-0:
+        destination: completed-plays
+        group: group1
+        auto.offset.reset: latest
     kafka:
+      streams.binder.configuration.application.server: game-master:18081
       binder:
-        brokers: 127.0.0.1:9094,127.0.0.1:9095,127.0.0.1:9096
+        brokers: kafka1:9094,kafka2:9095,kafka3:9096
         replication-factor: 3
-      streams.binder:
         configuration:
+          auto.offset.reset: latest
+      streams.binder:
+        functions:
+          processUsersJoinGame:
+            applicationId: app_processUsersJoinGame
+          processUserScores:
+            applicationId: app_processUserScores
+        brokers: kafka1:9094,kafka2:9095,kafka3:9096
+        deserialization-exception-handler: logandfail
+        stateStoreRetry:
+          maxAttempts: 3
+          backoff-period: 5000
+        configuration:
+          #application.server: localhost:9094
           default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-          default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+          default.value.serde: serde.DefaultKafkaMessageSerde
           commit.interval.ms: 1000
-

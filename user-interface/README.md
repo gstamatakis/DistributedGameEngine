@@ -156,7 +156,7 @@ HMACSHA256(
   secret)
 ```
 
-The signature is used to verify that the sender of the JWT is who it says it is and to ensure that the message wasn't changed along the way.
+The signature is used to verify that the sender of the JWT is who it says it is and to ensure that the clientSTOMPMessage wasn't changed along the way.
 Putting all together
 
 The output is three Base64 strings separated by dots that can be easily passed in HTML and HTTP environments, while being more compact when compared to XML-based standards such as SAML.
@@ -358,7 +358,7 @@ http.apply(new JwtTokenFilterConfigurer(jwtTokenProvider));
     port: 8090
   ```
 
-7. Make a GET request to `/users/me` to check you're not authenticated. You should receive a response with a `403` with an `Access Denied` message since you haven't set your valid JWT token yet
+7. Make a GET request to `/users/me` to check you're not authenticated. You should receive a response with a `403` with an `Access Denied` clientSTOMPMessage since you haven't set your valid JWT token yet
 
   ```
   $ curl -X GET http://localhost:8080/users/me

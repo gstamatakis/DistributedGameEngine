@@ -34,7 +34,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 512M
+          memory: 256M
       update_config:
         parallelism: 1
         delay: 60s
@@ -60,7 +60,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 512M
+          memory: 256M
       update_config:
         parallelism: 1
         delay: 60s
@@ -125,72 +125,6 @@ services:
         constraints:
           - node.labels.mysql == true
 
-  redis-master:
-    image: 127.0.0.1:5000/dge/redis:latest
-    ports:
-      - 6379:6379
-    deploy:
-      mode: replicated
-      replicas: 1
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-      placement:
-        constraints:
-          - node.labels.redis-master == true
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        window: 120s
-    networks:
-      - swarm_net
-
-  redis-slave:
-    image: 127.0.0.1:5000/dge/redis:latest
-    command: --slaveof redis-master 6379
-    depends_on:
-      - redis-master
-    deploy:
-      mode: replicated
-      replicas: 1
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-      placement:
-        constraints:
-          - node.labels.redis-replica == true
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        window: 120s
-    networks:
-      - swarm_net
-
-  redis-sentinel:
-    image: 127.0.0.1:5000/dge/redis-sentinel:latest
-    depends_on:
-      - redis-master
-    deploy:
-      mode: replicated
-      replicas: 1
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-      placement:
-        constraints:
-          - node.labels.redis-sentinel == true
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        window: 120s
-    environment:
-      - "SENTINEL_MASTER_IP=redis-master"
-    networks:
-      - swarm_net
-
   zookeeper:
     image: 127.0.0.1:5000/dge/zookeeper:latest
     ports:
@@ -202,7 +136,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 512M
+          memory: 256M
       placement:
         constraints:
           - node.labels.zookeeper == true
@@ -228,7 +162,7 @@ services:
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://127.0.0.1:9094
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://kafka1:9094
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       KAFKA_LOG_RETENTION_BYTES: 100048576
       KAFKA_LOG_RETENTION_DAYS: 1
@@ -263,7 +197,7 @@ services:
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9095
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://127.0.0.1:9095
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://kafka2:9095
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       KAFKA_LOG_RETENTION_BYTES: 100048576
       KAFKA_LOG_RETENTION_DAYS: 1
@@ -298,7 +232,7 @@ services:
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9096
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://127.0.0.1:9096
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://kafka3:9096
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       KAFKA_LOG_RETENTION_BYTES: 100048576
       KAFKA_LOG_RETENTION_DAYS: 1

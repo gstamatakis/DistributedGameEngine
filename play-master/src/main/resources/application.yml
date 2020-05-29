@@ -1,14 +1,57 @@
 server:
   port: 8082
-
+debug: true
 security:
   jwt:
     token:
       secret-key: secret-key
 
-secets:
-  ui-token: token_ui
-  gm-token: token_gm
-  pm-token: token_pm
-
-spring.application.name: PlayMasterApplication
+spring:
+  application.name: PlayMasterApplication
+  devtools:
+    livereload:
+      port: 12346
+  cloud.stream:
+    function.definition: processPlaysAndMoves;processStatePlay
+    bindings:
+      processPlaysAndMoves-in-0:
+        destination: new-moves
+        group: group1
+        auto.offset.reset: latest
+      processPlaysAndMoves-in-1:
+        destination: ongoing-plays
+        group: group1
+        auto.offset.reset: latest
+      processPlaysAndMoves-out-0:
+        destination: ongoing-plays
+      processPlaysAndMoves-out-1:
+        destination: completed-moves
+      processPlaysAndMoves-out-2:
+        destination: completed-plays
+      processStatePlay-in-0:
+        destination: ongoing-plays
+        group: group2
+        auto.offset.reset: latest
+    kafka:
+      streams.binder.configuration.application.server: play-master:18082
+      binder:
+        brokers: kafka1:9094,kafka2:9095,kafka3:9096
+        replication-factor: 3
+        configuration:
+          auto.offset.reset: latest
+      streams.binder:
+        functions:
+          processPlaysAndMoves:
+            applicationId: app_play_master_processPlaysAndMoves
+          processStatePlay:
+            applicationId: app_play_master_processStatePlay
+        brokers: kafka1:9094,kafka2:9095,kafka3:9096
+        deserialization-exception-handler: logandfail
+        stateStoreRetry:
+          maxAttempts: 3
+          backoff-period: 5000
+        configuration:
+          #application.server: localhost:9094
+          default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+          default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+          commit.interval.ms: 1000

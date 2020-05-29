@@ -12,7 +12,7 @@ public class Producers {
     public static void main(String... args) {
         Random rng = new Random(0);
         Map<String, Object> props = new HashMap<>();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Arrays.asList("127.0.0.1:9094", "127.0.0.1:9095", "127.0.0.1:9096"));
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Arrays.asList("kafka1:9094", "kafka2:9095", "kafka3:9096"));
         props.put(ProducerConfig.RETRIES_CONFIG, 0);
         props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
         props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
