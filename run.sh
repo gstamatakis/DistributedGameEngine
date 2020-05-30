@@ -1,6 +1,8 @@
 #Stop everything
 docker rm $(docker ps --filter "status=exited" -q)
 docker image prune -f
+docker swarm leave
+docker swarm init
 
 #Setup a private docker registry
 docker stop registry

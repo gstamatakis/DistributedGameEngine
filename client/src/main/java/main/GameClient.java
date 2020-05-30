@@ -91,7 +91,6 @@ public class GameClient {
         }
 
         //Handle Ctrl+C
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> System.exit(0)));
 
         //Execute the main loop
         int result = handleInputs(scanner, output);

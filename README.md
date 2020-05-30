@@ -4,12 +4,13 @@ Have a docker service running and just run this script.
 Set the docker host in the Makefile under the REGISTRY_HOST tag.
 Simply run: 
 
+    chmod +x run.sh
     ./run.sh
 
 Test that everything is working by running some client side commands.
 Working directory is considered the top level.
 
-    java -jar client\target\client.jar main.GameClientTests
+    mvn test
         
 # Swarm 
 

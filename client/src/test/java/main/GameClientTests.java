@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class GameClientTests {
     private static final Logger logger = LoggerFactory.getLogger(GameClientTests.class);
-    private static final String HOSTNAME = "localhost";
+    private static final String HOSTNAME = "83.212.102.12";
     private static File[] clientActionFiles;
     private static File[] specialActionFiles4;
     private static File[] specialActionFiles8;
@@ -21,27 +21,31 @@ class GameClientTests {
     private static File[] tournamentActionFiles8;
     private static ExecutorService executorService;
 
+    @BeforeEach
+    void setUp() {
+        executorService = Executors.newFixedThreadPool(8);
+    }
+
     @BeforeAll
-    static void setUp() {
+    static void setUpAll() {
         clientActionFiles = getClientActionFiles("input/practice", "client_actions_");
         specialActionFiles4 = getClientActionFiles("input/tournament4", "official_actions_");
         tournamentActionFiles4 = getClientActionFiles("input/tournament4", "tournament_player_actions_");
         specialActionFiles8 = getClientActionFiles("input/tournament8", "official_actions_");
         tournamentActionFiles8 = getClientActionFiles("input/tournament8", "tournament_player_actions_");
-        executorService = Executors.newFixedThreadPool(8);
+    }
+
+    @AfterEach
+    void tearDown() throws InterruptedException {
+        executorService.shutdown();
+        if (!executorService.awaitTermination(3, TimeUnit.SECONDS)) {
+            executorService.shutdownNow();
+        }
     }
 
     @AfterAll
     static void tearDownAll() {
-        executorService.shutdown();
-        try {
-            if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
-                executorService.shutdownNow();
-            }
-        } catch (InterruptedException ex) {
-            executorService.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
+        System.out.println("Finished");
     }
 
     @Test
@@ -59,7 +63,7 @@ class GameClientTests {
 
             //Wait for futures to complete
             for (Future<?> future : futures) {
-                future.get(20, TimeUnit.SECONDS);
+                future.get(60, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of all Futures.");
         } catch (TimeoutException ignored) {
@@ -83,7 +87,7 @@ class GameClientTests {
 
             //Wait for futures to complete
             for (Future<?> future : futures) {
-                future.get(20, TimeUnit.SECONDS);
+                future.get(60, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of all Futures.");
         } catch (TimeoutException ignored) {
@@ -104,7 +108,7 @@ class GameClientTests {
                 officialsActions.add(future);
             }
             for (Future<?> future : officialsActions) {
-                future.get(10, TimeUnit.SECONDS);
+                future.get(20, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of Official(s).");
 
@@ -116,7 +120,7 @@ class GameClientTests {
                 tournamentPlayerActions.add(future);
             }
             for (Future<?> future : tournamentPlayerActions) {
-                future.get(20, TimeUnit.SECONDS);
+                future.get(60, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of Tournament Players.");
         } catch (TimeoutException ignored) {
@@ -150,7 +154,7 @@ class GameClientTests {
                 tournamentPlayerActions.add(future);
             }
             for (Future<?> future : tournamentPlayerActions) {
-                future.get(20, TimeUnit.SECONDS);
+                future.get(60, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of Tournament Players.");
         } catch (TimeoutException ignored) {
