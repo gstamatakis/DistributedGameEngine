@@ -13,6 +13,7 @@ import java.util.concurrent.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class GameClientTests {
     private static final Logger logger = LoggerFactory.getLogger(GameClientTests.class);
+    private static final String HOSTNAME = "localhost";
     private static File[] clientActionFiles;
     private static File[] specialActionFiles4;
     private static File[] specialActionFiles8;
@@ -34,7 +35,7 @@ class GameClientTests {
     static void tearDownAll() {
         executorService.shutdown();
         try {
-            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+            if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
                 executorService.shutdownNow();
             }
         } catch (InterruptedException ex) {
@@ -50,7 +51,7 @@ class GameClientTests {
             //Submit user actions
             List<Future<?>> futures = new ArrayList<>();
             for (File file : Arrays.asList(clientActionFiles).subList(0, 2)) {
-                UserActionTask callable = new UserActionTask(file, false, "192.168.1.100");
+                UserActionTask callable = new UserActionTask(file, false, HOSTNAME);
                 Future<?> future = executorService.submit(callable);
                 futures.add(future);
             }
@@ -58,9 +59,10 @@ class GameClientTests {
 
             //Wait for futures to complete
             for (Future<?> future : futures) {
-                future.get(30, TimeUnit.SECONDS);
+                future.get(20, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of all Futures.");
+        } catch (TimeoutException ignored) {
         } catch (Exception e) {
             Assertions.fail(e);
         }
@@ -73,7 +75,7 @@ class GameClientTests {
             //Submit user actions
             List<Future<?>> futures = new ArrayList<>();
             for (File file : clientActionFiles) {
-                UserActionTask callable = new UserActionTask(file, false);
+                UserActionTask callable = new UserActionTask(file, false, HOSTNAME);
                 Future<?> future = executorService.submit(callable);
                 futures.add(future);
             }
@@ -81,9 +83,10 @@ class GameClientTests {
 
             //Wait for futures to complete
             for (Future<?> future : futures) {
-                future.get(30, TimeUnit.SECONDS);
+                future.get(20, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of all Futures.");
+        } catch (TimeoutException ignored) {
         } catch (Exception e) {
             Assertions.fail(e);
         }
@@ -96,7 +99,7 @@ class GameClientTests {
             //Submit the actions of the Official(s)
             List<Future<?>> officialsActions = new ArrayList<>();
             for (File file : specialActionFiles4) {
-                UserActionTask callable = new UserActionTask(file, false);
+                UserActionTask callable = new UserActionTask(file, false, HOSTNAME);
                 Future<?> future = executorService.submit(callable);
                 officialsActions.add(future);
             }
@@ -113,7 +116,7 @@ class GameClientTests {
                 tournamentPlayerActions.add(future);
             }
             for (Future<?> future : tournamentPlayerActions) {
-                future.get(10, TimeUnit.SECONDS);
+                future.get(20, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of Tournament Players.");
         } catch (TimeoutException ignored) {
@@ -130,7 +133,7 @@ class GameClientTests {
             //Submit the actions of the Official(s)
             List<Future<?>> officialsActions = new ArrayList<>();
             for (File file : specialActionFiles8) {
-                UserActionTask callable = new UserActionTask(file, false);
+                UserActionTask callable = new UserActionTask(file, false, HOSTNAME);
                 Future<?> future = executorService.submit(callable);
                 officialsActions.add(future);
             }
@@ -142,14 +145,15 @@ class GameClientTests {
             //Submit the tournament players
             List<Future<?>> tournamentPlayerActions = new ArrayList<>();
             for (File file : Arrays.asList(tournamentActionFiles8).subList(0, 8)) {  //All
-                UserActionTask callable = new UserActionTask(file, false);
+                UserActionTask callable = new UserActionTask(file, false, HOSTNAME);
                 Future<?> future = executorService.submit(callable);
                 tournamentPlayerActions.add(future);
             }
             for (Future<?> future : tournamentPlayerActions) {
-                future.get(15, TimeUnit.SECONDS);
+                future.get(20, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of Tournament Players.");
+        } catch (TimeoutException ignored) {
         } catch (Exception e) {
             Assertions.fail(e);
         }

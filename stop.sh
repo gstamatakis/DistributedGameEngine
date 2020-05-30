@@ -4,4 +4,6 @@
 docker stack rm dge
 
 # Stop the registry
+docker stop registry
+docker rm registry
 docker service rm registry

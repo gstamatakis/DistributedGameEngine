@@ -25,7 +25,7 @@ spring:
     kafka:
       binder:
         brokers: kafka1:9094,kafka2:9095,kafka3:9096
-        replication-factor: 3
+        replication-factor: 1
       streams.binder.configuration.application.server: user-interface:18080
 
 playmaster.store.url: "http://play-master:8082"
@@ -33,7 +33,7 @@ gamemaster.store.url: "http://game-master:8081"
 
 server:
   port: 8080
-debug: true
+debug: false
 
 security:
   jwt:

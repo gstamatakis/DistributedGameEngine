@@ -1,24 +1,5 @@
 version: '3.5'
 services:
-  registry:
-    image: registry:2
-    networks:
-      - swarm_net
-    ports:
-      - 5000:5000
-    environment:
-      REGISTRY_HTTP_ADDR: 0.0.0.0:5001
-    deploy:
-      mode: global
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 128M
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        window: 120s
-
   mysql1:
     image: localhost:5000/dge/mysql:latest
     networks:
@@ -38,7 +19,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 512M
+          memory: 256M
       update_config:
         parallelism: 1
         delay: 60s
@@ -64,7 +45,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 512M
+          memory: 256M
       update_config:
         parallelism: 1
         delay: 60s
@@ -134,7 +115,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 512M
+          memory: 256M
       restart_policy:
         condition: on-failure
         delay: 5s

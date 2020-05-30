@@ -32,6 +32,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         // Entry points
         http.authorizeRequests()
                 .antMatchers("/game/test/*").permitAll()
+                .antMatchers("/error").permitAll()
                 .anyRequest().authenticated();
 
         // If a user try to access a resource without having enough permissions
