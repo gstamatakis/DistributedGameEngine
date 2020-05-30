@@ -3,6 +3,6 @@ user00003 pass00003 user00003@gmail.com
 2
 user00003 pass00003
 4
-tournament_123456
+tournament_4
 6
 10

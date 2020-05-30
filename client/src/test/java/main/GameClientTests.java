@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class GameClientTests {
     private static final Logger logger = LoggerFactory.getLogger(GameClientTests.class);
-    private static final String HOSTNAME = "192.168.1.100";
+    private static final String HOSTNAME = "localhost";
     private static File[] clientActionFiles;
     private static File[] specialActionFiles4;
     private static File[] specialActionFiles8;
@@ -35,7 +35,7 @@ class GameClientTests {
     static void tearDownAll() {
         executorService.shutdown();
         try {
-            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+            if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
                 executorService.shutdownNow();
             }
         } catch (InterruptedException ex) {
@@ -59,9 +59,10 @@ class GameClientTests {
 
             //Wait for futures to complete
             for (Future<?> future : futures) {
-                future.get(60, TimeUnit.SECONDS);
+                future.get(20, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of all Futures.");
+        } catch (TimeoutException ignored) {
         } catch (Exception e) {
             Assertions.fail(e);
         }
@@ -82,9 +83,10 @@ class GameClientTests {
 
             //Wait for futures to complete
             for (Future<?> future : futures) {
-                future.get(60, TimeUnit.SECONDS);
+                future.get(20, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of all Futures.");
+        } catch (TimeoutException ignored) {
         } catch (Exception e) {
             Assertions.fail(e);
         }
@@ -114,7 +116,7 @@ class GameClientTests {
                 tournamentPlayerActions.add(future);
             }
             for (Future<?> future : tournamentPlayerActions) {
-                future.get(60, TimeUnit.SECONDS);
+                future.get(20, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of Tournament Players.");
         } catch (TimeoutException ignored) {
@@ -148,9 +150,10 @@ class GameClientTests {
                 tournamentPlayerActions.add(future);
             }
             for (Future<?> future : tournamentPlayerActions) {
-                future.get(15, TimeUnit.SECONDS);
+                future.get(20, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of Tournament Players.");
+        } catch (TimeoutException ignored) {
         } catch (Exception e) {
             Assertions.fail(e);
         }

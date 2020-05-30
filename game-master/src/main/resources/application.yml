@@ -28,7 +28,7 @@ spring:
       streams.binder.configuration.application.server: game-master:18081
       binder:
         brokers: kafka1:9094,kafka2:9095,kafka3:9096
-        replication-factor: 3
+        replication-factor: 1
         configuration:
           auto.offset.reset: latest
       streams.binder:

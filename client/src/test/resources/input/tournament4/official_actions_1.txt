@@ -1,5 +1,5 @@
 2
 official official
 5
-1 4 tournament_123456
+1 4 tournament_4
 10
