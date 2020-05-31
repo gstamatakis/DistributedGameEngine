@@ -14,7 +14,8 @@ import java.util.concurrent.*;
 class GameClientTests {
     private static final Logger logger = LoggerFactory.getLogger(GameClientTests.class);
     private static final String HOSTNAME = "localhost";
-    private static File[] clientActionFiles;
+    private static File[] clientActionFiles2;
+    private static File[] clientActionFiles8;
     private static File[] specialActionFiles4;
     private static File[] specialActionFiles8;
     private static File[] tournamentActionFiles4;
@@ -28,7 +29,8 @@ class GameClientTests {
 
     @BeforeAll
     static void setUpAll() {
-        clientActionFiles = getClientActionFiles("input/practice", "client_actions_");
+        clientActionFiles2 = getClientActionFiles("input/practice2", "client_actions_");
+        clientActionFiles8 = getClientActionFiles("input/practice8", "client_actions_");
         specialActionFiles4 = getClientActionFiles("input/tournament4", "official_actions_");
         tournamentActionFiles4 = getClientActionFiles("input/tournament4", "tournament_player_actions_");
         specialActionFiles8 = getClientActionFiles("input/tournament8", "official_actions_");
@@ -54,7 +56,7 @@ class GameClientTests {
         try {
             //Submit user actions
             List<Future<?>> futures = new ArrayList<>();
-            for (File file : Arrays.asList(clientActionFiles).subList(0, 2)) {
+            for (File file : clientActionFiles2) {
                 UserActionTask callable = new UserActionTask(file, false, HOSTNAME);
                 Future<?> future = executorService.submit(callable);
                 futures.add(future);
@@ -73,11 +75,12 @@ class GameClientTests {
 
     @Test
     @Order(1)
+    @Disabled
     public void concurrent_practice_players_test() {
         try {
             //Submit user actions
             List<Future<?>> futures = new ArrayList<>();
-            for (File file : clientActionFiles) {
+            for (File file : clientActionFiles8) {
                 UserActionTask callable = new UserActionTask(file, false, HOSTNAME);
                 Future<?> future = executorService.submit(callable);
                 futures.add(future);
@@ -96,6 +99,7 @@ class GameClientTests {
 
     @Test
     @Order(2)
+    @Disabled
     public void concurrent_tournament_players_instant_win_test() {
         try {
             //Submit the actions of the Official(s)

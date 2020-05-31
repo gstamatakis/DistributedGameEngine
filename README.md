@@ -2,17 +2,29 @@
 
 Have a docker service running and just run this script.
 Set the docker host in the Makefile under the REGISTRY_HOST tag.
-Simply run: 
+Install:
+    
+    docker
+    make
+    
+    
+Configure:
+    
+    sudo usermod -aG docker $USER
+
+
+Run: 
 
     chmod +x run.sh
     ./run.sh
+
 
 Test that everything is working by running a client side test.
 Working directory is considered the top level.
 
     mvn package -DskipTests=true 
-    cd client
     mvn test -pl client -am
+        
         
 # Swarm 
 
@@ -21,7 +33,9 @@ Start (or join) a Docker Swarm
     docker swarm init --advertise-addr 127.0.0.1
     
         
+        
 #Build and Run
+
 The following instruction can be used to deploy the entire application in a Docker
 Swarm environment. The following steps assume that the path is at the top-level
 directory of the project (same as this README).
