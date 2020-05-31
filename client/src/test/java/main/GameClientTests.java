@@ -66,7 +66,6 @@ class GameClientTests {
                 future.get(60, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of all Futures.");
-        } catch (TimeoutException ignored) {
         } catch (Exception e) {
             Assertions.fail(e);
         }
@@ -90,7 +89,6 @@ class GameClientTests {
                 future.get(60, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of all Futures.");
-        } catch (TimeoutException ignored) {
         } catch (Exception e) {
             Assertions.fail(e);
         }
@@ -123,7 +121,6 @@ class GameClientTests {
                 future.get(60, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of Tournament Players.");
-        } catch (TimeoutException ignored) {
         } catch (Exception e) {
             Assertions.fail(e);
         }
@@ -157,7 +154,6 @@ class GameClientTests {
                 future.get(60, TimeUnit.SECONDS);
             }
             logger.info("Completed the processing of Tournament Players.");
-        } catch (TimeoutException ignored) {
         } catch (Exception e) {
             Assertions.fail(e);
         }
