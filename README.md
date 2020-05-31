@@ -7,10 +7,12 @@ Simply run:
     chmod +x run.sh
     ./run.sh
 
-Test that everything is working by running some client side commands.
+Test that everything is working by running a client side test.
 Working directory is considered the top level.
 
-    mvn test
+    mvn package -DskipTests=true 
+    cd client
+    mvn test -pl client -am
         
 # Swarm 
 
