@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class GameClientTests {
     private static final Logger logger = LoggerFactory.getLogger(GameClientTests.class);
-    private static final String HOSTNAME = "localhost";
+    private static final String HOSTNAME = "83.212.102.12";
     private static File[] clientActionFiles2;
     private static File[] clientActionFiles8;
     private static File[] specialActionFiles4;
