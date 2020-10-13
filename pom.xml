@@ -35,7 +35,7 @@
         <modelmapper.version>2.3.5</modelmapper.version>
         <jackson.version>2.10.2</jackson.version>
         <swagger.version>2.9.2</swagger.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
         <spring-cloud.version>Hoxton.SR3</spring-cloud.version>
     </properties>
 
